@@ -492,8 +492,8 @@ environment may have changed in ways material to its policy.
 Re-attestation does not retroactively protect data transmitted
 before a state change occurred.  It bounds further exposure by
 conditioning continued sensitive data transmission on a current
-trust assessment.  Whether to terminate a session upon 
-re-attestation failure or continue with reduced privilege is 
+trust assessment.  Whether to terminate a session upon
+re-attestation failure or continue with reduced privilege is
 a matter of Relying Party policy.
 
 # Privacy Considerations
