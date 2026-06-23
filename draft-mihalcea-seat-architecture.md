@@ -466,7 +466,7 @@ with respect to the session: a replay from a different session will
 carry an Attestation Binder derived from a different Root Secret, and
 appraisal will fail.
 
-## Session resumption 
+## Session resumption
 
 Session resumption introduces a specific freshness consideration.
 When a transport session is resumed, previously obtained Attestation
