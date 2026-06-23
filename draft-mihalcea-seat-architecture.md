@@ -474,9 +474,9 @@ Results may no longer reflect the Attester's current state.
 
 ## Re-Attestation in Long-Running Sessions
 
-Initial attestation at Connection Establishment Time addresses 
-the architectural invariants the Relying Party's policy 
-requires before application data may flow.  Re-attestation 
+Initial attestation at Connection Establishment Time addresses
+the architectural invariants the Relying Party's policy
+requires before application data may flow.  Re-attestation
 addresses the dynamic reality that established sessions may
 outlast the validity of a single trust assessment.  Protocol
 specifications building on this architecture SHOULD treat
