@@ -483,10 +483,10 @@ specifications building on this architecture SHOULD treat
 these as distinct concerns.
 
 Per-session freshness ensures Evidence cannot be replayed across
-sessions but does not address changes in the Attester's state 
-during the Lifetime of Connection. A Relying Party MAY require 
-Re-attestation before continuing to transmit sensitive data to a 
-peer whose trust assessment has expired or whose deployment 
+sessions but does not address changes in the Attester's state
+during the Lifetime of Connection. A Relying Party MAY require
+Re-attestation before continuing to transmit sensitive data to a
+peer whose trust assessment has expired or whose deployment
 environment may have changed in ways material to its policy.
 
 Re-attestation does not retroactively protect data transmitted
