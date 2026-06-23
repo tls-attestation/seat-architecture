@@ -9,20 +9,20 @@ number:
 date:
 consensus: true
 v: 3
-area: SEC
-workgroup: SEAT Working Group
+# area: SEC
+# workgroup: SEAT Working Group
 keyword:
  - remote attestation
  - TLS
  - confidential computing
  - transport security
 venue:
-  group: SEAT
-  type: Working Group
-  mail: seat@ietf.org
-  arch: https://example.com/WG
-  github: USER/REPO
-  latest: https://example.com/LATEST
+#  group: SEAT
+#  type: Working Group
+#  mail: seat@ietf.org
+#  arch: https://example.com/WG
+  github: "telephonicrobotics/seat-architecture"
+  latest: "https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html"
 
 author:
   - fullname: Ionuț Mihalcea
@@ -207,7 +207,7 @@ Split Deployment:
   input — typically a handshake transcript hash or exported key —
   from the transport stack via a trusted interface.
 
-Participating Intermediary:  
+Participating Intermediary:
 : A TLS-terminating proxy that operates
   outside the trusted network topology and is traversed by a client
   seeking to attest an origin endpoint behind it.  A Participating
@@ -543,7 +543,7 @@ and in {{I-D.ounsworth-rats-privacy-framework}}.
 
 ## Security Considerations
 
-This section enumerates the security properties and considerations 
+This section enumerates the security properties and considerations
 of the SEAT architecture.  Security goals state outcomes the
 architecture is designed to achieve; they carry no normative
 mandates.  Security properties state technical characteristics the
