@@ -167,6 +167,10 @@ Lifetime of Connection:
   Evidence to reflect the Attester's current state rather than its
   state at Connection Establishment Time.
 
+Re-attestation: 
+: The production and appraisal of fresh Evidence during an 
+  established session's Lifetime of Connection.
+
 Intra-Handshake Window:
 : The interval during transport connection
   establishment in which Evidence is conveyed within the handshake
@@ -449,6 +453,8 @@ The freshness of Evidence is critical to its value as a
 trustworthiness signal.  In the transport context, freshness has two
 distinct scopes that must be addressed separately.
 
+## Per-session freshness
+
 Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
@@ -460,9 +466,35 @@ with respect to the session: a replay from a different session will
 carry an Attestation Binder derived from a different Root Secret, and
 appraisal will fail.
 
+## Session resumption 
+
 Session resumption introduces a specific freshness consideration.
 When a transport session is resumed, previously obtained Attestation
 Results may no longer reflect the Attester's current state.
+
+## Re-Attestation in Long-Running Sessions
+
+Initial attestation at Connection Establishment Time addresses 
+the architectural invariants the Relying Party's policy 
+requires before application data may flow.  Re-attestation 
+addresses the dynamic reality that established sessions may
+outlast the validity of a single trust assessment.  Protocol
+specifications building on this architecture SHOULD treat
+these as distinct concerns.
+
+Per-session freshness ensures Evidence cannot be replayed across
+sessions but does not address changes in the Attester's state 
+during the Lifetime of Connection. A Relying Party MAY require 
+Re-attestation before continuing to transmit sensitive data to a 
+peer whose trust assessment has expired or whose deployment 
+environment may have changed in ways material to its policy.
+
+Re-attestation does not retroactively protect data transmitted
+before a state change occurred.  It bounds further exposure by
+conditioning continued sensitive data transmission on a current
+trust assessment.  Whether to terminate a session upon 
+re-attestation failure or continue with reduced privilege is 
+a matter of Relying Party policy.
 
 # Privacy Considerations
 
