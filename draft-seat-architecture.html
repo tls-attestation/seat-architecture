@@ -1070,7 +1070,7 @@ svg {
 <div id="internal-metadata" class="document-information">
 <dl id="identifiers">
 <dt class="label-workgroup">Workgroup:</dt>
-<dd class="workgroup">SEAT Working Group</dd>
+<dd class="workgroup">Network Working Group</dd>
 <dt class="label-internet-draft">Internet-Draft:</dt>
 <dd class="internet-draft">draft-seat-architecture-latest</dd>
 <dt class="label-published">Published:</dt>
@@ -1121,15 +1121,10 @@ intermediaries such as proxies.<a href="#section-abstract-1" class="pilcrow">¶<
       </h2>
 <p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
 <p id="section-note.1-2">
-        The latest revision of this draft can be found at <span><a href="https://example.com/LATEST">https://example.com/LATEST</a></span>.
+        The latest revision of this draft can be found at <span><a href="https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html">https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html</a></span>.
         Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-seat-architecture/">https://datatracker.ietf.org/doc/draft-seat-architecture/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
-<p id="section-note.1-3">
-        Discussion of this document takes place on the
-        SEAT Working Group mailing list (<span><a href="mailto:seat@ietf.org">mailto:seat@ietf.org</a></span>),
-        which is archived at <span><a href="https://example.com/WG">https://example.com/WG</a></span>.
-        Subscribe at <span><a href="https://www.ietf.org/mailman/listinfo/seat/">https://www.ietf.org/mailman/listinfo/seat/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
-<p id="section-note.1-4">Source for this draft and an issue tracker can be found at
-        <span><a href="https://github.com/USER/REPO">https://github.com/USER/REPO</a></span>.<a href="#section-note.1-4" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">Source for this draft and an issue tracker can be found at
+        <span><a href="https://github.com/telephonicrobotics/seat-architecture">https://github.com/telephonicrobotics/seat-architecture</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1910,7 +1905,7 @@ and in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">
         <h3 id="name-security-considerations">
 <a href="#section-8.6" class="section-number selfRef">8.6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
         </h3>
-<p id="section-8.6-1">This section enumerates the security properties and considerations 
+<p id="section-8.6-1">This section enumerates the security properties and considerations
 of the SEAT architecture.  Security goals state outcomes the
 architecture is designed to achieve; they carry no normative
 mandates.  Security properties state technical characteristics the
@@ -1918,42 +1913,42 @@ protocol are expected to exhibit and may carry normative
 requirements.  Implementations <span class="bcp14">MUST</span> also consider the Security
 Considerations of <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> and of any protocol specification that
 instantiates this architecture.<a href="#section-8.6-1" class="pilcrow">¶</a></p>
-<p id="section-8.6-2"><em>Session Binding and Relay Prevention.</em> Evidence presented on a
+<p id="section-8.6-2"><strong>Session Binding and Relay Prevention.</strong> Evidence presented on a
 session is bound to that session and to the endpoint role in which it
 is presented.  Valid Evidence from one session cannot satisfy a
 Verifier on a different session or from a different endpoint.<a href="#section-8.6-2" class="pilcrow">¶</a></p>
-<p id="section-8.6-3"><em>Evidence Freshness.</em> Evidence reflects the Attester's state at or
+<p id="section-8.6-3"><strong>Evidence Freshness.</strong> Evidence reflects the Attester's state at or
 near the Evidence Generation Time for the session in which it is
 presented.  Per-session freshness ensures Evidence from a prior
 session cannot be replayed against a new one.  When re-attestation
 occurs during a session's Lifetime of Connection, the re-attestation
 Evidence reflects the Attester's state at the time of re-attestation,
 not at Connection Establishment Time.<a href="#section-8.6-3" class="pilcrow">¶</a></p>
-<p id="section-8.6-4"><em>Evidence Confidentiality from Intermediaries.</em> When a Participating
+<p id="section-8.6-4"><strong>Evidence Confidentiality from Intermediaries.</strong> When a Participating
 Intermediary is present, Evidence payloads <span class="bcp14">SHOULD</span> be protected by
 object-level encryption to a key held exclusively by the intended
 recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-8.6-4" class="pilcrow">¶</a></p>
-<p id="section-8.6-5"><em>Key Non-exportability (informative).</em> The specific concern of
+<p id="section-8.6-5"><strong>Key Non-exportability (informative).</strong> The specific concern of
 demonstrating that a transport authentication key is physically
 confined within the attested execution environment is addressed at
 the RATS layer by <span>[<a href="#I-D.reddy-rats-key-binding" class="cite xref">I-D.reddy-rats-key-binding</a>]</span> and is not re-
 specified here.<a href="#section-8.6-5" class="pilcrow">¶</a></p>
-<p id="section-8.6-6"><em>Session Resumption.</em> When a transport session is resumed, previously
+<p id="section-8.6-6"><strong>Session Resumption.</strong> When a transport session is resumed, previously
 obtained Attestation Results may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
 to a resumed session.<a href="#section-8.6-6" class="pilcrow">¶</a></p>
-<p id="section-8.6-7"><em>Cryptographic Session Binding.</em> Evidence <span class="bcp14">MUST</span> be committed to an
+<p id="section-8.6-7"><strong>Cryptographic Session Binding.</strong> Evidence <span class="bcp14">MUST</span> be bound to an
 Attestation Binder derived from a Root Secret established from
 session-specific keying material that cannot be known before the
 session is initiated.  A replay from a different session carries a
 Binder derived from a different Root Secret and <span class="bcp14">MUST</span> be rejected.
 See <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a>.<a href="#section-8.6-7" class="pilcrow">¶</a></p>
-<p id="section-8.6-8"><em>Directional Endpoint Binding.</em> Distinct Attestation Binders <span class="bcp14">MUST</span> be
+<p id="section-8.6-8"><strong>Directional Endpoint Binding.</strong> Distinct Attestation Binders <span class="bcp14">MUST</span> be
 derived for the initiator and the responder from the same Root Secret
 using distinct inputs.  Evidence produced by one endpoint <span class="bcp14">MUST NOT</span>
 satisfy the verification requirement for the opposite endpoint.  See
 <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a><a href="#section-8.6-8" class="pilcrow">¶</a></p>
-<p id="section-8.6-9"><em>Transmission and Verification Anchor Soundness.</em> An Attestation
+<p id="section-8.6-9"><strong>Transmission and Verification Anchor Soundness.</strong> An Attestation
 Binder may be included in a transport message before peer
 authentication is complete (the Transmission Anchor).
 Implementations <span class="bcp14">MUST</span> ensure the transport protocol's integrity
@@ -1961,7 +1956,7 @@ guarantee covers the message carrying the Attestation Binder; for
 example, the TLS 1.3 handshake MAC (the Verification Anchor)
 retroactively guarantees the Binder's integrity at handshake
 completion.<a href="#section-8.6-9" class="pilcrow">¶</a></p>
-<p id="section-8.6-10"><em>Downgrade Prevention.</em> Two endpoints that both support attestation
+<p id="section-8.6-10"><strong>Downgrade Prevention.</strong> Two endpoints that both support attestation
 cannot be caused by an active adversary to negotiate a connection
 without it.  The negotiation of attestation capabilities is protected
 against suppression.<a href="#section-8.6-10" class="pilcrow">¶</a></p>
@@ -2035,7 +2030,8 @@ against suppression.<a href="#section-8.6-10" class="pilcrow">¶</a></p>
       <h2 id="name-contributors">
 <a href="#name-contributors" class="section-name selfRef">Contributors</a>
       </h2>
-<p id="appendix-A-1">The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen for their thoughtful input and contributions that influenced this document.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-A-1">The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
+for their thoughtful input and contributions that influenced this document.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="acknowledgments">

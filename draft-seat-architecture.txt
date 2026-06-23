@@ -2,7 +2,7 @@
 
 
 
-SEAT Working Group                                           I. Mihalcea
+Network Working Group                                        I. Mihalcea
 Internet-Draft                                                       Arm
 Intended status: Informational                                T. Fossati
 Expires: 25 December 2026                                         Linaro
@@ -33,17 +33,12 @@ About This Document
    This note is to be removed before publishing as an RFC.
 
    The latest revision of this draft can be found at
-   https://example.com/LATEST.  Status information for this document may
-   be found at https://datatracker.ietf.org/doc/draft-seat-
-   architecture/.
-
-   Discussion of this document takes place on the SEAT Working Group
-   mailing list (mailto:seat@ietf.org), which is archived at
-   https://example.com/WG.  Subscribe at
-   https://www.ietf.org/mailman/listinfo/seat/.
+   https://telephonicrobotics.github.io/seat-architecture/draft-seat-
+   architecture.html.  Status information for this document may be found
+   at https://datatracker.ietf.org/doc/draft-seat-architecture/.
 
    Source for this draft and an issue tracker can be found at
-   https://github.com/USER/REPO.
+   https://github.com/telephonicrobotics/seat-architecture.
 
 Status of This Memo
 
@@ -584,12 +579,12 @@ Table of Contents
    Considerations of [RFC9334] and of any protocol specification that
    instantiates this architecture.
 
-   _Session Binding and Relay Prevention._ Evidence presented on a
+   *Session Binding and Relay Prevention.* Evidence presented on a
    session is bound to that session and to the endpoint role in which it
    is presented.  Valid Evidence from one session cannot satisfy a
    Verifier on a different session or from a different endpoint.
 
-   _Evidence Freshness._ Evidence reflects the Attester's state at or
+   *Evidence Freshness.* Evidence reflects the Attester's state at or
    near the Evidence Generation Time for the session in which it is
    presented.  Per-session freshness ensures Evidence from a prior
    session cannot be replayed against a new one.  When re-attestation
@@ -597,36 +592,36 @@ Table of Contents
    Evidence reflects the Attester's state at the time of re-attestation,
    not at Connection Establishment Time.
 
-   _Evidence Confidentiality from Intermediaries._ When a Participating
+   *Evidence Confidentiality from Intermediaries.* When a Participating
    Intermediary is present, Evidence payloads SHOULD be protected by
    object-level encryption to a key held exclusively by the intended
    recipient.  See [I-D.ounsworth-rats-privacy-framework].
 
-   _Key Non-exportability (informative)._ The specific concern of
+   *Key Non-exportability (informative).* The specific concern of
    demonstrating that a transport authentication key is physically
    confined within the attested execution environment is addressed at
    the RATS layer by [I-D.reddy-rats-key-binding] and is not re-
    specified here.
 
-   _Session Resumption._ When a transport session is resumed, previously
+   *Session Resumption.* When a transport session is resumed, previously
    obtained Attestation Results may no longer reflect the Attester's
    current state.  Attestation from a prior session does not carry over
    to a resumed session.
 
-   _Cryptographic Session Binding._ Evidence MUST be committed to an
+   *Cryptographic Session Binding.* Evidence MUST be bound to an
    Attestation Binder derived from a Root Secret established from
    session-specific keying material that cannot be known before the
    session is initiated.  A replay from a different session carries a
    Binder derived from a different Root Secret and MUST be rejected.
    See Section 6.
 
-   _Directional Endpoint Binding._ Distinct Attestation Binders MUST be
+   *Directional Endpoint Binding.* Distinct Attestation Binders MUST be
    derived for the initiator and the responder from the same Root Secret
    using distinct inputs.  Evidence produced by one endpoint MUST NOT
    satisfy the verification requirement for the opposite endpoint.  See
    Section 6
 
-   _Transmission and Verification Anchor Soundness._ An Attestation
+   *Transmission and Verification Anchor Soundness.* An Attestation
    Binder may be included in a transport message before peer
    authentication is complete (the Transmission Anchor).
    Implementations MUST ensure the transport protocol's integrity
@@ -635,7 +630,7 @@ Table of Contents
    retroactively guarantees the Binder's integrity at handshake
    completion.
 
-   _Downgrade Prevention._ Two endpoints that both support attestation
+   *Downgrade Prevention.* Two endpoints that both support attestation
    cannot be caused by an active adversary to negotiate a connection
    without it.  The negotiation of attestation capabilities is protected
    against suppression.
