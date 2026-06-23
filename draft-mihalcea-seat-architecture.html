@@ -1249,6 +1249,17 @@ intermediaries such as proxies.<a href="#section-abstract-1" class="pilcrow">¶<
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
             <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-freshness" class="internal xref">Freshness</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-per-session-freshness" class="internal xref">Per-session freshness</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-session-resumption" class="internal xref">Session resumption</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-re-attestation-in-long-runn" class="internal xref">Re-Attestation in Long-Running Sessions</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
             <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-privacy-considerations" class="internal xref">Privacy Considerations</a></p>
@@ -1429,73 +1440,79 @@ Evidence to reflect the Attester's current state rather than its
 state at Connection Establishment Time.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.11">Intra-Handshake Window:</dt>
+<dt id="section-2-3.11">Re-attestation:</dt>
         <dd style="margin-left: 1.5em" id="section-2-3.12">
-          <p id="section-2-3.12.1">The interval during transport connection
+          <p id="section-2-3.12.1">The production and appraisal of fresh Evidence during an
+established session's Lifetime of Connection.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.13">Intra-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.14">
+          <p id="section-2-3.14.1">The interval during transport connection
 establishment in which Evidence is conveyed within the handshake
 messages themselves, prior to the transition to application data
-exchange.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+exchange.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.13">Post-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.14">
-          <p id="section-2-3.14.1">The interval following transport handshake
+<dt id="section-2-3.15">Post-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.16">
+          <p id="section-2-3.16.1">The interval following transport handshake
 completion in which Evidence is conveyed using post-handshake
 protocol mechanisms, such as Exported Authenticators or
-application-layer exchanges.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
+application-layer exchanges.<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.15">Attestation Binder:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.16">
-          <p id="section-2-3.16.1">A cryptographic value derived from transport
+<dt id="section-2-3.17">Attestation Binder:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.18">
+          <p id="section-2-3.18.1">A cryptographic value derived from transport
 session keying material and committed to by the Attesting
 Environment in its Evidence payload.  The Attestation Binder is
 the mechanism by which Evidence is cryptographically bound to a
 specific session, preventing relay to a different session or
-endpoint.<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
+endpoint.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.17">Transmission Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.18">
-          <p id="section-2-3.18.1">The point in the protocol at which an
+<dt id="section-2-3.19">Transmission Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.20">
+          <p id="section-2-3.20.1">The point in the protocol at which an
 Attestation Binder is included in a protocol message.  A binder
 may be computed and transmitted before peer authentication is
-complete.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
+complete.<a href="#section-2-3.20.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.19">Verification Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.20">
-          <p id="section-2-3.20.1">The protocol mechanism by which the integrity
+<dt id="section-2-3.21">Verification Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.22">
+          <p id="section-2-3.22.1">The protocol mechanism by which the integrity
 of a transmitted Attestation Binder is subsequently guaranteed,
 typically the handshake MAC that seals the full transcript after
-the fact.<a href="#section-2-3.20.1" class="pilcrow">¶</a></p>
+the fact.<a href="#section-2-3.22.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.21">Split Deployment:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.22">
-          <p id="section-2-3.22.1">A deployment in which the Attesting Environment
+<dt id="section-2-3.23">Split Deployment:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.24">
+          <p id="section-2-3.24.1">A deployment in which the Attesting Environment
 and the transport stack reside in different execution contexts.
 The transport stack is in the Target Environment; the Attesting
 Environment (e.g., a TEE) must receive the attestation binder
 input — typically a handshake transcript hash or exported key —
-from the transport stack via a trusted interface.<a href="#section-2-3.22.1" class="pilcrow">¶</a></p>
+from the transport stack via a trusted interface.<a href="#section-2-3.24.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.23">Participating Intermediary:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.24">
-          <p id="section-2-3.24.1">A TLS-terminating proxy that operates
+<dt id="section-2-3.25">Participating Intermediary:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.26">
+          <p id="section-2-3.26.1">A TLS-terminating proxy that operates
 outside the trusted network topology and is traversed by a client
 seeking to attest an origin endpoint behind it.  A Participating
 Intermediary is not a RATS role; it participates in Evidence
 routing but is not authorised to appraise Evidence or to access
 Evidence payloads.  This term applies specifically to the proxy-
 traversal topology, in which the attested properties belong to the
-origin rather than to the intermediary itself.<a href="#section-2-3.24.1" class="pilcrow">¶</a></p>
+origin rather than to the intermediary itself.<a href="#section-2-3.26.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-3.25">Layered Attestation:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-3.26">
-          <p id="section-2-3.26.1">In layered attestation, Claims are collected
+<dt id="section-2-3.27">Layered Attestation:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.28">
+          <p id="section-2-3.28.1">In layered attestation, Claims are collected
 from multiple execution layers beginning with a foundational
 Attesting Environment that is typically immutable or difficult to
 modify.  A common example is a TEE executing within a virtual
@@ -1503,7 +1520,7 @@ machine, which is itself executing on a host platform.  In the
 transport context, the critical question is whether the layer
 holding the transport session's keying material is the same layer
 that signs the Evidence, or whether the attestation binder input
-must traverse a layer boundary.<a href="#section-2-3.26.1" class="pilcrow">¶</a></p>
+must traverse a layer boundary.<a href="#section-2-3.28.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1787,7 +1804,12 @@ out-of-band secret as the Root Secret.<a href="#section-6.1-1" class="pilcrow">�
 <p id="section-7-1">The freshness of Evidence is critical to its value as a
 trustworthiness signal.  In the transport context, freshness has two
 distinct scopes that must be addressed separately.<a href="#section-7-1" class="pilcrow">¶</a></p>
-<p id="section-7-2">Per-session freshness ensures that Evidence is bound to the specific
+<div id="per-session-freshness">
+<section id="section-7.1">
+        <h3 id="name-per-session-freshness">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-per-session-freshness" class="section-name selfRef">Per-session freshness</a>
+        </h3>
+<p id="section-7.1-1">Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
 of Section 6.  The Root Secret is derived from session keying
@@ -1796,10 +1818,45 @@ the session is initiated.  Evidence committed to an Attestation
 Binder derived from the Root Secret is therefore intrinsically fresh
 with respect to the session: a replay from a different session will
 carry an Attestation Binder derived from a different Root Secret, and
-appraisal will fail.<a href="#section-7-2" class="pilcrow">¶</a></p>
-<p id="section-7-3">Session resumption introduces a specific freshness consideration.
+appraisal will fail.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="session-resumption">
+<section id="section-7.2">
+        <h3 id="name-session-resumption">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-session-resumption" class="section-name selfRef">Session resumption</a>
+        </h3>
+<p id="section-7.2-1">Session resumption introduces a specific freshness consideration.
 When a transport session is resumed, previously obtained Attestation
-Results may no longer reflect the Attester's current state.<a href="#section-7-3" class="pilcrow">¶</a></p>
+Results may no longer reflect the Attester's current state.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="re-attestation-in-long-running-sessions">
+<section id="section-7.3">
+        <h3 id="name-re-attestation-in-long-runn">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-re-attestation-in-long-runn" class="section-name selfRef">Re-Attestation in Long-Running Sessions</a>
+        </h3>
+<p id="section-7.3-1">Initial attestation at Connection Establishment Time addresses
+the architectural invariants the Relying Party's policy
+requires before application data may flow.  Re-attestation
+addresses the dynamic reality that established sessions may
+outlast the validity of a single trust assessment.  Protocol
+specifications building on this architecture <span class="bcp14">SHOULD</span> treat
+these as distinct concerns.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-2">Per-session freshness ensures Evidence cannot be replayed across
+sessions but does not address changes in the Attester's state
+during the Lifetime of Connection. A Relying Party <span class="bcp14">MAY</span> require
+Re-attestation before continuing to transmit sensitive data to a
+peer whose trust assessment has expired or whose deployment
+environment may have changed in ways material to its policy.<a href="#section-7.3-2" class="pilcrow">¶</a></p>
+<p id="section-7.3-3">Re-attestation does not retroactively protect data transmitted
+before a state change occurred.  It bounds further exposure by
+conditioning continued sensitive data transmission on a current
+trust assessment.  Whether to terminate a session upon
+re-attestation failure or continue with reduced privilege is
+a matter of Relying Party policy.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="privacy-considerations">
