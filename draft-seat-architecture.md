@@ -552,12 +552,12 @@ requirements.  Implementations MUST also consider the Security
 Considerations of {{RFC9334}} and of any protocol specification that
 instantiates this architecture.
 
-*Session Binding and Relay Prevention.* Evidence presented on a
+**Session Binding and Relay Prevention.** Evidence presented on a
 session is bound to that session and to the endpoint role in which it
 is presented.  Valid Evidence from one session cannot satisfy a
 Verifier on a different session or from a different endpoint.
 
-*Evidence Freshness.* Evidence reflects the Attester's state at or
+**Evidence Freshness.** Evidence reflects the Attester's state at or
 near the Evidence Generation Time for the session in which it is
 presented.  Per-session freshness ensures Evidence from a prior
 session cannot be replayed against a new one.  When re-attestation
@@ -565,36 +565,36 @@ occurs during a session's Lifetime of Connection, the re-attestation
 Evidence reflects the Attester's state at the time of re-attestation,
 not at Connection Establishment Time.
 
-*Evidence Confidentiality from Intermediaries.* When a Participating
+**Evidence Confidentiality from Intermediaries.** When a Participating
 Intermediary is present, Evidence payloads SHOULD be protected by
 object-level encryption to a key held exclusively by the intended
 recipient.  See {{I-D.ounsworth-rats-privacy-framework}}.
 
-*Key Non-exportability (informative).* The specific concern of
+**Key Non-exportability (informative).** The specific concern of
 demonstrating that a transport authentication key is physically
 confined within the attested execution environment is addressed at
 the RATS layer by {{I-D.reddy-rats-key-binding}} and is not re-
 specified here.
 
-*Session Resumption.* When a transport session is resumed, previously
+**Session Resumption.** When a transport session is resumed, previously
 obtained Attestation Results may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
 to a resumed session.
 
-*Cryptographic Session Binding.* Evidence MUST be committed to an
+**Cryptographic Session Binding.** Evidence MUST be bound to an
 Attestation Binder derived from a Root Secret established from
 session-specific keying material that cannot be known before the
 session is initiated.  A replay from a different session carries a
 Binder derived from a different Root Secret and MUST be rejected.
 See {{channel-binding-pattern}}.
 
-*Directional Endpoint Binding.* Distinct Attestation Binders MUST be
+**Directional Endpoint Binding.** Distinct Attestation Binders MUST be
 derived for the initiator and the responder from the same Root Secret
 using distinct inputs.  Evidence produced by one endpoint MUST NOT
 satisfy the verification requirement for the opposite endpoint.  See
 {{channel-binding-pattern}}
 
-*Transmission and Verification Anchor Soundness.* An Attestation
+**Transmission and Verification Anchor Soundness.** An Attestation
 Binder may be included in a transport message before peer
 authentication is complete (the Transmission Anchor).
 Implementations MUST ensure the transport protocol's integrity
@@ -603,7 +603,7 @@ example, the TLS 1.3 handshake MAC (the Verification Anchor)
 retroactively guarantees the Binder's integrity at handshake
 completion.
 
-*Downgrade Prevention.* Two endpoints that both support attestation
+**Downgrade Prevention.** Two endpoints that both support attestation
 cannot be caused by an active adversary to negotiate a connection
 without it.  The negotiation of attestation capabilities is protected
 against suppression.
@@ -618,7 +618,8 @@ This document has no IANA actions.
 # Contributors
 {:numbered="false"}
 
-The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen for their thoughtful input and contributions that influenced this document.
+The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen 
+for their thoughtful input and contributions that influenced this document.
 
 # Acknowledgments
 {:numbered="false"}
