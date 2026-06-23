@@ -618,7 +618,7 @@ This document has no IANA actions.
 # Contributors
 {:numbered="false"}
 
-The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen 
+The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
 for their thoughtful input and contributions that influenced this document.
 
 # Acknowledgments
