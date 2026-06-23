@@ -167,8 +167,8 @@ Lifetime of Connection:
   Evidence to reflect the Attester's current state rather than its
   state at Connection Establishment Time.
 
-Re-attestation: 
-: The production and appraisal of fresh Evidence during an 
+Re-attestation:
+: The production and appraisal of fresh Evidence during an
   established session's Lifetime of Connection.
 
 Intra-Handshake Window:
