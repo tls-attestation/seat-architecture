@@ -3,7 +3,7 @@ title: "Secure Evidence and Attestation Transport (SEAT) Architecture"
 abbrev: "SEAT Architecture"
 category: info
 
-docname: draft-seat-architecture-latest
+docname: draft-mihalcea-seat-architecture-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
