@@ -640,6 +640,15 @@ cannot be caused by an active adversary to negotiate a connection
 without it.  The negotiation of attestation capabilities is protected
 against suppression.
 
+**Dynamic Verification Code Integrity.** When client-side attestation
+verification logic is dynamically delivered by the endpoint under
+appraisal (such as browser-based JavaScript), a circular trust
+dependency exists.  Unless the client's execution environment
+enforces an independent, orthogonal guarantee of code integrity
+and binary transparency, Application-layer attestation cannot
+provide security assurance, as the Attester may serve malicious
+code that bypasses cryptographic validation.
+
 # IANA Considerations
 
 This document has no IANA actions.
