@@ -1,0 +1,273 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2026-06-25T03:37:25.807924+00:00",
+  "repo": "telephonicrobotics/seat-architecture",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "issues": [
+    {
+      "number": 3,
+      "id": "I_kwDOTCeSC88AAAABGcbQaA",
+      "title": "Privacy Preservation",
+      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/3",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The following section is borrowed in part by Yaron's suggestion at https://github.com/tls-attestation/use-cases-and-properties/issues/12\nhttps://github.com/telephonicrobotics/seat-architecture/blob/5a11861cea39138ebeeb4844e38cdc3a15be127f/draft-mihalcea-seat-architecture.md?plain=1#L554\n\nThere is also the IAB's response to the CCC's response to the IAB statement \ud83d\ude03 https://datatracker.ietf.org/liaison/1897/",
+      "createdAt": "2026-06-23T15:54:49Z",
+      "updatedAt": "2026-06-24T01:54:32Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 4,
+      "id": "I_kwDOTCeSC88AAAABGfeoGQ",
+      "title": "Service mesh / Logical TEE",
+      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/4",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "OWNER",
+      "assignees": [
+        "telephonicrobotics"
+      ],
+      "labels": [],
+      "body": "Paul Howard put together a slide outlining a use-case for Service Mesh: https://github.com/tls-attestation/materials/blob/main/lc24/attested_tls_use_cases_paulh.pdf\n\nWhat architectual properties or goals could be written to facilitate this? Already present in Arch or use-cases draft?\n\nCan a \"logical TEE\" concept be deployed? How would SEAT facilitate this?",
+      "createdAt": "2026-06-24T00:38:25Z",
+      "updatedAt": "2026-06-24T01:48:05Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 5,
+      "id": "I_kwDOTCeSC88AAAABGfidog",
+      "title": "LAKE RA  use-cases/architectural patterns?",
+      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/5",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "OWNER",
+      "assignees": [
+        "telephonicrobotics"
+      ],
+      "labels": [],
+      "body": "https://datatracker.ietf.org/doc/draft-ietf-lake-ra/\n\nLAKE WG has their own RA over EDHOC. Analyze how it works, what's different from Early Attestation / EXPAT over TLS.\n\n",
+      "createdAt": "2026-06-24T00:52:47Z",
+      "updatedAt": "2026-06-24T00:52:47Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDOTCeSC87phu9_",
+      "title": "feat: add periodic re-attestation",
+      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/1",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Add periodic re-attestation following from a thread which followed [a technical discussion between Ionut and Ekr ](https://mailarchive.ietf.org/arch/msg/seat/B9syKKTyDwzSO30o7VOAXfnUUdQ/)on the same subject.",
+      "createdAt": "2026-06-23T07:23:03Z",
+      "updatedAt": "2026-06-23T15:47:05Z",
+      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "b43ac823b5d686938b63d7dda40cb3cf2493e12d",
+      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRefName": "telephonicrobotics-reattestation-1",
+      "headRefOid": "cbe16495aa5c72e36dfb44909f83179dd2a6c391",
+      "closedAt": "2026-06-23T07:29:34Z",
+      "mergedAt": "2026-06-23T07:29:34Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "bad85eb2e3a0a9914a373df3d66b0869729e24d0"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABD0GctQ",
+          "commit": {
+            "abbreviatedOid": "93c07b7"
+          },
+          "author": "github-actions",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-23T07:23:29Z",
+          "updatedAt": "2026-06-23T07:23:30Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "````suggestion\ntrust assessment.  Whether to terminate a session upon\nre-attestation failure or continue with reduced privilege is\n````",
+              "createdAt": "2026-06-23T07:23:29Z",
+              "updatedAt": "2026-06-23T07:23:30Z"
+            },
+            {
+              "originalPosition": 44,
+              "body": "````suggestion\nsessions but does not address changes in the Attester's state\nduring the Lifetime of Connection. A Relying Party MAY require\nRe-attestation before continuing to transmit sensitive data to a\npeer whose trust assessment has expired or whose deployment\n````",
+              "createdAt": "2026-06-23T07:23:30Z",
+              "updatedAt": "2026-06-23T07:23:30Z"
+            },
+            {
+              "originalPosition": 34,
+              "body": "````suggestion\nInitial attestation at Connection Establishment Time addresses\nthe architectural invariants the Relying Party's policy\nrequires before application data may flow.  Re-attestation\n````",
+              "createdAt": "2026-06-23T07:23:30Z",
+              "updatedAt": "2026-06-23T07:23:30Z"
+            },
+            {
+              "originalPosition": 24,
+              "body": "````suggestion\n## Session resumption\n````",
+              "createdAt": "2026-06-23T07:23:30Z",
+              "updatedAt": "2026-06-23T07:23:30Z"
+            },
+            {
+              "originalPosition": 5,
+              "body": "````suggestion\nRe-attestation:\n: The production and appraisal of fresh Evidence during an\n````",
+              "createdAt": "2026-06-23T07:23:30Z",
+              "updatedAt": "2026-06-23T07:23:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABD0HpuA",
+          "commit": {
+            "abbreviatedOid": "9fab93c"
+          },
+          "author": "github-actions",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-23T07:26:41Z",
+          "updatedAt": "2026-06-23T07:26:41Z",
+          "comments": [
+            {
+              "originalPosition": 34,
+              "body": "````suggestion\nInitial attestation at Connection Establishment Time addresses\nthe architectural invariants the Relying Party's policy\nrequires before application data may flow.  Re-attestation\n````",
+              "createdAt": "2026-06-23T07:26:41Z",
+              "updatedAt": "2026-06-23T07:26:41Z"
+            },
+            {
+              "originalPosition": 24,
+              "body": "````suggestion\n## Session resumption\n````",
+              "createdAt": "2026-06-23T07:26:41Z",
+              "updatedAt": "2026-06-23T07:26:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABD0HrRA",
+          "commit": {
+            "abbreviatedOid": "d86d5a5"
+          },
+          "author": "github-actions",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-23T07:26:44Z",
+          "updatedAt": "2026-06-23T07:26:45Z",
+          "comments": [
+            {
+              "originalPosition": 44,
+              "body": "````suggestion\nsessions but does not address changes in the Attester's state\nduring the Lifetime of Connection. A Relying Party MAY require\nRe-attestation before continuing to transmit sensitive data to a\npeer whose trust assessment has expired or whose deployment\n````",
+              "createdAt": "2026-06-23T07:26:44Z",
+              "updatedAt": "2026-06-23T07:26:45Z"
+            },
+            {
+              "originalPosition": 34,
+              "body": "````suggestion\nInitial attestation at Connection Establishment Time addresses\nthe architectural invariants the Relying Party's policy\nrequires before application data may flow.  Re-attestation\n````",
+              "createdAt": "2026-06-23T07:26:45Z",
+              "updatedAt": "2026-06-23T07:26:45Z"
+            },
+            {
+              "originalPosition": 24,
+              "body": "````suggestion\n## Session resumption\n````",
+              "createdAt": "2026-06-23T07:26:45Z",
+              "updatedAt": "2026-06-23T07:26:45Z"
+            },
+            {
+              "originalPosition": 5,
+              "body": "````suggestion\nRe-attestation:\n: The production and appraisal of fresh Evidence during an\n````",
+              "createdAt": "2026-06-23T07:26:45Z",
+              "updatedAt": "2026-06-23T07:26:45Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "id": "PR_kwDOTCeSC87puCQH",
+      "title": "Add Dynamic Verification Code Integrity considerations per Ekr",
+      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/2",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Incorporate concerns raised by Ekr [on-list](https://mailarchive.ietf.org/arch/msg/seat/-wOnrqnQZPY4s19y7_Kj1zifwn0/).\r\n\r\nIn part: \"[...] I don't see how anything implemented in browser-based JS can provide any kind of assurance unless there is *also* some form of assurance for the JS itself [[0]](https://realworldcrypto.iacr.org/2026/program.php). Otherwise, the attester (who, remember, is the attacker) can just serve JS that pretends to verify the proofs.\"",
+      "createdAt": "2026-06-23T15:37:49Z",
+      "updatedAt": "2026-06-23T15:47:33Z",
+      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "bad85eb2e3a0a9914a373df3d66b0869729e24d0",
+      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRefName": "telephonicrobotics-dynamic-integrity-considerations",
+      "headRefOid": "8a18f00a19ef8edc42937446c624cc2b97baf69a",
+      "closedAt": "2026-06-23T15:39:59Z",
+      "mergedAt": "2026-06-23T15:39:59Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "dc3517b8f9ee291aadd36d53b39d26ec48c7bf4c"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}
