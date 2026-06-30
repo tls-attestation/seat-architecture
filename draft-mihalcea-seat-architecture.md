@@ -179,7 +179,7 @@ Attestation Timing Model:
   Handshake Attestation. See {{timing-models}}.
 
 Evidence Generation Time:
-: The point at which an Attester's Claims 
+: The point at which an Attester's Claims
   are signed to produce Evidence. Depending on the internal workings
   of the Attester, the Evidence reflects the reported state at the
   time the underlying Claims were collected and may not represent a
