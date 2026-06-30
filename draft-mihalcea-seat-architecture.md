@@ -443,7 +443,7 @@ during the authentication phase of the handshake.
 
 Evidence is conveyed by the Attester after transport connection
 establishment to the Relying Party following the transition to
-application data exchange. 
+application data exchange.
 
 The Attestation Binder is derived after handshake completion,
 tying the Evidence to the completed session.
