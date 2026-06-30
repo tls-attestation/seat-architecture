@@ -300,7 +300,7 @@ Remote Verifier:
   This deployment corresponds to the Passport Model of {{RFC9334}}.
 
 {{fig-roles}} illustrates how the RATS roles map onto the Client and
-Server transport endpoints under the two conveyance models.
+Server transport endpoints under the two conveyance models (see {{Section 5 of RFC9334}}).
 
 ~~~ ascii-art
  Background-Check Model (Verifier co-located with Relying Party)
