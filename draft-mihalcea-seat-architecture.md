@@ -53,6 +53,21 @@ informative:
     target: https://datatracker.ietf.org/doc/statement-iab-statement-on-the-risks-of-attestation-of-software-and-hardware-on-the-open-internet/
     author:
       - org: Internet Architecture Board (IAB)
+  NIEME2021:
+    title: "Trusted Sockets Layer: A TLS 1.3 Based Trusted Channel Protocol"
+    date: 2021
+    target: "https://doi.org/10.1007/978-3-030-91625-1_10"
+    author:
+      - ins: A. Niemi
+        name: Arto Niemi
+      - ins: V. A. B. Pop
+        name: Vasile Adrian Bogdan Pop
+      - ins: J. Ekberg
+        name: Jan-Erik Ekberg
+    seriesinfo:
+      DOI: "10.1007/978-3-030-91625-1_10"
+      Publisher: "Springer International Publishing"
+      Booktitle: "Secure IT Systems, pp. 175-191"
 
 ...
 
@@ -75,6 +90,13 @@ intermediaries such as proxies.
 # Introduction
 
 ## Establishing Trust in Secure Communications
+
+> "Cryptography [without system integrity] is like investing in an
+  armored car to carry money between a customer living in a cardboard
+  box and a person doing business on a park bench."
+> 
+> — Gene Spafford
+{: =aside}
 
 Traditional secure channel protocols, such as Transport Layer
 Security (TLS), primarily establish trust in a peer's identity. This
@@ -119,6 +141,10 @@ requirements for a solution that is agnostic to any specific
 attestation technology (e.g., Trusted Platform Modules (TPMs), Intel
 TDX, AMD SEV, Arm CCA, etc.).
 
+For the scope of this architecture, the term "transport" is used
+interchangeably with "secure transport" to refer to secure channel
+establishment protocols.
+
 ## Use Cases
 
 The use cases motivating this architecture are defined in
@@ -136,6 +162,9 @@ The following terms are used in this document.  Terms defined in
 definitions below extend or specialize those terms for the transport
 context.
 
+This document adopts terms of art such as `intra-` and `post-`
+as coined by {{NIEME2021}}.
+
 Attested Channel:
 : A transport session in which at least one endpoint
   has produced Evidence that has been appraised, and in which that
@@ -145,15 +174,17 @@ Attested Channel:
 
 Attestation Timing Model:
 : The temporal relationship between Evidence
-  conveyance and transport handshake completion.  This document
+  conveyance and connection establishment time.  This document
   defines two timing models: Intra-Handshake Attestation and Post-
   Handshake Attestation. See {{timing-models}}.
 
 Evidence Generation Time:
-: The point at which an Attester's Claims
-  are signed to produce Evidence.  Evidence describes the Attester's
-  state at this moment only; it makes no representation about the
-  Attester's state at any later time.
+: The point at which an Attester's Claims 
+  are signed to produce Evidence. Depending on the internal workings
+  of the Attester, the Evidence reflects the reported state at the
+  time the underlying Claims were collected and may not represent a
+  snapshot of state at the exact moment of signing. In all cases, it
+  makes no representation about the Attester's state at any later time.
 
 Connection Establishment Time:
 : The point at which a transport
@@ -178,18 +209,10 @@ Intra-Handshake Window:
   exchange.
 
 Post-Handshake Window:
-: The interval following transport handshake
-  completion in which Evidence is conveyed using post-handshake
-  protocol mechanisms, such as Exported Authenticators or
-  application-layer exchanges.
-
-Attestation Binder:
-: A cryptographic value derived from a Session Binding
-  Value and committed to by the Attesting
-  Environment in its Evidence payload.  The Attestation Binder is
-  the mechanism by which Evidence is cryptographically bound to a
-  specific session, preventing relay to a different session or
-  endpoint.
+: The interval following connection establishment in which Evidence
+  is conveyed to the Relying Party using post-handshake protocol
+  mechanisms (e.g., Exported Authenticators or application-layer
+  exchanges).
 
 Session Binding Value:
 : A value, uniquely determined by a specific transport
@@ -197,6 +220,12 @@ Session Binding Value:
   Binding Value may be public or secret depending on the topology;
   what is required is that it cannot be known before the session is
   initiated.  See {{channel-binding-pattern}}.
+
+Attestation Binder:
+: A cryptographic value derived from a Session Binding
+  Value and committed to by the Attesting Environment into its
+  Evidence payload. This value binds the Evidence to a specific
+  session guaranteed under typical cryptographic assumptions. 
 
 Transmission Anchor:
 : The point in the protocol at which an
@@ -206,9 +235,11 @@ Transmission Anchor:
 
 Verification Anchor:
 : The protocol mechanism by which the integrity
-  of a transmitted Attestation Binder is subsequently guaranteed,
-  typically the handshake MAC that seals the full transcript after
-  the fact.
+  of a transmitted Attestation Binder is established. Depending on
+  the Attestation Timing Model, this may be achieved via a MAC
+  that authenticates the handshake transcript (e.g., the TLS Finished
+  message), or through post-handshake cryptographic binding (e.g.,
+  Exported Authenticators).
 
 Split Deployment:
 : A deployment in which the Attesting Environment
@@ -388,7 +419,7 @@ suppresses eviction signalling causes session termination, providing
 fail-secure behaviour without requiring the endpoints to detect
 adversarial intent.
 
-# Topological Patterns for Transport {#timing-models}
+# Timing Models {#timing-models}
 
 The timing and conveyance of attestation data relative to the
 transport handshake define the two Attestation Timing Models used in
@@ -399,7 +430,8 @@ this architecture.
 Evidence is conveyed by the Attester during the transport connection
 establishment to the Relying Party within the handshake messages
 themselves, prior to the transition to application data exchange.
-The Relying Party, typically deploying a co-located Verifier,
+
+The Relying Party, which may be deployed with a co-located Verifier,
 appraises the Evidence in real time and makes an authorization
 decision before the transport state machine permits application data
 to flow.
@@ -409,15 +441,16 @@ during the authentication phase of the handshake.
 
 ## Post-Handshake Attestation
 
-Post-handshake is an application-layer mechanism.  The Attestation
-Binder is derived from an exported key established after handshake
-completion, tying the Evidence to the completed session.
+Evidence is conveyed by the Attester after transport connection
+establishment to the Relying Party following the transition to
+application data exchange. 
 
-This model cleanly separates the transport state machine from the
-attestation state machine, which simplifies implementation and offers
-high architectural modularity.  This deployment can be localized to a
-sidecar or connection-gating component, avoiding the need for per-
-application integration with the attestation protocol.
+The Attestation Binder is derived after handshake completion,
+tying the Evidence to the completed session.
+
+This deployment can be localized to a sidecar or connection-gating
+component, avoiding the need for per-application integration with
+the attestation protocol.
 
 ## Combining Timing Models
 
@@ -479,6 +512,14 @@ within that environment.  Session binding alone does not bind the
 Subject Key to the attested environment; this is handled at the RATS
 layer, as discussed under Key Non-exportability in
 {{security-considerations}}.
+
+The Evidence itself plays a critical role in verifying that these three
+session binding conditions have been successfully achieved. Beyond the
+cryptographic inclusion of the Attestation Binder, strict requirements
+for the internal structure and the application of logical safeguards
+protecting the Evidence are necessary to provide assurance that the
+Evidence could not have been generated through alternative means such
+as side-channel exploits.
 
 When all three conditions are met, the channel-binding check may be
 performed either by the Relying Party itself or by the Verifier.  As a
@@ -627,10 +668,16 @@ requirements.  Implementations MUST also consider the Security
 Considerations of {{RFC9334}} and of any protocol specification that
 instantiates this architecture.
 
-**Session Binding and Relay Prevention.** Evidence presented on a
-session is bound to that session and to the endpoint role in which it
-is presented.  Valid Evidence from one session cannot satisfy a
-Verifier on a different session or from a different endpoint.
+**Cryptographic Session Binding and Relay Prevention.** Evidence
+presented on a session MUST be cryptographically bound to that
+session and to the endpoint role in which it is presented. This is
+achieved by binding the Evidence to an Attestation Binder derived
+from a Session Binding Value that is specific to the session and
+cannot be known before the session is initiated. Consequently,
+valid Evidence from one session cannot satisfy a Verifier on a
+different session or from a different endpoint; a replay carries
+a Binder derived from a different Session Binding Value and MUST
+be rejected. See {{channel-binding-pattern}}.
 
 **Evidence Freshness.** Evidence reflects the Attester's state at or
 near the Evidence Generation Time for the session in which it is
@@ -655,13 +702,6 @@ not re-specified here.
 obtained Attestation Results may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
 to a resumed session.
-
-**Cryptographic Session Binding.** Evidence MUST be bound to an
-Attestation Binder derived from a Session Binding Value that is
-specific to the session and cannot be known before the session is
-initiated.  A replay from a different session carries a Binder derived
-from a different Session Binding Value and MUST be rejected.  See
-{{channel-binding-pattern}}.
 
 **Directional Endpoint Binding.** Distinct Attestation Binders MUST be
 derived for the initiator and the responder from the same Session
@@ -700,13 +740,10 @@ This document has no IANA actions.
 
 --- back
 
-# Contributors
+# Acknowledgments
 {:numbered="false"}
 
 The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
 for their thoughtful input and contributions that influenced this document.
-
-# Acknowledgments
-{:numbered="false"}
 
 TODO
