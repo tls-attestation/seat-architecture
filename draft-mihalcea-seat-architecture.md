@@ -615,6 +615,7 @@ the open internet.  Protocol designs building on this architecture
 should minimize vendor-specific claim disclosure consistent with the
 Attestation Result minimization controls described in this section
 and in {{I-D.ounsworth-rats-privacy-framework}}.
+
 # Security Considerations {#security-considerations}
 
 This section enumerates the security properties and considerations
