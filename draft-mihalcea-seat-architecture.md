@@ -53,21 +53,7 @@ informative:
     target: https://datatracker.ietf.org/doc/statement-iab-statement-on-the-risks-of-attestation-of-software-and-hardware-on-the-open-internet/
     author:
       - org: Internet Architecture Board (IAB)
-  NIEME2021:
-    title: "Trusted Sockets Layer: A TLS 1.3 Based Trusted Channel Protocol"
-    date: 2021
-    target: "https://doi.org/10.1007/978-3-030-91625-1_10"
-    author:
-      - ins: A. Niemi
-        name: Arto Niemi
-      - ins: V. A. B. Pop
-        name: Vasile Adrian Bogdan Pop
-      - ins: J. Ekberg
-        name: Jan-Erik Ekberg
-    seriesinfo:
-      DOI: "10.1007/978-3-030-91625-1_10"
-      Publisher: "Springer International Publishing"
-      Booktitle: "Secure IT Systems, pp. 175-191"
+  NIEME2021: DOI.10.1007/978-3-030-91625-1_10
 
 ...
 
