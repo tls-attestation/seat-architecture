@@ -184,12 +184,19 @@ Post-Handshake Window:
   application-layer exchanges.
 
 Attestation Binder:
-: A cryptographic value derived from transport
-  session keying material and committed to by the Attesting
+: A cryptographic value derived from a Session Binding
+  Value and committed to by the Attesting
   Environment in its Evidence payload.  The Attestation Binder is
   the mechanism by which Evidence is cryptographically bound to a
   specific session, preventing relay to a different session or
   endpoint.
+
+Session Binding Value:
+: A value, uniquely determined by a specific transport
+  session, from which Attestation Binders are derived.  A Session
+  Binding Value may be public or secret depending on the topology;
+  what is required is that it cannot be known before the session is
+  initiated.  See {{channel-binding-pattern}}.
 
 Transmission Anchor:
 : The point in the protocol at which an
@@ -272,22 +279,54 @@ Client when the Server attests.
 
 The Verifier appraises Evidence by applying an Appraisal Policy for
 Evidence and produces Attestation Results.  In the transport context,
-two deployment variants arise that correspond to the topological
-timing models defined in Section 5:
+two deployment variants arise, corresponding to the two RATS
+conveyance models:
 
 Co-located Verifier:
 : The Verifier is implemented within the Relying
-  Party endpoint.  This variant is typical of intra-handshake
+  Party endpoint. This variant is typical of intra-handshake
   attestation, where Evidence is evaluated inline during the
   handshake and the Relying Party requires a real-time appraisal
   result before finalizing the connection.
+  This deployment corresponds to the Background-Check Model of
+  {{RFC9334}}.
 
 Remote Verifier:
-: The Verifier is an independent service.  The
+: The Verifier is an independent service. The
   Attester contacts the Verifier prior to or during the session and
   obtains Attestation Results, which it then presents to the Relying
   Party.  This variant may be more common in post-handshake
   attestation flows.
+  This deployment corresponds to the Passport Model of {{RFC9334}}.
+
+{{fig-roles}} illustrates how the RATS roles map onto the Client and
+Server transport endpoints under the two conveyance models (see {{Section 5 of RFC9334}}).
+
+~~~ ascii-art
+ Background-Check Model (Verifier co-located with Relying Party)
+
+  +---------------------+  Evidence   +---------------------------+
+  |      Attester       |------------>|      Relying Party        |
+  | (Client or Server)  |             | +-----------------------+ |
+  |                     |             | | Verifier (co-located) | |
+  |                     |             | +-----------------------+ |
+  +---------------------+             +---------------------------+
+
+ Passport Model (Remote Verifier)
+
+  +---------------------+  Evidence   +---------------------+
+  |      Attester       |------------>|   Remote Verifier   |
+  | (Client or Server)  |<------------|                     |
+  +---------------------+ Att.Results +---------------------+
+            |
+            | Attestation Results
+            v
+  +---------------------+
+  |    Relying Party    |
+  | (Server or Client)  |
+  +---------------------+
+~~~
+{: #fig-roles title="RATS Roles Mapped to Transport Endpoints"}
 
 # Trust Model
 
@@ -301,13 +340,15 @@ context.
 The Relying Party must trust that the Attestation Results it receives
 accurately reflect the Attester's state, which depends on its trust
 in the Verifier and in the Endorsement chain for the Attesting
-Environment.  The Relying Party must additionally satisfy itself that
-the Evidence was produced by the same entity holding the transport
-keys for the current session — that it has not been replayed from a
-different session or transferred from a different endpoint.  This
-assurance is provided by the session binding mechanism described in
-Section 6 and cannot be delegated or pre-computed independently of
-the session.
+Environment.
+
+The Relying Party must additionally satisfy itself that
+the Evidence is bound to the current session — that it has not been
+replayed from a different session or transferred from a different
+endpoint.  This assurance is provided by the session binding mechanism
+described in {{channel-binding-pattern}}; the check may be performed by
+the Relying Party itself or delegated to the Verifier, but it cannot
+be pre-computed independently of the session.
 
 ## Attester Trust
 
@@ -402,69 +443,71 @@ Regardless of which timing model is used or which transport protocol
 is in use, a correctly bound attested channel requires that three
 conditions hold in sequence.
 
-The first condition is Root Secret establishment.  The endpoints must
-derive or obtain a shared session-specific Root Secret from which
-Attestation Binders can be derived.  The Root Secret is bound to the
-specific session instance by construction.
+The first condition is Session Binding Value establishment.  The
+endpoints must derive or obtain a shared, session-specific Session
+Binding Value from which Attestation Binders can be derived.  The
+Session Binding Value is bound to the specific session instance by
+construction, and may be public (for example, a handshake transcript)
+or secret (for example, an exporter-derived value).
 
-The second condition is directional Binder derivation.  From the Root
-Secret, the protocol derives distinct Attestation Binders for the
-initiator and the responder.  The binders are directional: the
-initiator's binder cannot be substituted for the responder's and vice
+The second condition is directional Binder derivation.  From the
+Session Binding Value, the protocol derives distinct Attestation
+Binders for the initiator and the responder.  The binders are directional:
+the initiator's binder cannot be substituted for the responder's and vice
 versa.  This ensures that Evidence produced by one endpoint cannot
 satisfy the verification requirement for the opposite endpoint, even
 within the same session.
 
 The third condition is channel binding to Evidence.  The Attesting
 Environment signs its directional Attestation Binder into its
-Evidence payload.  Because the Attestation Binder encodes both the
-specific session and the endpoint's role within it, and because only
-the legitimate holder of the session's transport keys can have
-derived the correct Root Secret, this signature constitutes proof
-that the entity signing the Evidence is the same entity that holds
-the transport keys for this session.
+Evidence payload, committing that Evidence to this specific session.
+This condition addresses two distinct concerns.
 
-When all three conditions are satisfied, an external party appraising
-the Evidence can verify that the Evidence was produced by the
-specific Attesting Environment that holds the transport keys for the
-specific session being appraised.  Replaying the Evidence to a
-different session fails because the Attestation Binder in the signed
-Evidence will not match the binder the Verifier independently derives
-from that session's Root Secret.
+The first is replay across sessions.  Because the Session Binding
+Value is unique to the session, Evidence committed to a binder
+derived from it cannot be presented in a different session.  Where
+the Session Binding Value is secret, only the session participants can
+derive it.  Where it is public, for example, a handshake transcript,
+its uniqueness follows from the ephemeral keying material that the
+transport establishes per session, so the transcript, and hence the
+binder, cannot recur across sessions.
 
-## Instantiation in Proxy-Traversal Deployments
+The second is a Key Substitution Attack: valid Evidence produced by a
+genuine attested execution environment is presented while the Subject
+Key used for authentication was not generated or protected
+within that environment.  Session binding alone does not bind the
+Subject Key to the attested environment; this is handled at the RATS
+layer, as discussed under Key Non-exportability in
+{{security-considerations}}.
 
-When a Participating Intermediary terminates the transport
-connection, the native Root Secret — such as the handshake transcript
-— is severed at the proxy boundary.  The endpoints do not share a
-common transcript, and the session binding mechanism described above
-cannot operate directly on transcript material.  In this case, a Root
-Secret must be established via an alternative mechanism that is
-opaque to the intermediary: specifically, an parallel exchange
-conducted between the true endpoints through the intermediary, from
-which an out-of-band shared secret is derived that the intermediary
-cannot reproduce.  The directional Binder derivation and Evidence
-commitment phases then proceed as described above, but using this
-out-of-band secret as the Root Secret.
+When all three conditions are met, the channel-binding check may be
+performed either by the Relying Party itself or by the Verifier.  As a
+session participant, the Relying Party holds the Session Binding Value
+and can derive the expected Attestation Binder locally, rejecting
+Evidence whose binder does not match.  Alternatively, the Relying
+Party conveys the binder to the Verifier, which checks it against the
+binder in the Evidence.
 
 # Freshness
 
 The freshness of Evidence is critical to its value as a
-trustworthiness signal.  In the transport context, freshness has two
-distinct scopes that must be addressed separately.
+trustworthiness signal.  In the transport context, freshness has
+several distinct scopes that must be addressed separately.
 
 ## Per-session freshness
 
 Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
-of Section 6.  The Root Secret is derived from session keying
-material that is specific to the session and cannot be known before
-the session is initiated.  Evidence committed to an Attestation
-Binder derived from the Root Secret is therefore intrinsically fresh
-with respect to the session: a replay from a different session will
-carry an Attestation Binder derived from a different Root Secret, and
-appraisal will fail.
+of {{channel-binding-pattern}}.  The Session Binding Value is specific
+to the session
+and cannot be known before the session is initiated, providing
+nonce-style freshness in the sense of {{RFC9334}} Section 10.
+Evidence committed to an Attestation Binder derived from the Session
+Binding Value is therefore intrinsically fresh with respect to the
+session: a replay from a different session will carry an Attestation
+Binder derived from a different Session Binding Value, and appraisal
+will fail.
 
 ## Session resumption
 
@@ -573,13 +616,13 @@ should minimize vendor-specific claim disclosure consistent with the
 Attestation Result minimization controls described in this section
 and in {{I-D.ounsworth-rats-privacy-framework}}.
 
-## Security Considerations
+# Security Considerations {#security-considerations}
 
 This section enumerates the security properties and considerations
 of the SEAT architecture.  Security goals state outcomes the
 architecture is designed to achieve; they carry no normative
 mandates.  Security properties state technical characteristics the
-protocol are expected to exhibit and may carry normative
+protocol is expected to exhibit and may carry normative
 requirements.  Implementations MUST also consider the Security
 Considerations of {{RFC9334}} and of any protocol specification that
 instantiates this architecture.
@@ -603,10 +646,10 @@ object-level encryption to a key held exclusively by the intended
 recipient.  See {{I-D.ounsworth-rats-privacy-framework}}.
 
 **Key Non-exportability (informative).** The specific concern of
-demonstrating that a transport authentication key is physically
-confined within the attested execution environment is addressed at
-the RATS layer by {{I-D.reddy-rats-key-binding}} and is not re-
-specified here.
+demonstrating that the Subject Key used for transport authentication
+is physically confined within the attested execution environment is
+addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
+not re-specified here.
 
 **Session Resumption.** When a transport session is resumed, previously
 obtained Attestation Results may no longer reflect the Attester's
@@ -614,15 +657,16 @@ current state.  Attestation from a prior session does not carry over
 to a resumed session.
 
 **Cryptographic Session Binding.** Evidence MUST be bound to an
-Attestation Binder derived from a Root Secret established from
-session-specific keying material that cannot be known before the
-session is initiated.  A replay from a different session carries a
-Binder derived from a different Root Secret and MUST be rejected.
-See {{channel-binding-pattern}}.
+Attestation Binder derived from a Session Binding Value that is
+specific to the session and cannot be known before the session is
+initiated.  A replay from a different session carries a Binder derived
+from a different Session Binding Value and MUST be rejected.  See
+{{channel-binding-pattern}}.
 
 **Directional Endpoint Binding.** Distinct Attestation Binders MUST be
-derived for the initiator and the responder from the same Root Secret
-using distinct inputs.  Evidence produced by one endpoint MUST NOT
+derived for the initiator and the responder from the same Session
+Binding Value using distinct inputs.  Evidence produced by one
+endpoint MUST NOT
 satisfy the verification requirement for the opposite endpoint.  See
 {{channel-binding-pattern}}
 
