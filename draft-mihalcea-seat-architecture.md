@@ -225,7 +225,7 @@ Attestation Binder:
 : A cryptographic value derived from a Session Binding
   Value and committed to by the Attesting Environment into its
   Evidence payload. This value binds the Evidence to a specific
-  session guaranteed under typical cryptographic assumptions. 
+  session guaranteed under typical cryptographic assumptions.
 
 Transmission Anchor:
 : The point in the protocol at which an
