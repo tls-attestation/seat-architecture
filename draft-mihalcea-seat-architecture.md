@@ -94,7 +94,7 @@ intermediaries such as proxies.
 > "Cryptography [without system integrity] is like investing in an
   armored car to carry money between a customer living in a cardboard
   box and a person doing business on a park bench."
-> 
+>
 > — Gene Spafford
 {: =aside}
 
