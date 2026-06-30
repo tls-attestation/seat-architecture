@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>Secure Evidence and Attestation Transport (SEAT) Architecture</title>
+<meta content="Ionuț Mihalcea" name="author">
+<meta content="Thomas Fossati" name="author">
+<meta content="Tirumaleswar Reddy" name="author">
+<meta content="Nathanael Ritz" name="author">
+<meta content="
+       This document defines an architectural framework for composing Remote
+ATtestation procedureS (RATS) with Secure Evidence and Attestation
+Transport (SEAT).  The document establishes normalized terminology
+for SEAT, aligns RATS roles to transport endpoints, outlines
+topological patterns for attestation delivery timing, characterizes
+the abstract cryptographic pattern by which Evidence is bound to a
+given transport connection, and describes the architectural
+requirements for end-to-end trust in deployments traversing
+intermediaries such as proxies. 
+    " name="description">
+<meta content="xml2rfc 3.34.0" name="generator">
+<meta content="remote attestation" name="keyword">
+<meta content="TLS" name="keyword">
+<meta content="confidential computing" name="keyword">
+<meta content="transport security" name="keyword">
+<meta content="draft-mihalcea-seat-architecture-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.0
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.33.1
+    wcwidth 0.8.1
+-->
+<link href="draft-mihalcea-seat-architecture.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
+}
+svg {
+  display: block;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
+}
+.alignCenter {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+      float: none;
+    }
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a {
+  text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
+}
+.iref + a[href].internal {
+  color: var(--text-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
+  }
+  @media print {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+  & .prepared {
+    float: right;
+  }
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
+  }
+}
+
+/* Comments */
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
+      }
+    }
+    & a.toplink {
+      float: right;
+    }
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
+    }
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc {
+    page-break-before: always;
+    border-top: none;
+    padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">SEAT Architecture</td>
+<td class="right">June 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Mihalcea, et al.</td>
+<td class="center">Expires 1 January 2027</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Network Working Group</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-mihalcea-seat-architecture-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-06-30" class="published">30 June 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2027-01-01">1 January 2027</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">I. Mihalcea</div>
+<div class="org">Arm</div>
+</div>
+<div class="author">
+      <div class="author-name">T. Fossati</div>
+<div class="org">Linaro</div>
+</div>
+<div class="author">
+      <div class="author-name">T. Reddy</div>
+<div class="org">Nokia</div>
+</div>
+<div class="author">
+      <div class="author-name">N. Ritz</div>
+<div class="org">Independent</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">Secure Evidence and Attestation Transport (SEAT) Architecture</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">This document defines an architectural framework for composing Remote
+ATtestation procedureS (RATS) with Secure Evidence and Attestation
+Transport (SEAT).  The document establishes normalized terminology
+for SEAT, aligns RATS roles to transport endpoints, outlines
+topological patterns for attestation delivery timing, characterizes
+the abstract cryptographic pattern by which Evidence is bound to a
+given transport connection, and describes the architectural
+requirements for end-to-end trust in deployments traversing
+intermediaries such as proxies.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-about-this-document">
+<a href="#name-about-this-document" class="section-name selfRef">About This Document</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">
+        The latest revision of this draft can be found at <span><a href="https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html">https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html</a></span>.
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-mihalcea-seat-architecture/">https://datatracker.ietf.org/doc/draft-mihalcea-seat-architecture/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">Source for this draft and an issue tracker can be found at
+        <span><a href="https://github.com/telephonicrobotics/seat-architecture">https://github.com/telephonicrobotics/seat-architecture</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 1 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-establishing-trust-in-secur" class="internal xref">Establishing Trust in Secure Communications</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
+                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-the-role-of-remote-attestat" class="internal xref">The Role of Remote Attestation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
+                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-purpose-and-scope" class="internal xref">Purpose and Scope</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.4">
+                <p id="section-toc.1-1.1.2.4.1"><a href="#section-1.4" class="auto internal xref">1.4</a>.  <a href="#name-use-cases" class="internal xref">Use Cases</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-roles-and-entities" class="internal xref">Roles and Entities</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-attester" class="internal xref">Attester</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-relying-party" class="internal xref">Relying Party</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-verifier" class="internal xref">Verifier</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-trust-model" class="internal xref">Trust Model</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-relying-party-trust" class="internal xref">Relying Party Trust</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-attester-trust" class="internal xref">Attester Trust</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-verifier-trust" class="internal xref">Verifier Trust</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-participating-intermediary-" class="internal xref">Participating Intermediary Trust</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-topological-patterns-for-tr" class="internal xref">Topological Patterns for Transport</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-intra-handshake-attestation" class="internal xref">Intra-Handshake Attestation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-post-handshake-attestation" class="internal xref">Post-Handshake Attestation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-combining-timing-models" class="internal xref">Combining Timing Models</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-attestation-session-binding" class="internal xref">Attestation Session Binding</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-instantiation-in-proxy-trav" class="internal xref">Instantiation in Proxy-Traversal Deployments</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-freshness" class="internal xref">Freshness</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-per-session-freshness" class="internal xref">Per-session freshness</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-session-resumption" class="internal xref">Session resumption</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-re-attestation-in-long-runn" class="internal xref">Re-Attestation in Long-Running Sessions</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-privacy-considerations" class="internal xref">Privacy Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-evidence-payload-confidenti" class="internal xref">Evidence Payload Confidentiality</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-transport-metadata" class="internal xref">Transport Metadata</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.3">
+                <p id="section-toc.1-1.8.2.3.1"><a href="#section-8.3" class="auto internal xref">8.3</a>.  <a href="#name-attestation-key-correlation" class="internal xref">Attestation Key Correlation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.4">
+                <p id="section-toc.1-1.8.2.4.1"><a href="#section-8.4" class="auto internal xref">8.4</a>.  <a href="#name-anonymous-client-attestatio" class="internal xref">Anonymous Client Attestation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.5">
+                <p id="section-toc.1-1.8.2.5.1"><a href="#section-8.5" class="auto internal xref">8.5</a>.  <a href="#name-scope-boundary-and-internet" class="internal xref">Scope Boundary and Internet Openness</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6">
+                <p id="section-toc.1-1.8.2.6.1"><a href="#section-8.6" class="auto internal xref">8.6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.1">
+                <p id="section-toc.1-1.10.2.1.1"><a href="#section-10.1" class="auto internal xref">10.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.2">
+                <p id="section-toc.1-1.10.2.2.1"><a href="#section-10.2" class="auto internal xref">10.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-contributors" class="internal xref">Contributors</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<div id="establishing-trust-in-secure-communications">
+<section id="section-1.1">
+        <h3 id="name-establishing-trust-in-secur">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-establishing-trust-in-secur" class="section-name selfRef">Establishing Trust in Secure Communications</a>
+        </h3>
+<p id="section-1.1-1">Traditional secure channel protocols, such as Transport Layer
+Security (TLS), primarily establish trust in a peer's identity. This
+is typically achieved through mechanisms like a Public Key
+Infrastructure (PKI), where a trusted Certification Authority (CA)
+vouches for the binding between a public key and an identifier (e.g.,
+a hostname).<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">However, this model has a core limitation: identity authentication
+provides no assurance about the peer's internal state or the
+integrity of its software stack.  A compromised server, for instance,
+can still present a valid X.509 certificate and be considered
+"trusted" by a client.  This gap allows compromised endpoints to
+maintain network access and the trust of their peers, posing a
+significant security risk in many environments.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="the-role-of-remote-attestation">
+<section id="section-1.2">
+        <h3 id="name-the-role-of-remote-attestat">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-the-role-of-remote-attestat" class="section-name selfRef">The Role of Remote Attestation</a>
+        </h3>
+<p id="section-1.2-1">Remote Attestation (RA), as described in the RATS architecture
+<span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>, is a mechanism designed to fill this gap.  RA allows an
+entity (the "Attester") to produce verifiable "Evidence" about its
+current runtime state.  This Evidence covers the Attester's TCB, and
+can thus include measurements of its firmware, operating system, and
+application code, as well as the configuration of its hardware and
+software security features (e.g., secure boot status, memory
+isolation).  A "Relying Party" can then use this Evidence, often with
+the help of a trusted "Verifier", to appraise the Attester's
+trustworthiness.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<p id="section-1.2-2">By integrating RA into a secure channel establishment protocol, a
+second dimension of trust—trustworthiness—is added to complement
+regular peer authentication.  This allows a peer to make
+authorization decisions based not just on who the other party is, but
+also on what it is (e.g., an AMD SEV-SNP-based server running in some
+known datacenter) and whether its state is acceptable.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="purpose-and-scope">
+<section id="section-1.3">
+        <h3 id="name-purpose-and-scope">
+<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-purpose-and-scope" class="section-name selfRef">Purpose and Scope</a>
+        </h3>
+<p id="section-1.3-1">This document is intended as an input to the design of protocol
+solutions within the SEAT working group.  A key goal is to define
+requirements for a solution that is agnostic to any specific
+attestation technology (e.g., Trusted Platform Modules (TPMs), Intel
+TDX, AMD SEV, Arm CCA, etc.).<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="use-cases">
+<section id="section-1.4">
+        <h3 id="name-use-cases">
+<a href="#section-1.4" class="section-number selfRef">1.4. </a><a href="#name-use-cases" class="section-name selfRef">Use Cases</a>
+        </h3>
+<p id="section-1.4-1">The use cases motivating this architecture are defined in
+<span>[<a href="#I-D.mihalcea-seat-use-cases" class="cite xref">I-D.mihalcea-seat-use-cases</a>]</span>.  Readers are directed there for the
+full enumeration of deployment scenarios, requirements, and
+properties that protocol work in the SEAT working group is expected
+to satisfy.<a href="#section-1.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">The following terms are used in this document.  Terms defined in
+<span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> are used with the meanings established there; the
+definitions below extend or specialize those terms for the transport
+context.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-3">
+        <dt id="section-2-3.1">Attested Channel:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.2">
+          <p id="section-2-3.2.1">A transport session in which at least one endpoint
+has produced Evidence that has been appraised, and in which that
+Evidence is cryptographically bound to the session such that the
+appraisal cannot be replayed to a different session or transferred
+to a different endpoint.<a href="#section-2-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.3">Attestation Timing Model:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.4">
+          <p id="section-2-3.4.1">The temporal relationship between Evidence
+conveyance and transport handshake completion.  This document
+defines two timing models: Intra-Handshake Attestation and Post-
+Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.5">Evidence Generation Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.6">
+          <p id="section-2-3.6.1">The point at which an Attester's Claims
+are signed to produce Evidence.  Evidence describes the Attester's
+state at this moment only; it makes no representation about the
+Attester's state at any later time.<a href="#section-2-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.7">Connection Establishment Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.8">
+          <p id="section-2-3.8.1">The point at which a transport
+handshake completes and the session becomes usable for application
+data exchange.<a href="#section-2-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.9">Lifetime of Connection:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.10">
+          <p id="section-2-3.10.1">The period from Connection Establishment
+Time until the session is torn down.  Post-handshake re-
+attestation operates during the Lifetime of Connection, allowing
+Evidence to reflect the Attester's current state rather than its
+state at Connection Establishment Time.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.11">Re-attestation:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.12">
+          <p id="section-2-3.12.1">The production and appraisal of fresh Evidence during an
+established session's Lifetime of Connection.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.13">Intra-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.14">
+          <p id="section-2-3.14.1">The interval during transport connection
+establishment in which Evidence is conveyed within the handshake
+messages themselves, prior to the transition to application data
+exchange.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.15">Post-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.16">
+          <p id="section-2-3.16.1">The interval following transport handshake
+completion in which Evidence is conveyed using post-handshake
+protocol mechanisms, such as Exported Authenticators or
+application-layer exchanges.<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.17">Attestation Binder:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.18">
+          <p id="section-2-3.18.1">A cryptographic value derived from transport
+session keying material and committed to by the Attesting
+Environment in its Evidence payload.  The Attestation Binder is
+the mechanism by which Evidence is cryptographically bound to a
+specific session, preventing relay to a different session or
+endpoint.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.19">Transmission Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.20">
+          <p id="section-2-3.20.1">The point in the protocol at which an
+Attestation Binder is included in a protocol message.  A binder
+may be computed and transmitted before peer authentication is
+complete.<a href="#section-2-3.20.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.21">Verification Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.22">
+          <p id="section-2-3.22.1">The protocol mechanism by which the integrity
+of a transmitted Attestation Binder is subsequently guaranteed,
+typically the handshake MAC that seals the full transcript after
+the fact.<a href="#section-2-3.22.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.23">Split Deployment:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.24">
+          <p id="section-2-3.24.1">A deployment in which the Attesting Environment
+and the transport stack reside in different execution contexts.
+The transport stack is in the Target Environment; the Attesting
+Environment (e.g., a TEE) must receive the attestation binder
+input — typically a handshake transcript hash or exported key —
+from the transport stack via a trusted interface.<a href="#section-2-3.24.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.25">Participating Intermediary:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.26">
+          <p id="section-2-3.26.1">A TLS-terminating proxy that operates
+outside the trusted network topology and is traversed by a client
+seeking to attest an origin endpoint behind it.  A Participating
+Intermediary is not a RATS role; it participates in Evidence
+routing but is not authorised to appraise Evidence or to access
+Evidence payloads.  This term applies specifically to the proxy-
+traversal topology, in which the attested properties belong to the
+origin rather than to the intermediary itself.<a href="#section-2-3.26.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.27">Layered Attestation:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.28">
+          <p id="section-2-3.28.1">In layered attestation, Claims are collected
+from multiple execution layers beginning with a foundational
+Attesting Environment that is typically immutable or difficult to
+modify.  A common example is a TEE executing within a virtual
+machine, which is itself executing on a host platform.  In the
+transport context, the critical question is whether the layer
+holding the transport session's keying material is the same layer
+that signs the Evidence, or whether the attestation binder input
+must traverse a layer boundary.<a href="#section-2-3.28.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="roles-and-entities">
+<section id="section-3">
+      <h2 id="name-roles-and-entities">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-roles-and-entities" class="section-name selfRef">Roles and Entities</a>
+      </h2>
+<p id="section-3-1">The SEAT architecture maps the roles defined in <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> to standard
+transport protocol entities.  The subsections below describe each
+role and its specific character in the transport context.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<div id="attester">
+<section id="section-3.1">
+        <h3 id="name-attester">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-attester" class="section-name selfRef">Attester</a>
+        </h3>
+<p id="section-3.1-1">The Attester produces Evidence about its current state for
+consumption by a Verifier.  In the transport context, the Attester is
+a network endpoint — either the Client or the Server — that possesses
+an Attesting Environment (such as a Trusted Execution Environment)
+capable of securely collecting Claims and signing them with an
+attestation key.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">The Attester's transport stack provides the attestation binder input
+to the Attesting Environment so that Evidence can be bound to the
+specific session.  In a Split Deployment, the transport stack is in
+the Target Environment and the interface between the transport stack
+and the Attesting Environment is a security-critical boundary: the
+Attesting Environment <span class="bcp14">MUST NOT</span> treat an attestation binder input
+received from an untrusted host as authoritative without first
+verifying it has not been substituted.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">In mutual attestation deployments, both the Client and the Server
+simultaneously act as Attesters.  Each endpoint's Attesting
+Environment independently generates Evidence bound to the session.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="relying-party">
+<section id="section-3.2">
+        <h3 id="name-relying-party">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-relying-party" class="section-name selfRef">Relying Party</a>
+        </h3>
+<p id="section-3.2-1">The Relying Party consumes Attestation Results or Evidence and uses
+them to make authorization decisions about the transport connection.
+In the transport context, the Relying Party is typically the endpoint
+opposite the Attester — the Server when the Client attests, or the
+Client when the Server attests.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="verifier">
+<section id="section-3.3">
+        <h3 id="name-verifier">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-verifier" class="section-name selfRef">Verifier</a>
+        </h3>
+<p id="section-3.3-1">The Verifier appraises Evidence by applying an Appraisal Policy for
+Evidence and produces Attestation Results.  In the transport context,
+two deployment variants arise that correspond to the topological
+timing models defined in Section 5:<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3.3-2">
+          <dt id="section-3.3-2.1">Co-located Verifier:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-2.2">
+            <p id="section-3.3-2.2.1">The Verifier is implemented within the Relying
+Party endpoint.  This variant is typical of intra-handshake
+attestation, where Evidence is evaluated inline during the
+handshake and the Relying Party requires a real-time appraisal
+result before finalizing the connection.<a href="#section-3.3-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-3.3-2.3">Remote Verifier:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-2.4">
+            <p id="section-3.3-2.4.1">The Verifier is an independent service.  The
+Attester contacts the Verifier prior to or during the session and
+obtains Attestation Results, which it then presents to the Relying
+Party.  This variant may be more common in post-handshake
+attestation flows.<a href="#section-3.3-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="trust-model">
+<section id="section-4">
+      <h2 id="name-trust-model">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-trust-model" class="section-name selfRef">Trust Model</a>
+      </h2>
+<p id="section-4-1">This section describes the trust relationships required to establish
+an Attested Channel.  The general trust model of <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> Section 7
+applies; the subsections below specialise it for the transport
+context.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<div id="relying-party-trust">
+<section id="section-4.1">
+        <h3 id="name-relying-party-trust">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-relying-party-trust" class="section-name selfRef">Relying Party Trust</a>
+        </h3>
+<p id="section-4.1-1">The Relying Party must trust that the Attestation Results it receives
+accurately reflect the Attester's state, which depends on its trust
+in the Verifier and in the Endorsement chain for the Attesting
+Environment.  The Relying Party must additionally satisfy itself that
+the Evidence was produced by the same entity holding the transport
+keys for the current session — that it has not been replayed from a
+different session or transferred from a different endpoint.  This
+assurance is provided by the session binding mechanism described in
+Section 6 and cannot be delegated or pre-computed independently of
+the session.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="attester-trust">
+<section id="section-4.2">
+        <h3 id="name-attester-trust">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-attester-trust" class="section-name selfRef">Attester Trust</a>
+        </h3>
+<p id="section-4.2-1">For an Attesting Environment to be trustworthy to a Verifier, the
+Verifier must be able to establish trust in the signing key the
+Attesting Environment uses to produce Evidence.  This is accomplished
+via an Endorsement chain from a hardware manufacturer or certificate
+authority that attests to the Attesting Environment's properties and
+the provenance of its attestation key.  In the transport context,
+Endorsements may be conveyed alongside Evidence in the same transport
+message, or fetched out-of-band by the Verifier prior to or during
+appraisal.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="verifier-trust">
+<section id="section-4.3">
+        <h3 id="name-verifier-trust">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-verifier-trust" class="section-name selfRef">Verifier Trust</a>
+        </h3>
+<p id="section-4.3-1">The Relying Party must have a trust relationship with the Verifier
+commensurate with the sensitivity of the authorization decision.  In
+the co-located Verifier deployment, this relationship is implicit:
+the Verifier's logic is part of the Relying Party's own
+implementation.  In the remote Verifier deployment, the Relying Party
+must authenticate the Verifier and confirm that the Verifier's
+Appraisal Policy for Evidence is consistent with the Relying Party's
+own requirements before accepting Attestation Results.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="participating-intermediary-trust">
+<section id="section-4.4">
+        <h3 id="name-participating-intermediary-">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-participating-intermediary-" class="section-name selfRef">Participating Intermediary Trust</a>
+        </h3>
+<p id="section-4.4-1">The Participating Intermediary is explicitly not trusted for the
+security properties of the attested channel: not for Evidence
+confidentiality (hence object-level encryption), not for session
+integrity after eviction (hence key rotation that excludes it from
+deriving post-eviction traffic keys), and not for Evidence appraisal.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-2">The Participating Intermediary is trusted solely to correctly execute
+its transport-layer routing obligations.  A Participating
+Intermediary that fails to honour those obligations or that
+suppresses eviction signalling causes session termination, providing
+fail-secure behaviour without requiring the endpoints to detect
+adversarial intent.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="timing-models">
+<section id="section-5">
+      <h2 id="name-topological-patterns-for-tr">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-topological-patterns-for-tr" class="section-name selfRef">Topological Patterns for Transport</a>
+      </h2>
+<p id="section-5-1">The timing and conveyance of attestation data relative to the
+transport handshake define the two Attestation Timing Models used in
+this architecture.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<div id="intra-handshake-attestation">
+<section id="section-5.1">
+        <h3 id="name-intra-handshake-attestation">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-intra-handshake-attestation" class="section-name selfRef">Intra-Handshake Attestation</a>
+        </h3>
+<p id="section-5.1-1">Evidence is conveyed by the Attester during the transport connection
+establishment to the Relying Party within the handshake messages
+themselves, prior to the transition to application data exchange.
+The Relying Party, typically deploying a co-located Verifier,
+appraises the Evidence in real time and makes an authorization
+decision before the transport state machine permits application data
+to flow.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">Evidence is carried within standard transport protocol extensions
+during the authentication phase of the handshake.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="post-handshake-attestation">
+<section id="section-5.2">
+        <h3 id="name-post-handshake-attestation">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-post-handshake-attestation" class="section-name selfRef">Post-Handshake Attestation</a>
+        </h3>
+<p id="section-5.2-1">Post-handshake is an application-layer mechanism.  The Attestation
+Binder is derived from an exported key established after handshake
+completion, tying the Evidence to the completed session.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">This model cleanly separates the transport state machine from the
+attestation state machine, which simplifies implementation and offers
+high architectural modularity.  This deployment can be localized to a
+sidecar or connection-gating component, avoiding the need for per-
+application integration with the attestation protocol.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="combining-timing-models">
+<section id="section-5.3">
+        <h3 id="name-combining-timing-models">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-combining-timing-models" class="section-name selfRef">Combining Timing Models</a>
+        </h3>
+<p id="section-5.3-1">The two timing models are not mutually exclusive and their
+combination is the natural architecture for deployments requiring
+both immediate trust establishment and durable session integrity over
+long-lived connections.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">In this composition, intra-handshake attestation establishes baseline
+trust before the session becomes usable: the Relying Party's Verifier
+must accept the Attester's Evidence before application data can flow.
+The combined model suits constrained device and IoT deployments where
+a single attestation protocol handles both initial session trust and
+ongoing re-verification, avoiding separate code paths for onboarding
+and normal operation.<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.3-3">Protocol specifications building on this architecture <span class="bcp14">MAY</span> support one
+or both timing models.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="channel-binding-pattern">
+<section id="section-6">
+      <h2 id="name-attestation-session-binding">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-attestation-session-binding" class="section-name selfRef">Attestation Session Binding</a>
+      </h2>
+<p id="section-6-1">Regardless of which timing model is used or which transport protocol
+is in use, a correctly bound attested channel requires that three
+conditions hold in sequence.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">The first condition is Root Secret establishment.  The endpoints must
+derive or obtain a shared session-specific Root Secret from which
+Attestation Binders can be derived.  The Root Secret is bound to the
+specific session instance by construction.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">The second condition is directional Binder derivation.  From the Root
+Secret, the protocol derives distinct Attestation Binders for the
+initiator and the responder.  The binders are directional: the
+initiator's binder cannot be substituted for the responder's and vice
+versa.  This ensures that Evidence produced by one endpoint cannot
+satisfy the verification requirement for the opposite endpoint, even
+within the same session.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">The third condition is channel binding to Evidence.  The Attesting
+Environment signs its directional Attestation Binder into its
+Evidence payload.  Because the Attestation Binder encodes both the
+specific session and the endpoint's role within it, and because only
+the legitimate holder of the session's transport keys can have
+derived the correct Root Secret, this signature constitutes proof
+that the entity signing the Evidence is the same entity that holds
+the transport keys for this session.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">When all three conditions are satisfied, an external party appraising
+the Evidence can verify that the Evidence was produced by the
+specific Attesting Environment that holds the transport keys for the
+specific session being appraised.  Replaying the Evidence to a
+different session fails because the Attestation Binder in the signed
+Evidence will not match the binder the Verifier independently derives
+from that session's Root Secret.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<div id="instantiation-in-proxy-traversal-deployments">
+<section id="section-6.1">
+        <h3 id="name-instantiation-in-proxy-trav">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-instantiation-in-proxy-trav" class="section-name selfRef">Instantiation in Proxy-Traversal Deployments</a>
+        </h3>
+<p id="section-6.1-1">When a Participating Intermediary terminates the transport
+connection, the native Root Secret — such as the handshake transcript
+— is severed at the proxy boundary.  The endpoints do not share a
+common transcript, and the session binding mechanism described above
+cannot operate directly on transcript material.  In this case, a Root
+Secret must be established via an alternative mechanism that is
+opaque to the intermediary: specifically, an parallel exchange
+conducted between the true endpoints through the intermediary, from
+which an out-of-band shared secret is derived that the intermediary
+cannot reproduce.  The directional Binder derivation and Evidence
+commitment phases then proceed as described above, but using this
+out-of-band secret as the Root Secret.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="freshness">
+<section id="section-7">
+      <h2 id="name-freshness">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-freshness" class="section-name selfRef">Freshness</a>
+      </h2>
+<p id="section-7-1">The freshness of Evidence is critical to its value as a
+trustworthiness signal.  In the transport context, freshness has two
+distinct scopes that must be addressed separately.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="per-session-freshness">
+<section id="section-7.1">
+        <h3 id="name-per-session-freshness">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-per-session-freshness" class="section-name selfRef">Per-session freshness</a>
+        </h3>
+<p id="section-7.1-1">Per-session freshness ensures that Evidence is bound to the specific
+session being evaluated and cannot be replayed from a prior session.
+This property is addressed directly by the session binding mechanism
+of Section 6.  The Root Secret is derived from session keying
+material that is specific to the session and cannot be known before
+the session is initiated.  Evidence committed to an Attestation
+Binder derived from the Root Secret is therefore intrinsically fresh
+with respect to the session: a replay from a different session will
+carry an Attestation Binder derived from a different Root Secret, and
+appraisal will fail.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="session-resumption">
+<section id="section-7.2">
+        <h3 id="name-session-resumption">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-session-resumption" class="section-name selfRef">Session resumption</a>
+        </h3>
+<p id="section-7.2-1">Session resumption introduces a specific freshness consideration.
+When a transport session is resumed, previously obtained Attestation
+Results may no longer reflect the Attester's current state.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="re-attestation-in-long-running-sessions">
+<section id="section-7.3">
+        <h3 id="name-re-attestation-in-long-runn">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-re-attestation-in-long-runn" class="section-name selfRef">Re-Attestation in Long-Running Sessions</a>
+        </h3>
+<p id="section-7.3-1">Initial attestation at Connection Establishment Time addresses
+the architectural invariants the Relying Party's policy
+requires before application data may flow.  Re-attestation
+addresses the dynamic reality that established sessions may
+outlast the validity of a single trust assessment.  Protocol
+specifications building on this architecture <span class="bcp14">SHOULD</span> treat
+these as distinct concerns.<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<p id="section-7.3-2">Per-session freshness ensures Evidence cannot be replayed across
+sessions but does not address changes in the Attester's state
+during the Lifetime of Connection. A Relying Party <span class="bcp14">MAY</span> require
+Re-attestation before continuing to transmit sensitive data to a
+peer whose trust assessment has expired or whose deployment
+environment may have changed in ways material to its policy.<a href="#section-7.3-2" class="pilcrow">¶</a></p>
+<p id="section-7.3-3">Re-attestation does not retroactively protect data transmitted
+before a state change occurred.  It bounds further exposure by
+conditioning continued sensitive data transmission on a current
+trust assessment.  Whether to terminate a session upon
+re-attestation failure or continue with reduced privilege is
+a matter of Relying Party policy.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="privacy-considerations">
+<section id="section-8">
+      <h2 id="name-privacy-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-privacy-considerations" class="section-name selfRef">Privacy Considerations</a>
+      </h2>
+<div id="evidence-payload-confidentiality">
+<section id="section-8.1">
+        <h3 id="name-evidence-payload-confidenti">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-evidence-payload-confidenti" class="section-name selfRef">Evidence Payload Confidentiality</a>
+        </h3>
+<p id="section-8.1-1">The Evidence payload carries Claims about the Attester's state and is
+the most privacy-sensitive artifact in the protocol.  In deployments
+involving a Participating Intermediary, the intermediary has Layer 7
+visibility into the transport connection during the handshake phase
+and would ordinarily be able to read unprotected message content.
+Evidence payloads <span class="bcp14">SHOULD</span> be protected using object-level encryption
+to a key held exclusively by the intended recipient, ensuring that
+the Evidence content is inaccessible to the Participating
+Intermediary regardless of its network position.  This protects
+against the eavesdropper and intermediary threat surface; object-
+level encryption provides this protection even when TLS is terminated
+at the proxy boundary.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-2">The complementary control for the Relying Party surface is
+Attestation Result minimization: the Attestation Result returned to
+the Relying Party <span class="bcp14">SHOULD NOT</span> re-expose sensitive Claims that were
+protected in the encrypted Evidence.  Encrypting Evidence for the
+Verifier without minimizing the Attestation Result shifts rather than
+eliminates the disclosure risk.  A framework for consistent handling
+of sensitive Evidence across RATS roles, including claim
+classification, Trusted Verifier management, and Attestation Result
+minimization, is provided in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="transport-metadata">
+<section id="section-8.2">
+        <h3 id="name-transport-metadata">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-transport-metadata" class="section-name selfRef">Transport Metadata</a>
+        </h3>
+<p id="section-8.2-1">The transport connection discloses metadata — IP addresses, server
+name indications, and connection timing — that is visible to the
+Participating Intermediary and to passive network observers.  This
+disclosure is inherent to the transport protocol and is not specific
+to the attestation layer.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="attestation-key-correlation">
+<section id="section-8.3">
+        <h3 id="name-attestation-key-correlation">
+<a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-attestation-key-correlation" class="section-name selfRef">Attestation Key Correlation</a>
+        </h3>
+<p id="section-8.3-1">When the same attestation signing key is used across multiple
+sessions, any party with access to Evidence from more than one of
+those sessions can correlate the sessions to the same Attesting
+Environment.  This linkability consideration is particularly relevant
+for client Attesters where privacy of individual connections is a
+concern.<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="anonymous-client-attestation">
+<section id="section-8.4">
+        <h3 id="name-anonymous-client-attestatio">
+<a href="#section-8.4" class="section-number selfRef">8.4. </a><a href="#name-anonymous-client-attestatio" class="section-name selfRef">Anonymous Client Attestation</a>
+        </h3>
+<p id="section-8.4-1">The SEAT architecture supports deployments where a client Attester
+attests to the trustworthiness of its Attesting Environment without
+presenting a TLS client identity certificate, enabling anonymous
+client attestation.  In this deployment, the Relying Party's
+appraisal policy applies to the client's hardware and software state
+rather than to a disclosed identity.<a href="#section-8.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scope-boundary-and-internet-openness">
+<section id="section-8.5">
+        <h3 id="name-scope-boundary-and-internet">
+<a href="#section-8.5" class="section-number selfRef">8.5. </a><a href="#name-scope-boundary-and-internet" class="section-name selfRef">Scope Boundary and Internet Openness</a>
+        </h3>
+<p id="section-8.5-1">The IAB has issued a statement cautioning that using client
+attestation as a barrier to access for otherwise open protocols and
+services risks undermining Internet openness <span>[<a href="#IAB-Attestation-Risks" class="cite xref">IAB-Attestation-Risks</a>]</span>.
+The statement distinguishes services with intentionally restricted
+access — for which client attestation is recognized as a valuable
+security measure — from openly accessible services, for which
+imposing hardware or software requirements on participating
+implementations is inappropriate.  SEAT is scoped to the former
+category: the use cases motivating this work involve confidential
+workloads, enterprise-controlled environments, and TEE-backed
+services where access is explicitly conditioned on verified platform
+state.<a href="#section-8.5-1" class="pilcrow">¶</a></p>
+<p id="section-8.5-2">The IAB statement further identifies the disclosure of vendor-
+specific hardware and software information as a distinct risk:
+attestation evidence that reveals which specific implementations are
+in use can restrict access and enable tracking in ways that undermine
+the open internet.  Protocol designs building on this architecture
+should minimize vendor-specific claim disclosure consistent with the
+Attestation Result minimization controls described in this section
+and in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-8.5-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-8.6">
+        <h3 id="name-security-considerations">
+<a href="#section-8.6" class="section-number selfRef">8.6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+        </h3>
+<p id="section-8.6-1">This section enumerates the security properties and considerations
+of the SEAT architecture.  Security goals state outcomes the
+architecture is designed to achieve; they carry no normative
+mandates.  Security properties state technical characteristics the
+protocol are expected to exhibit and may carry normative
+requirements.  Implementations <span class="bcp14">MUST</span> also consider the Security
+Considerations of <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> and of any protocol specification that
+instantiates this architecture.<a href="#section-8.6-1" class="pilcrow">¶</a></p>
+<p id="section-8.6-2"><strong>Session Binding and Relay Prevention.</strong> Evidence presented on a
+session is bound to that session and to the endpoint role in which it
+is presented.  Valid Evidence from one session cannot satisfy a
+Verifier on a different session or from a different endpoint.<a href="#section-8.6-2" class="pilcrow">¶</a></p>
+<p id="section-8.6-3"><strong>Evidence Freshness.</strong> Evidence reflects the Attester's state at or
+near the Evidence Generation Time for the session in which it is
+presented.  Per-session freshness ensures Evidence from a prior
+session cannot be replayed against a new one.  When re-attestation
+occurs during a session's Lifetime of Connection, the re-attestation
+Evidence reflects the Attester's state at the time of re-attestation,
+not at Connection Establishment Time.<a href="#section-8.6-3" class="pilcrow">¶</a></p>
+<p id="section-8.6-4"><strong>Evidence Confidentiality from Intermediaries.</strong> When a Participating
+Intermediary is present, Evidence payloads <span class="bcp14">SHOULD</span> be protected by
+object-level encryption to a key held exclusively by the intended
+recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-8.6-4" class="pilcrow">¶</a></p>
+<p id="section-8.6-5"><strong>Key Non-exportability (informative).</strong> The specific concern of
+demonstrating that a transport authentication key is physically
+confined within the attested execution environment is addressed at
+the RATS layer by <span>[<a href="#I-D.reddy-rats-key-binding" class="cite xref">I-D.reddy-rats-key-binding</a>]</span> and is not re-
+specified here.<a href="#section-8.6-5" class="pilcrow">¶</a></p>
+<p id="section-8.6-6"><strong>Session Resumption.</strong> When a transport session is resumed, previously
+obtained Attestation Results may no longer reflect the Attester's
+current state.  Attestation from a prior session does not carry over
+to a resumed session.<a href="#section-8.6-6" class="pilcrow">¶</a></p>
+<p id="section-8.6-7"><strong>Cryptographic Session Binding.</strong> Evidence <span class="bcp14">MUST</span> be bound to an
+Attestation Binder derived from a Root Secret established from
+session-specific keying material that cannot be known before the
+session is initiated.  A replay from a different session carries a
+Binder derived from a different Root Secret and <span class="bcp14">MUST</span> be rejected.
+See <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a>.<a href="#section-8.6-7" class="pilcrow">¶</a></p>
+<p id="section-8.6-8"><strong>Directional Endpoint Binding.</strong> Distinct Attestation Binders <span class="bcp14">MUST</span> be
+derived for the initiator and the responder from the same Root Secret
+using distinct inputs.  Evidence produced by one endpoint <span class="bcp14">MUST NOT</span>
+satisfy the verification requirement for the opposite endpoint.  See
+<a href="#channel-binding-pattern" class="auto internal xref">Section 6</a><a href="#section-8.6-8" class="pilcrow">¶</a></p>
+<p id="section-8.6-9"><strong>Transmission and Verification Anchor Soundness.</strong> An Attestation
+Binder may be included in a transport message before peer
+authentication is complete (the Transmission Anchor).
+Implementations <span class="bcp14">MUST</span> ensure the transport protocol's integrity
+guarantee covers the message carrying the Attestation Binder; for
+example, the TLS 1.3 handshake MAC (the Verification Anchor)
+retroactively guarantees the Binder's integrity at handshake
+completion.<a href="#section-8.6-9" class="pilcrow">¶</a></p>
+<p id="section-8.6-10"><strong>Downgrade Prevention.</strong> Two endpoints that both support attestation
+cannot be caused by an active adversary to negotiate a connection
+without it.  The negotiation of attestation capabilities is protected
+against suppression.<a href="#section-8.6-10" class="pilcrow">¶</a></p>
+<p id="section-8.6-11"><strong>Dynamic Verification Code Integrity.</strong> When client-side attestation
+verification logic is dynamically delivered by the endpoint under
+appraisal (such as browser-based JavaScript), a circular trust
+dependency exists.  Unless the client's execution environment
+enforces an independent, orthogonal guarantee of code integrity
+and binary transparency, Application-layer attestation cannot
+provide security assurance, as the Attester may serve malicious
+code that bypasses cryptographic validation.<a href="#section-8.6-11" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-9">
+      <h2 id="name-iana-considerations">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-9-1">This document has no IANA actions.<a href="#section-9-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-10">
+      <h2 id="name-references">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-10.1">
+        <h3 id="name-normative-references">
+<a href="#section-10.1" class="section-number selfRef">10.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="I-D.mihalcea-seat-use-cases">[I-D.mihalcea-seat-use-cases]</dt>
+        <dd>
+<span class="refAuthor">Mihalcea, I.</span>, <span class="refAuthor">Sardar, M. U.</span>, <span class="refAuthor">Fossati, T.</span>, <span class="refAuthor">Reddy.K, T.</span>, <span class="refAuthor">Jiang, Y.</span>, and <span class="refAuthor">M. Chen</span>, <span class="refTitle">"Security Goals and Use Cases for Integrating Remote Attestation with Secure Channel Protocols"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-mihalcea-seat-use-cases-03</span>, <time datetime="2026-06-16" class="refDate">16 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-mihalcea-seat-use-cases-03">https://datatracker.ietf.org/doc/html/draft-mihalcea-seat-use-cases-03</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9334">[RFC9334]</dt>
+      <dd>
+<span class="refAuthor">Birkholz, H.</span>, <span class="refAuthor">Thaler, D.</span>, <span class="refAuthor">Richardson, M.</span>, <span class="refAuthor">Smith, N.</span>, and <span class="refAuthor">W. Pan</span>, <span class="refTitle">"Remote ATtestation procedureS (RATS) Architecture"</span>, <span class="seriesInfo">RFC 9334</span>, <span class="seriesInfo">DOI 10.17487/RFC9334</span>, <time datetime="2023-01" class="refDate">January 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9334">https://www.rfc-editor.org/rfc/rfc9334</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-10.2">
+        <h3 id="name-informative-references">
+<a href="#section-10.2" class="section-number selfRef">10.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="I-D.ounsworth-rats-privacy-framework">[I-D.ounsworth-rats-privacy-framework]</dt>
+        <dd>
+<span class="refAuthor">Ounsworth, M.</span>, <span class="refAuthor">Tschofenig, H.</span>, and <span class="refAuthor">G. Lehmann</span>, <span class="refTitle">"Privacy Framework for Remote ATtestation procedureS"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ounsworth-rats-privacy-framework-00</span>, <time datetime="2026-06-18" class="refDate">18 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ounsworth-rats-privacy-framework-00">https://datatracker.ietf.org/doc/html/draft-ounsworth-rats-privacy-framework-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.reddy-rats-key-binding">[I-D.reddy-rats-key-binding]</dt>
+        <dd>
+<span class="refAuthor">Reddy.K, T.</span>, <span class="refAuthor">Tschofenig, H.</span>, <span class="refAuthor">Fossati, T.</span>, and <span class="refAuthor">I. Mihalcea</span>, <span class="refTitle">"Key Attestation for Entity Attestation Tokens (EAT)"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-reddy-rats-key-binding-01</span>, <time datetime="2026-06-07" class="refDate">7 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-reddy-rats-key-binding-01">https://datatracker.ietf.org/doc/html/draft-reddy-rats-key-binding-01</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="IAB-Attestation-Risks">[IAB-Attestation-Risks]</dt>
+      <dd>
+<span class="refAuthor">Internet Architecture Board (IAB)</span>, <span class="refTitle">"IAB Statement on the Risks of Attestation of Software and Hardware on the Open Internet"</span>, <time datetime="2023-09-25" class="refDate">25 September 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/statement-iab-statement-on-the-risks-of-attestation-of-software-and-hardware-on-the-open-internet/">https://datatracker.ietf.org/doc/statement-iab-statement-on-the-risks-of-attestation-of-software-and-hardware-on-the-open-internet/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="contributors">
+<section id="appendix-A">
+      <h2 id="name-contributors">
+<a href="#name-contributors" class="section-name selfRef">Contributors</a>
+      </h2>
+<p id="appendix-A-1">The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
+for their thoughtful input and contributions that influenced this document.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-B">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-B-1">TODO<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-C">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Ionuț Mihalcea</span></div>
+<div dir="auto" class="left"><span class="org">Arm</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:ionut.mihalcea@arm.com" class="email">ionut.mihalcea@arm.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Thomas Fossati</span></div>
+<div dir="auto" class="left"><span class="org">Linaro</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:thomas.fossati@linaro.org" class="email">thomas.fossati@linaro.org</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Tirumaleswar Reddy</span></div>
+<div dir="auto" class="left"><span class="org">Nokia</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:kondtir@gmail.com" class="email">kondtir@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Nathanael Ritz</span></div>
+<div dir="auto" class="left"><span class="org">Independent</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:ietf@nritz.com" class="email">ietf@nritz.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
