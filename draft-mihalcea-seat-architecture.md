@@ -548,12 +548,12 @@ held exclusively by the intended recipient (typically the Verifier),
 so that the Evidence content is disclosed only to that recipient and
 not to the Relying Party or to other parties on the path.
 
-The complementary control for the Relying Party surface is minimization: 
-the Attestation Credentials returned to the Relying Party SHOULD NOT 
-re-expose sensitive Claims that were protected in any encrypted Evidence.  
-A framework for consistent handling of sensitive Evidence across RATS roles, 
-including claim classification, Trusted Verifier management, and 
-Attestation Credential minimization, is provided in 
+The complementary control for the Relying Party surface is minimization:
+the Attestation Credentials returned to the Relying Party SHOULD NOT
+re-expose sensitive Claims that were protected in any encrypted Evidence.
+A framework for consistent handling of sensitive Evidence across RATS roles,
+including claim classification, Trusted Verifier management, and
+Attestation Credential minimization, is provided in
 {{I-D.ounsworth-rats-privacy-framework}}.
 
 ## Transport Metadata
