@@ -446,7 +446,7 @@ and normal operation.
 Protocol specifications building on this architecture MAY support one
 or both timing models.
 
-# Failure handling considerations {failure-handling}
+# Failure handling considerations {#failure-handling}
 
 ## Failure handing within Intra-Handshake Window
 
