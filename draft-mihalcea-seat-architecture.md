@@ -169,7 +169,7 @@ Evidence Generation Time:
   are signed to produce Evidence. Depending on the internal workings
   of the Attester, the Evidence reflects the reported state at the
   time the underlying Claims were collected and may not represent a
-  snapshot of state at the exact moment of signing. In all cases, it
+  snapshot of state at the exact moment of signing the evidence. In all cases, it
   makes no representation about the Attester's state at any later time.
 
 Connection Establishment Time:
