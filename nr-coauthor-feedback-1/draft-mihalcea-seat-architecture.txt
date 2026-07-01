@@ -5,12 +5,12 @@
 Network Working Group                                        I. Mihalcea
 Internet-Draft                                                       Arm
 Intended status: Informational                                T. Fossati
-Expires: 1 January 2027                                           Linaro
+Expires: 2 January 2027                                           Linaro
                                                                 T. Reddy
                                                                    Nokia
                                                                  N. Ritz
                                                              Independent
-                                                            30 June 2026
+                                                             1 July 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 January 2027.
+   This Internet-Draft will expire on 2 January 2027.
 
 Copyright Notice
 
@@ -208,9 +208,9 @@ Table of Contents
       are signed to produce Evidence.  Depending on the internal
       workings of the Attester, the Evidence reflects the reported state
       at the time the underlying Claims were collected and may not
-      represent a snapshot of state at the exact moment of signing.  In
-      all cases, it makes no representation about the Attester's state
-      at any later time.
+      represent a snapshot of state at the exact moment of signing the
+      evidence.  In all cases, it makes no representation about the
+      Attester's state at any later time.
 
    Connection Establishment Time:  The point at which a transport
       handshake completes and the session becomes usable for application
