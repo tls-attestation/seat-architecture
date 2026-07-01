@@ -435,7 +435,8 @@ The Attestation Binder is derived after handshake completion,
 tying the Evidence to the completed session.
 
 This deployment can be localized to a sidecar 
-component, avoiding the need for per-application integration with
+that withholds application data until attestation completes, decoupling attestation
+protocol from application logic.
 the attestation protocol.
 
 ## Combining Timing Models
