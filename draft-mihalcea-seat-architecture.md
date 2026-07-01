@@ -66,9 +66,7 @@ Transport (SEAT).  The document establishes normalized terminology
 for SEAT, aligns RATS roles to transport endpoints, outlines
 topological patterns for attestation delivery timing, characterizes
 the abstract cryptographic pattern by which Evidence is bound to a
-given transport connection, and describes the architectural
-requirements for end-to-end trust in deployments traversing
-intermediaries such as proxies.
+given transport connection.
 
 
 --- middle
@@ -235,16 +233,6 @@ Split Deployment:
   input — typically a handshake transcript hash or exported key —
   from the transport stack via a trusted interface.
 
-Participating Intermediary:
-: A TLS-terminating proxy that operates
-  outside the trusted network topology and is traversed by a client
-  seeking to attest an origin endpoint behind it.  A Participating
-  Intermediary is not a RATS role; it participates in Evidence
-  routing but is not authorised to appraise Evidence or to access
-  Evidence payloads.  This term applies specifically to the proxy-
-  traversal topology, in which the attested properties belong to the
-  origin rather than to the intermediary itself.
-
 Layered Attestation:
 : In layered attestation, Claims are collected
   from multiple execution layers beginning with a foundational
@@ -295,55 +283,57 @@ Client when the Server attests.
 ## Verifier
 
 The Verifier appraises Evidence by applying an Appraisal Policy for
-Evidence and produces Attestation Results.  In the transport context,
-two deployment variants arise, corresponding to the two RATS
-conveyance models:
+Evidence and produces Attestation Results.
 
-Co-located Verifier:
-: The Verifier is implemented within the Relying
-  Party endpoint. This variant is typical of intra-handshake
-  attestation, where Evidence is evaluated inline during the
-  handshake and the Relying Party requires a real-time appraisal
-  result before finalizing the connection.
-  This deployment corresponds to the Background-Check Model of
-  {{RFC9334}}.
+How Evidence reaches the Verifier follows one of the two RATS
+conveyance models ({{Section 5 of RFC9334}}):
 
-Remote Verifier:
-: The Verifier is an independent service. The
-  Attester contacts the Verifier prior to or during the session and
-  obtains Attestation Results, which it then presents to the Relying
-  Party.  This variant may be more common in post-handshake
-  attestation flows.
-  This deployment corresponds to the Passport Model of {{RFC9334}}.
+Background-Check Model:
+: The Relying Party conveys the Attester's Evidence to the Verifier
+  and receives Attestation Results in return.  The Verifier may be
+  co-located with the Relying Party, appraising Evidence inline, for
+  example during an intra-handshake exchange that requires a real-time
+  result before the connection is finalized or operated as a remote
+  service.
 
-{{fig-roles}} illustrates how the RATS roles map onto the Client and
-Server transport endpoints under the two conveyance models (see {{Section 5 of RFC9334}}).
+Passport Model:
+: The Attester conveys its Evidence to a remote Verifier, obtains
+  Attestation Results, and presents those Results to the Relying
+  Party.
 
-~~~ ascii-art
- Background-Check Model (Verifier co-located with Relying Party)
+Verifier location is an independent deployment choice: a co-located
+Verifier operates under the Background-Check Model, whereas a remote
+Verifier may operate under either model.
 
-  +---------------------+  Evidence   +---------------------------+
-  |      Attester       |------------>|      Relying Party        |
-  | (Client or Server)  |             | +-----------------------+ |
-  |                     |             | | Verifier (co-located) | |
-  |                     |             | +-----------------------+ |
-  +---------------------+             +---------------------------+
+{{fig-roles}} illustrates the Evidence and Attestation Results flows
+under the two conveyance models.
 
- Passport Model (Remote Verifier)
+~~~ aasvg
+ Background-Check Model
+ (the Relying Party conveys Evidence to the Verifier; the
+  Verifier may be co-located with the Relying Party or remote)
 
-  +---------------------+  Evidence   +---------------------+
-  |      Attester       |------------>|   Remote Verifier   |
-  | (Client or Server)  |<------------|                     |
-  +---------------------+ Att.Results +---------------------+
-            |
-            | Attestation Results
-            v
-  +---------------------+
-  |    Relying Party    |
-  | (Server or Client)  |
-  +---------------------+
+  +----------+ Evidence  +---------------+ Evidence  +----------+
+  | Attester |---------->| Relying Party |---------->| Verifier |
+  |          |           |               |<----------|          |
+  +----------+           +---------------+ Att.Res.  +----------+
+
+ Passport Model
+ (the Attester conveys Evidence to the Verifier and presents
+  the resulting Attestation Results to the Relying Party)
+
+  +----------+ Evidence  +----------+
+  | Attester |---------->| Verifier |
+  |          |<----------|          |
+  +----------+ Att.Res.  +----------+
+        |
+        | Attestation Results
+        v
+  +---------------+
+  | Relying Party |
+  +---------------+
 ~~~
-{: #fig-roles title="RATS Roles Mapped to Transport Endpoints"}
+{: #fig-roles title="RATS Conveyance Models in the Transport Context"}
 
 # Trust Model
 
@@ -571,17 +561,11 @@ a matter of Relying Party policy.
 ## Evidence Payload Confidentiality
 
 The Evidence payload carries Claims about the Attester's state and is
-the most privacy-sensitive artifact in the protocol.  In deployments
-involving a Participating Intermediary, the intermediary has Layer 7
-visibility into the transport connection during the handshake phase
-and would ordinarily be able to read unprotected message content.
-Evidence payloads SHOULD be protected using object-level encryption
-to a key held exclusively by the intended recipient, ensuring that
-the Evidence content is inaccessible to the Participating
-Intermediary regardless of its network position.  This protects
-against the eavesdropper and intermediary threat surface; object-
-level encryption provides this protection even when TLS is terminated
-at the proxy boundary.
+the most privacy-sensitive artifact in the protocol.  Evidence
+payloads SHOULD be protected using object-level encryption to a key
+held exclusively by the intended recipient (typically the Verifier),
+so that the Evidence content is disclosed only to that recipient and
+not to the Relying Party or to other parties on the path.
 
 The complementary control for the Relying Party surface is
 Attestation Result minimization: the Attestation Result returned to
@@ -596,10 +580,9 @@ minimization, is provided in {{I-D.ounsworth-rats-privacy-framework}}.
 ## Transport Metadata
 
 The transport connection discloses metadata — IP addresses, server
-name indications, and connection timing — that is visible to the
-Participating Intermediary and to passive network observers.  This
-disclosure is inherent to the transport protocol and is not specific
-to the attestation layer.
+name indications, and connection timing — that is visible to passive
+network observers.  This disclosure is inherent to the transport
+protocol and is not specific to the attestation layer.
 
 ## Attestation Key Correlation
 
@@ -673,8 +656,7 @@ occurs during a session's Lifetime of Connection, the re-attestation
 Evidence reflects the Attester's state at the time of re-attestation,
 not at Connection Establishment Time.
 
-**Evidence Confidentiality from Intermediaries.** When a Participating
-Intermediary is present, Evidence payloads SHOULD be protected by
+**Evidence Confidentiality.** Evidence payloads SHOULD be protected by
 object-level encryption to a key held exclusively by the intended
 recipient.  See {{I-D.ounsworth-rats-privacy-framework}}.
 
