@@ -630,7 +630,7 @@ the attestation binder input, the architecture relies on
 cryptographic binding rather than continuous state monitoring.
 The Attesting Environment MUST bind the Evidence to the private
 identity key it holds to authenticate a connection (for example,
-by including a hash of the associated public key in the 
+by including a hash of the associated public key in the
 signed Evidence).
 
 The Relying Party then verifies that this claim matches the
