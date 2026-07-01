@@ -424,7 +424,7 @@ application data exchange.
 The Attestation Binder is derived after handshake completion,
 tying the Evidence to the completed session.
 
-This deployment can be localized to a sidecar 
+This deployment can be localized to a sidecar
 that withholds application data until attestation completes, decoupling attestation
 protocol from application logic.
 
