@@ -300,7 +300,7 @@ Verifier location is an independent deployment choice: a co-located
 Verifier operates under the Background-Check Model, whereas a remote
 Verifier may operate under either model.
 
-{{fig-roles}} illustrates how Attestation Credentials (either Evidence 
+{{fig-roles}} illustrates how Attestation Credentials (either Evidence
 or Attestation Results) flows under the two conveyance models.
 
 ~~~ aasvg
