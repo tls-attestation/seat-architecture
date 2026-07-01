@@ -708,16 +708,7 @@ This document has no IANA actions.
 
 --- back
 
-# Acknowledgments
-{:numbered="false"}
-
-The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
-for their thoughtful input and contributions that influenced this document.
-
-# Appendix
-{:numbered="false"}
-
-## Implementing Transport Integration (informational) {#integration-patterns}
+# Implementing Transport Integration (informational) {#integration-patterns}
 
 The Timing Models of {{timing-models}} describe when Evidence is
 conveyed relative to connection establishment.  This section
@@ -726,7 +717,7 @@ protocol conveys Evidence to, and receives an authorization decision from,
 the Verifier without requiring the transport specification itself
 to encode RATS semantics.
 
-### Extension-Based Conveyance
+## Extension-Based Conveyance
 
 In this pattern, the transport protocol's existing identity or
 authentication structures (such as an X.509 certificate
@@ -743,7 +734,7 @@ callback's return value.  The callback interface is
 transport-external: it need not be specified by the transport
 protocol itself, only supported by it as an extension point.
 
-### Structured Payload Conveyance
+## Structured Payload Conveyance
 
 In this pattern, the transport protocol defines a dedicated, opaque
 field for authorization-related data as part of its handshake or
@@ -767,4 +758,10 @@ prior to the transition to application data exchange; the choice
 between them depends on the target transport protocol's extension
 model and is otherwise architecturally equivalent from an {{RFC9334}}
 perspective.
+
+# Acknowledgments
+{:numbered="false"}
+
+The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
+for their thoughtful input and contributions that influenced this document.
 
