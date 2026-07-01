@@ -463,7 +463,7 @@ protocol's existing handshake-failure handling.
 When attestation occurs within the Post-Handshake Window, or when
 Re-attestation fails during the Lifetime of Connection, the
 transport session already exists and application data may already
-be flowing.  {{RFC9334}} admits an Attester's failing appraisal to
+be flowing.  {{RFC9334}} expects an Attester's failing appraisal to
 result in reduced access or privileges rather than outright
 rejection; this pattern instantiates that outcome at the
 transport layer.
