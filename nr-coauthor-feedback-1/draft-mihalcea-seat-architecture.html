@@ -16,9 +16,7 @@ Transport (SEAT).  The document establishes normalized terminology
 for SEAT, aligns RATS roles to transport endpoints, outlines
 topological patterns for attestation delivery timing, characterizes
 the abstract cryptographic pattern by which Evidence is bound to a
-given transport connection, and describes the architectural
-requirements for end-to-end trust in deployments traversing
-intermediaries such as proxies. 
+given transport connection. 
     " name="description">
 <meta content="xml2rfc 3.34.0" name="generator">
 <meta content="remote attestation" name="keyword">
@@ -1111,9 +1109,7 @@ Transport (SEAT).  The document establishes normalized terminology
 for SEAT, aligns RATS roles to transport endpoints, outlines
 topological patterns for attestation delivery timing, characterizes
 the abstract cryptographic pattern by which Evidence is bound to a
-given transport connection, and describes the architectural
-requirements for end-to-end trust in deployments traversing
-intermediaries such as proxies.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+given transport connection.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1514,21 +1510,9 @@ input — typically a handshake transcript hash or exported key —
 from the transport stack via a trusted interface.<a href="#section-2-4.26.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.27">Participating Intermediary:</dt>
+<dt id="section-2-4.27">Layered Attestation:</dt>
         <dd style="margin-left: 1.5em" id="section-2-4.28">
-          <p id="section-2-4.28.1">A TLS-terminating proxy that operates
-outside the trusted network topology and is traversed by a client
-seeking to attest an origin endpoint behind it.  A Participating
-Intermediary is not a RATS role; it participates in Evidence
-routing but is not authorised to appraise Evidence or to access
-Evidence payloads.  This term applies specifically to the proxy-
-traversal topology, in which the attested properties belong to the
-origin rather than to the intermediary itself.<a href="#section-2-4.28.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-4.29">Layered Attestation:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.30">
-          <p id="section-2-4.30.1">In layered attestation, Claims are collected
+          <p id="section-2-4.28.1">In layered attestation, Claims are collected
 from multiple execution layers beginning with a foundational
 Attesting Environment that is typically immutable or difficult to
 modify.  A common example is a TEE executing within a virtual
@@ -1536,7 +1520,7 @@ machine, which is itself executing on a host platform.  In the
 transport context, the critical question is whether the layer
 holding the transport session's keying material is the same layer
 that signs the Evidence, or whether the attestation binder input
-must traverse a layer boundary.<a href="#section-2-4.30.1" class="pilcrow">¶</a></p>
+must traverse a layer boundary.<a href="#section-2-4.28.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1592,64 +1576,136 @@ Client when the Server attests.<a href="#section-3.2-1" class="pilcrow">¶</a></
 <a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-verifier" class="section-name selfRef">Verifier</a>
         </h3>
 <p id="section-3.3-1">The Verifier appraises Evidence by applying an Appraisal Policy for
-Evidence and produces Attestation Results.  In the transport context,
-two deployment variants arise, corresponding to the two RATS
-conveyance models:<a href="#section-3.3-1" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-3.3-2">
-          <dt id="section-3.3-2.1">Co-located Verifier:</dt>
-          <dd style="margin-left: 1.5em" id="section-3.3-2.2">
-            <p id="section-3.3-2.2.1">The Verifier is implemented within the Relying
-Party endpoint. This variant is typical of intra-handshake
-attestation, where Evidence is evaluated inline during the
-handshake and the Relying Party requires a real-time appraisal
-result before finalizing the connection.
-This deployment corresponds to the Background-Check Model of
-<span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>.<a href="#section-3.3-2.2.1" class="pilcrow">¶</a></p>
+Evidence and produces Attestation Results.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">How Evidence reaches the Verifier follows one of the two RATS
+conveyance models (<span><a href="https://rfc-editor.org/rfc/rfc9334#section-5" class="relref">Section 5</a> of [<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>):<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3.3-3">
+          <dt id="section-3.3-3.1">Background-Check Model:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-3.2">
+            <p id="section-3.3-3.2.1">The Relying Party conveys the Attester's Evidence to the Verifier
+and receives Attestation Results in return.  The Verifier may be
+co-located with the Relying Party, appraising Evidence inline, for
+example during an intra-handshake exchange that requires a real-time
+result before the connection is finalized or operated as a remote
+service.<a href="#section-3.3-3.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-3.3-2.3">Remote Verifier:</dt>
-          <dd style="margin-left: 1.5em" id="section-3.3-2.4">
-            <p id="section-3.3-2.4.1">The Verifier is an independent service. The
-Attester contacts the Verifier prior to or during the session and
-obtains Attestation Results, which it then presents to the Relying
-Party.  This variant may be more common in post-handshake
-attestation flows.
-This deployment corresponds to the Passport Model of <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>.<a href="#section-3.3-2.4.1" class="pilcrow">¶</a></p>
+<dt id="section-3.3-3.3">Passport Model:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.3-3.4">
+            <p id="section-3.3-3.4.1">The Attester conveys its Evidence to a remote Verifier, obtains
+Attestation Results, and presents those Results to the Relying
+Party.<a href="#section-3.3-3.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-3.3-3"><a href="#fig-roles" class="auto internal xref">Figure 1</a> illustrates how the RATS roles map onto the Client and
-Server transport endpoints under the two conveyance models (see <span><a href="https://rfc-editor.org/rfc/rfc9334#section-5" class="relref">Section 5</a> of [<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>).<a href="#section-3.3-3" class="pilcrow">¶</a></p>
-<span id="name-rats-roles-mapped-to-transp"></span><div id="fig-roles">
+<p id="section-3.3-4">Verifier location is an independent deployment choice: a co-located
+Verifier operates under the Background-Check Model, whereas a remote
+Verifier may operate under either model.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+<p id="section-3.3-5"><a href="#fig-roles" class="auto internal xref">Figure 1</a> illustrates the Evidence and Attestation Results flows
+under the two conveyance models.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
+<span id="name-rats-conveyance-models-in-t"></span><div id="fig-roles">
 <figure id="figure-1">
-          <div class="alignLeft art-ascii-art art-text artwork" id="section-3.3-4.1">
-<pre>
- Background-Check Model (Verifier co-located with Relying Party)
-
-  +---------------------+  Evidence   +---------------------------+
-  |      Attester       |------------&gt;|      Relying Party        |
-  | (Client or Server)  |             | +-----------------------+ |
-  |                     |             | | Verifier (co-located) | |
-  |                     |             | +-----------------------+ |
-  +---------------------+             +---------------------------+
-
- Passport Model (Remote Verifier)
-
-  +---------------------+  Evidence   +---------------------+
-  |      Attester       |------------&gt;|   Remote Verifier   |
-  | (Client or Server)  |&lt;------------|                     |
-  +---------------------+ Att.Results +---------------------+
-            |
-            | Attestation Results
-            v
-  +---------------------+
-  |    Relying Party    |
-  | (Server or Client)  |
-  +---------------------+
-</pre>
+          <div id="section-3.3-6.1">
+            <div class="alignLeft art-svg artwork" id="section-3.3-6.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="416" width="520" viewBox="0 0 520 416" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                <path d="M 16,96 L 16,144" fill="none" stroke="black"></path>
+                <path d="M 16,240 L 16,288" fill="none" stroke="black"></path>
+                <path d="M 16,352 L 16,384" fill="none" stroke="black"></path>
+                <path d="M 64,296 L 64,344" fill="none" stroke="black"></path>
+                <path d="M 104,96 L 104,144" fill="none" stroke="black"></path>
+                <path d="M 104,240 L 104,288" fill="none" stroke="black"></path>
+                <path d="M 144,352 L 144,384" fill="none" stroke="black"></path>
+                <path d="M 200,96 L 200,144" fill="none" stroke="black"></path>
+                <path d="M 200,240 L 200,288" fill="none" stroke="black"></path>
+                <path d="M 288,240 L 288,288" fill="none" stroke="black"></path>
+                <path d="M 328,96 L 328,144" fill="none" stroke="black"></path>
+                <path d="M 424,96 L 424,144" fill="none" stroke="black"></path>
+                <path d="M 512,96 L 512,144" fill="none" stroke="black"></path>
+                <path d="M 16,96 L 104,96" fill="none" stroke="black"></path>
+                <path d="M 200,96 L 328,96" fill="none" stroke="black"></path>
+                <path d="M 424,96 L 512,96" fill="none" stroke="black"></path>
+                <path d="M 112,112 L 192,112" fill="none" stroke="black"></path>
+                <path d="M 336,112 L 416,112" fill="none" stroke="black"></path>
+                <path d="M 336,128 L 416,128" fill="none" stroke="black"></path>
+                <path d="M 16,144 L 104,144" fill="none" stroke="black"></path>
+                <path d="M 200,144 L 328,144" fill="none" stroke="black"></path>
+                <path d="M 424,144 L 512,144" fill="none" stroke="black"></path>
+                <path d="M 16,240 L 104,240" fill="none" stroke="black"></path>
+                <path d="M 200,240 L 288,240" fill="none" stroke="black"></path>
+                <path d="M 112,256 L 192,256" fill="none" stroke="black"></path>
+                <path d="M 112,272 L 192,272" fill="none" stroke="black"></path>
+                <path d="M 16,288 L 104,288" fill="none" stroke="black"></path>
+                <path d="M 200,288 L 288,288" fill="none" stroke="black"></path>
+                <path d="M 16,352 L 144,352" fill="none" stroke="black"></path>
+                <path d="M 16,384 L 144,384" fill="none" stroke="black"></path>
+                <polygon class="arrowhead" points="424,112 412,106.4 412,117.6" fill="black" transform="rotate(0,416,112)"></polygon>
+                <polygon class="arrowhead" points="344,128 332,122.4 332,133.6" fill="black" transform="rotate(180,336,128)"></polygon>
+                <polygon class="arrowhead" points="200,256 188,250.4 188,261.6" fill="black" transform="rotate(0,192,256)"></polygon>
+                <polygon class="arrowhead" points="200,112 188,106.4 188,117.6" fill="black" transform="rotate(0,192,112)"></polygon>
+                <polygon class="arrowhead" points="120,272 108,266.4 108,277.6" fill="black" transform="rotate(180,112,272)"></polygon>
+                <polygon class="arrowhead" points="72,344 60,338.4 60,349.6" fill="black" transform="rotate(90,64,344)"></polygon>
+                <g class="text">
+                  <text x="68" y="36">Background-Check</text>
+                  <text x="160" y="36">Model</text>
+                  <text x="20" y="52">(the</text>
+                  <text x="72" y="52">Relying</text>
+                  <text x="128" y="52">Party</text>
+                  <text x="184" y="52">conveys</text>
+                  <text x="252" y="52">Evidence</text>
+                  <text x="300" y="52">to</text>
+                  <text x="328" y="52">the</text>
+                  <text x="384" y="52">Verifier;</text>
+                  <text x="440" y="52">the</text>
+                  <text x="44" y="68">Verifier</text>
+                  <text x="96" y="68">may</text>
+                  <text x="124" y="68">be</text>
+                  <text x="180" y="68">co-located</text>
+                  <text x="244" y="68">with</text>
+                  <text x="280" y="68">the</text>
+                  <text x="328" y="68">Relying</text>
+                  <text x="384" y="68">Party</text>
+                  <text x="420" y="68">or</text>
+                  <text x="464" y="68">remote)</text>
+                  <text x="148" y="100">Evidence</text>
+                  <text x="372" y="100">Evidence</text>
+                  <text x="60" y="116">Attester</text>
+                  <text x="240" y="116">Relying</text>
+                  <text x="296" y="116">Party</text>
+                  <text x="468" y="116">Verifier</text>
+                  <text x="372" y="148">Att.Res.</text>
+                  <text x="36" y="180">Passport</text>
+                  <text x="96" y="180">Model</text>
+                  <text x="20" y="196">(the</text>
+                  <text x="76" y="196">Attester</text>
+                  <text x="144" y="196">conveys</text>
+                  <text x="212" y="196">Evidence</text>
+                  <text x="260" y="196">to</text>
+                  <text x="288" y="196">the</text>
+                  <text x="340" y="196">Verifier</text>
+                  <text x="392" y="196">and</text>
+                  <text x="444" y="196">presents</text>
+                  <text x="24" y="212">the</text>
+                  <text x="80" y="212">resulting</text>
+                  <text x="168" y="212">Attestation</text>
+                  <text x="248" y="212">Results</text>
+                  <text x="292" y="212">to</text>
+                  <text x="320" y="212">the</text>
+                  <text x="368" y="212">Relying</text>
+                  <text x="428" y="212">Party)</text>
+                  <text x="148" y="244">Evidence</text>
+                  <text x="60" y="260">Attester</text>
+                  <text x="244" y="260">Verifier</text>
+                  <text x="148" y="292">Att.Res.</text>
+                  <text x="120" y="324">Attestation</text>
+                  <text x="200" y="324">Results</text>
+                  <text x="56" y="372">Relying</text>
+                  <text x="112" y="372">Party</text>
+                </g>
+              </svg><a href="#section-3.3-6.1.1" class="pilcrow">¶</a>
+</div>
 </div>
 <figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
-<a href="#name-rats-roles-mapped-to-transp" class="selfRef">RATS Roles Mapped to Transport Endpoints</a>
+<a href="#name-rats-conveyance-models-in-t" class="selfRef">RATS Conveyance Models in the Transport Context</a>
           </figcaption></figure>
 </div>
 </section>
@@ -1768,9 +1824,9 @@ establishment to the Relying Party following the transition to
 application data exchange.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 <p id="section-5.2-2">The Attestation Binder is derived after handshake completion,
 tying the Evidence to the completed session.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.2-3">This deployment can be localized to a sidecar or connection-gating
-component, avoiding the need for per-application integration with
-the attestation protocol.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">This deployment can be localized to a sidecar
+that withholds application data until attestation completes, decoupling attestation
+protocol from application logic.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="combining-timing-models">
@@ -1927,17 +1983,11 @@ a matter of Relying Party policy.<a href="#section-7.3-3" class="pilcrow">¶</a>
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-evidence-payload-confidenti" class="section-name selfRef">Evidence Payload Confidentiality</a>
         </h3>
 <p id="section-8.1-1">The Evidence payload carries Claims about the Attester's state and is
-the most privacy-sensitive artifact in the protocol.  In deployments
-involving a Participating Intermediary, the intermediary has Layer 7
-visibility into the transport connection during the handshake phase
-and would ordinarily be able to read unprotected message content.
-Evidence payloads <span class="bcp14">SHOULD</span> be protected using object-level encryption
-to a key held exclusively by the intended recipient, ensuring that
-the Evidence content is inaccessible to the Participating
-Intermediary regardless of its network position.  This protects
-against the eavesdropper and intermediary threat surface; object-
-level encryption provides this protection even when TLS is terminated
-at the proxy boundary.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+the most privacy-sensitive artifact in the protocol.  Evidence
+payloads <span class="bcp14">SHOULD</span> be protected using object-level encryption to a key
+held exclusively by the intended recipient (typically the Verifier),
+so that the Evidence content is disclosed only to that recipient and
+not to the Relying Party or to other parties on the path.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <p id="section-8.1-2">The complementary control for the Relying Party surface is
 Attestation Result minimization: the Attestation Result returned to
 the Relying Party <span class="bcp14">SHOULD NOT</span> re-expose sensitive Claims that were
@@ -1955,10 +2005,9 @@ minimization, is provided in <span>[<a href="#I-D.ounsworth-rats-privacy-framewo
 <a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-transport-metadata" class="section-name selfRef">Transport Metadata</a>
         </h3>
 <p id="section-8.2-1">The transport connection discloses metadata — IP addresses, server
-name indications, and connection timing — that is visible to the
-Participating Intermediary and to passive network observers.  This
-disclosure is inherent to the transport protocol and is not specific
-to the attestation layer.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+name indications, and connection timing — that is visible to passive
+network observers.  This disclosure is inherent to the transport
+protocol and is not specific to the attestation layer.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="attestation-key-correlation">
@@ -2046,8 +2095,7 @@ session cannot be replayed against a new one.  When re-attestation
 occurs during a session's Lifetime of Connection, the re-attestation
 Evidence reflects the Attester's state at the time of re-attestation,
 not at Connection Establishment Time.<a href="#section-9-3" class="pilcrow">¶</a></p>
-<p id="section-9-4"><strong>Evidence Confidentiality from Intermediaries.</strong> When a Participating
-Intermediary is present, Evidence payloads <span class="bcp14">SHOULD</span> be protected by
+<p id="section-9-4"><strong>Evidence Confidentiality.</strong> Evidence payloads <span class="bcp14">SHOULD</span> be protected by
 object-level encryption to a key held exclusively by the intended
 recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-9-4" class="pilcrow">¶</a></p>
 <p id="section-9-5"><strong>Key Non-exportability (informative).</strong> The specific concern of
