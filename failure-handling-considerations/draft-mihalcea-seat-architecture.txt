@@ -479,7 +479,7 @@ Table of Contents
 
 6.1.  Failure handing within Intra-Handshake Window
 
-   When attestation occurs within the Intra-Handshake Window, the
+   When remote attestation occurs within the Intra-Handshake Window, the
    transport handshake withholds progression to application data
    exchange until the Attestation Result is available: application data
    exchange has not yet begun.  A Verifier rejection, or a Relying Party
