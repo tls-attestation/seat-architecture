@@ -258,10 +258,8 @@ The Attester's transport stack provides the attestation binder input
 to the Attesting Environment so that Evidence can be bound to the
 specific session.  In a Split Deployment, the transport stack is in
 the Target Environment and the interface between the transport stack
-and the Attesting Environment is a security-critical boundary: the
-Attesting Environment MUST NOT treat an attestation binder input
-received from an untrusted host as authoritative without first
-verifying it has not been substituted.
+and the Attesting Environment is a security-critical boundary.
+See {{security-considerations}}.
 
 In mutual attestation deployments, both the Client and the Server
 simultaneously act as Attesters.  Each endpoint's Attesting
@@ -300,7 +298,7 @@ Verifier location is an independent deployment choice: a co-located
 Verifier operates under the Background-Check Model, whereas a remote
 Verifier may operate under either model.
 
-{{fig-roles}} illustrates how Attestation Credentials (either Evidence 
+{{fig-roles}} illustrates how Attestation Credentials (either Evidence
 or Attestation Results) flows under the two conveyance models.
 
 ~~~ aasvg
@@ -497,9 +495,8 @@ Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
 of {{channel-binding-pattern}}.  The Session Binding Value is specific
-to the session
-and cannot be known before the session is initiated, providing
-nonce-style freshness in the sense of {{RFC9334}} Section 10.
+to the session and cannot be known before the session is initiated,
+providing nonce-style freshness in the sense of {{RFC9334}} Section 10.
 Evidence committed to an Attestation Binder derived from the Session
 Binding Value is therefore intrinsically fresh with respect to the
 session: a replay from a different session will carry an Attestation
@@ -627,6 +624,25 @@ different session or from a different endpoint; a replay carries
 a Binder derived from a different Session Binding Value and MUST
 be rejected. See {{channel-binding-pattern}}.
 
+**Split-Deployments.** Because a compromised host could attempt to
+use the Attesting Environment as a signing oracle by substituting
+the attestation binder input, the architecture relies on
+cryptographic binding rather than continuous state monitoring.
+The Attesting Environment MUST bind the Evidence to the private
+identity key it holds to authenticate a connection (for example,
+by including a hash of the associated public key in the 
+signed Evidence).
+
+The Relying Party then verifies that this claim matches the
+identity key presented in the transport handshake, preventing
+an untrusted host from successfully substituting the binder.
+
+**Key Non-exportability (informative).** The specific concern of
+demonstrating that the Subject Key used for transport authentication
+is physically confined within the attested execution environment is
+addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
+not re-specified here.
+
 **Evidence Freshness.** Evidence reflects the Attester's state at or
 near the Evidence Generation Time for the session in which it is
 presented.  Per-session freshness ensures Evidence from a prior
@@ -638,12 +654,6 @@ not at Connection Establishment Time.
 **Evidence Confidentiality.** Evidence payloads SHOULD be protected by
 object-level encryption to a key held exclusively by the intended
 recipient.  See {{I-D.ounsworth-rats-privacy-framework}}.
-
-**Key Non-exportability (informative).** The specific concern of
-demonstrating that the Subject Key used for transport authentication
-is physically confined within the attested execution environment is
-addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
-not re-specified here.
 
 **Session Resumption.** When a transport session is resumed, previously
 obtained Attestation Credential may no longer reflect the Attester's
