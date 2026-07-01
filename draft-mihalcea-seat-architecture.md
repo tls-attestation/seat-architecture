@@ -437,7 +437,6 @@ tying the Evidence to the completed session.
 This deployment can be localized to a sidecar 
 that withholds application data until attestation completes, decoupling attestation
 protocol from application logic.
-the attestation protocol.
 
 ## Combining Timing Models
 
