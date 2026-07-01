@@ -149,6 +149,12 @@ context.
 This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
+Attestation Credential:
+: A collective term for Evidence and Attestation Results, 
+used where a statement applies to both without distinguishing 
+between them. Where a statement applies specifically to one but 
+not the other, this document uses the more specific term.
+
 Attested Channel:
 : A transport session in which at least one endpoint
   has produced Evidence that has been appraised, and in which that
@@ -263,8 +269,8 @@ Environment independently generates Evidence bound to the session.
 
 ## Relying Party
 
-The Relying Party consumes Attestation Results or Evidence and uses
-them to make authorization decisions about the transport connection.
+The Relying Party consumes an Attestation Credential and uses
+it to make authorization decisions about the transport connection.
 In the transport context, the Relying Party is typically the endpoint
 opposite the Attester — the Server when the Client attests, or the
 Client when the Server attests.
@@ -294,8 +300,8 @@ Verifier location is an independent deployment choice: a co-located
 Verifier operates under the Background-Check Model, whereas a remote
 Verifier may operate under either model.
 
-{{fig-roles}} illustrates the Evidence and Attestation Results flows
-under the two conveyance models.
+{{fig-roles}} illustrates how Attestation Credentials (either Evidence 
+or Attestation Results) flows under the two conveyance models.
 
 ~~~ aasvg
  Background-Check Model
@@ -333,13 +339,13 @@ context.
 
 ## Relying Party Trust
 
-The Relying Party must trust that the Attestation Results it receives
-accurately reflect the Attester's state, which depends on its trust
+The Relying Party must trust that the Attestation Credential it receives
+accurately reflects the Attester's state, which depends on its trust
 in the Verifier and in the Endorsement chain for the Attesting
 Environment.
 
 The Relying Party must additionally satisfy itself that
-the Evidence is bound to the current session — that it has not been
+the Attestation Credential is bound to the current session — that it has not been
 replayed from a different session or transferred from a different
 endpoint.  This assurance is provided by the session binding mechanism
 described in {{channel-binding-pattern}}; the check may be performed by
@@ -367,7 +373,7 @@ the Verifier's logic is part of the Relying Party's own
 implementation.  In the remote Verifier deployment, the Relying Party
 must authenticate the Verifier and confirm that the Verifier's
 Appraisal Policy for Evidence is consistent with the Relying Party's
-own requirements before accepting Attestation Results.
+own requirements before accepting any Attestation Credentials.
 
 # Timing Models {#timing-models}
 
@@ -503,8 +509,9 @@ will fail.
 ## Session resumption
 
 Session resumption introduces a specific freshness consideration.
-When a transport session is resumed, previously obtained Attestation
-Results may no longer reflect the Attester's current state.
+When a transport session is resumed, previously obtained
+Attestation Credential may no longer reflect the Attester's
+current state.
 
 ## Re-Attestation in Long-Running Sessions
 
@@ -541,15 +548,13 @@ held exclusively by the intended recipient (typically the Verifier),
 so that the Evidence content is disclosed only to that recipient and
 not to the Relying Party or to other parties on the path.
 
-The complementary control for the Relying Party surface is
-Attestation Result minimization: the Attestation Result returned to
-the Relying Party SHOULD NOT re-expose sensitive Claims that were
-protected in the encrypted Evidence.  Encrypting Evidence for the
-Verifier without minimizing the Attestation Result shifts rather than
-eliminates the disclosure risk.  A framework for consistent handling
-of sensitive Evidence across RATS roles, including claim
-classification, Trusted Verifier management, and Attestation Result
-minimization, is provided in {{I-D.ounsworth-rats-privacy-framework}}.
+The complementary control for the Relying Party surface is minimization: 
+the Attestation Credentials returned to the Relying Party SHOULD NOT 
+re-expose sensitive Claims that were protected in any encrypted Evidence.  
+A framework for consistent handling of sensitive Evidence across RATS roles, 
+including claim classification, Trusted Verifier management, and 
+Attestation Credential minimization, is provided in 
+{{I-D.ounsworth-rats-privacy-framework}}.
 
 ## Transport Metadata
 
@@ -597,7 +602,7 @@ attestation evidence that reveals which specific implementations are
 in use can restrict access and enable tracking in ways that undermine
 the open internet.  Protocol designs building on this architecture
 should minimize vendor-specific claim disclosure consistent with the
-Attestation Result minimization controls described in this section
+Attestation Credential minimization controls described in this section
 and in {{I-D.ounsworth-rats-privacy-framework}}.
 
 # Security Considerations {#security-considerations}
@@ -641,7 +646,7 @@ addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
 not re-specified here.
 
 **Session Resumption.** When a transport session is resumed, previously
-obtained Attestation Results may no longer reflect the Attester's
+obtained Attestation Credential may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
 to a resumed session.
 
