@@ -150,9 +150,9 @@ This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
 Attestation Credential:
-: A collective term for Evidence and Attestation Results, 
-used where a statement applies to both without distinguishing 
-between them. Where a statement applies specifically to one but 
+: A collective term for Evidence and Attestation Results,
+used where a statement applies to both without distinguishing
+between them. Where a statement applies specifically to one but
 not the other, this document uses the more specific term.
 
 Attested Channel:
