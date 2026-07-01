@@ -233,17 +233,6 @@ Split Deployment:
   input — typically a handshake transcript hash or exported key —
   from the transport stack via a trusted interface.
 
-Layered Attestation:
-: In layered attestation, Claims are collected
-  from multiple execution layers beginning with a foundational
-  Attesting Environment that is typically immutable or difficult to
-  modify.  A common example is a TEE executing within a virtual
-  machine, which is itself executing on a host platform.  In the
-  transport context, the critical question is whether the layer
-  holding the transport session's keying material is the same layer
-  that signs the Evidence, or whether the attestation binder input
-  must traverse a layer boundary.
-
 # Roles and Entities
 
 The SEAT architecture maps the roles defined in [RFC9334] to standard
@@ -380,21 +369,6 @@ must authenticate the Verifier and confirm that the Verifier's
 Appraisal Policy for Evidence is consistent with the Relying Party's
 own requirements before accepting Attestation Results.
 
-## Participating Intermediary Trust
-
-The Participating Intermediary is explicitly not trusted for the
-security properties of the attested channel: not for Evidence
-confidentiality (hence object-level encryption), not for session
-integrity after eviction (hence key rotation that excludes it from
-deriving post-eviction traffic keys), and not for Evidence appraisal.
-
-The Participating Intermediary is trusted solely to correctly execute
-its transport-layer routing obligations.  A Participating
-Intermediary that fails to honour those obligations or that
-suppresses eviction signalling causes session termination, providing
-fail-secure behaviour without requiring the endpoints to detect
-adversarial intent.
-
 # Timing Models {#timing-models}
 
 The timing and conveyance of attestation data relative to the
@@ -424,9 +398,9 @@ application data exchange.
 The Attestation Binder is derived after handshake completion,
 tying the Evidence to the completed session.
 
-This deployment can be localized to a sidecar
-that withholds application data until attestation completes, decoupling attestation
-protocol from application logic.
+This deployment can be localized to a sidecar that withholds
+application data until attestation completes, decoupling
+attestation protocol from application logic.
 
 ## Combining Timing Models
 
@@ -561,8 +535,8 @@ a matter of Relying Party policy.
 ## Evidence Payload Confidentiality
 
 The Evidence payload carries Claims about the Attester's state and is
-the most privacy-sensitive artifact in the protocol.  Evidence
-payloads SHOULD be protected using object-level encryption to a key
+the most privacy-sensitive artifact in the protocol.  It is
+RECOMMENDED that Evidence payloads be encrypted to a key
 held exclusively by the intended recipient (typically the Verifier),
 so that the Evidence content is disclosed only to that recipient and
 not to the Relying Party or to other parties on the path.
@@ -673,10 +647,9 @@ to a resumed session.
 
 **Directional Endpoint Binding.** Distinct Attestation Binders MUST be
 derived for the initiator and the responder from the same Session
-Binding Value using distinct inputs.  Evidence produced by one
-endpoint MUST NOT
-satisfy the verification requirement for the opposite endpoint.  See
-{{channel-binding-pattern}}
+Binding Value using distinct inputs.  Evidence produced by one endpoint
+MUST NOT satisfy the verification requirement for the opposite endpoint.
+See {{channel-binding-pattern}}.
 
 **Transmission and Verification Anchor Soundness.** An Attestation
 Binder may be included in a transport message before peer
@@ -711,7 +684,8 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
-for their thoughtful input and contributions that influenced this document.
+The authors wish to thank all SEAT WG participants for their
+thoughtful input and contributions that have helped influence
+this document.
 
 TODO
