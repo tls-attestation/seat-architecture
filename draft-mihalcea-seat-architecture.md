@@ -446,6 +446,37 @@ and normal operation.
 Protocol specifications building on this architecture MAY support one
 or both timing models.
 
+# Failure handling considerations {failure-handling}
+
+## Failure handing within Intra-Handshake Window
+
+When attestation occurs within the Intra-Handshake Window, the
+transport handshake withholds progression to application data
+exchange until the Attestation Result is available: application
+data exchange has not yet begun. A Verifier rejection, or a
+Relying Party policy rejection of an otherwise valid Attestation
+Result, MUST process a fatal error consistent with the transport
+protocol's existing handshake-failure handling.
+
+## Failure handing within Post-Handshake Window
+
+When attestation occurs within the Post-Handshake Window, or when 
+Re-attestation fails during the Lifetime of Connection, the
+transport session already exists and application data may already
+be flowing.  {{RFC9334}} admits an Attester's failing appraisal to
+result in reduced access or privileges rather than outright
+rejection; this pattern instantiates that outcome at the
+transport layer.
+
+As the Relying Party's enforcement point sits outside the
+transport handshake, operating on already-established
+application-layer traffic, the Appraisal Policy determines
+whether the connection is torn down, or restricted to a subset
+of application-layer functionality. Failure handling of
+Post-Handshake Attestation does not retroactively protect
+application data already exchanged prior to the failed appraisal;
+it bounds further exposure going forward.
+
 # Attestation Session Binding {#channel-binding-pattern}
 
 Regardless of which timing model is used or which transport protocol
@@ -554,7 +585,7 @@ before a state change occurred.  It bounds further exposure by
 conditioning continued sensitive data transmission on a current
 trust assessment.  Whether to terminate a session upon
 re-attestation failure or continue with reduced privilege is
-a matter of Relying Party policy.
+a matter of Relying Party policy; see {{failure-handling}}.
 
 # Privacy Considerations
 
