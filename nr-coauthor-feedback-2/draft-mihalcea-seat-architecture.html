@@ -1541,10 +1541,8 @@ attestation key.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 to the Attesting Environment so that Evidence can be bound to the
 specific session.  In a Split Deployment, the transport stack is in
 the Target Environment and the interface between the transport stack
-and the Attesting Environment is a security-critical boundary: the
-Attesting Environment <span class="bcp14">MUST NOT</span> treat an attestation binder input
-received from an untrusted host as authoritative without first
-verifying it has not been substituted.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+and the Attesting Environment is a security-critical boundary.
+See <a href="#security-considerations" class="auto internal xref">Section 9</a>.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <p id="section-3.1-3">In mutual attestation deployments, both the Client and the Server
 simultaneously act as Attesters.  Each endpoint's Attesting
 Environment independently generates Evidence bound to the session.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
@@ -1898,9 +1896,8 @@ several distinct scopes that must be addressed separately.<a href="#section-7-1"
 session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
 of <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a>.  The Session Binding Value is specific
-to the session
-and cannot be known before the session is initiated, providing
-nonce-style freshness in the sense of <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> Section 10.
+to the session and cannot be known before the session is initiated,
+providing nonce-style freshness in the sense of <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> Section 10.
 Evidence committed to an Attestation Binder derived from the Session
 Binding Value is therefore intrinsically fresh with respect to the
 session: a replay from a different session will carry an Attestation
@@ -2061,50 +2058,61 @@ valid Evidence from one session cannot satisfy a Verifier on a
 different session or from a different endpoint; a replay carries
 a Binder derived from a different Session Binding Value and <span class="bcp14">MUST</span>
 be rejected. See <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a>.<a href="#section-9-2" class="pilcrow">¶</a></p>
-<p id="section-9-3"><strong>Evidence Freshness.</strong> Evidence reflects the Attester's state at or
-near the Evidence Generation Time for the session in which it is
-presented.  Per-session freshness ensures Evidence from a prior
-session cannot be replayed against a new one.  When re-attestation
-occurs during a session's Lifetime of Connection, the re-attestation
-Evidence reflects the Attester's state at the time of re-attestation,
-not at Connection Establishment Time.<a href="#section-9-3" class="pilcrow">¶</a></p>
-<p id="section-9-4"><strong>Evidence Confidentiality.</strong> Evidence payloads <span class="bcp14">SHOULD</span> be protected by
-object-level encryption to a key held exclusively by the intended
-recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-9-4" class="pilcrow">¶</a></p>
+<p id="section-9-3"><strong>Split-Deployments.</strong> Because a compromised host could attempt to
+use the Attesting Environment as a signing oracle by substituting
+the attestation binder input, the architecture relies on
+cryptographic binding rather than continuous state monitoring.
+The Attesting Environment <span class="bcp14">MUST</span> bind the Evidence to the private
+identity key it holds to authenticate a connection (for example,
+by including a hash of the associated public key in the
+signed Evidence).<a href="#section-9-3" class="pilcrow">¶</a></p>
+<p id="section-9-4">The Relying Party then verifies that this claim matches the
+identity key presented in the transport handshake, preventing
+an untrusted host from successfully substituting the binder.<a href="#section-9-4" class="pilcrow">¶</a></p>
 <p id="section-9-5"><strong>Key Non-exportability (informative).</strong> The specific concern of
 demonstrating that the Subject Key used for transport authentication
 is physically confined within the attested execution environment is
 addressed at the RATS layer by <span>[<a href="#I-D.reddy-rats-key-binding" class="cite xref">I-D.reddy-rats-key-binding</a>]</span> and is
 not re-specified here.<a href="#section-9-5" class="pilcrow">¶</a></p>
-<p id="section-9-6"><strong>Session Resumption.</strong> When a transport session is resumed, previously
+<p id="section-9-6"><strong>Evidence Freshness.</strong> Evidence reflects the Attester's state at or
+near the Evidence Generation Time for the session in which it is
+presented.  Per-session freshness ensures Evidence from a prior
+session cannot be replayed against a new one.  When re-attestation
+occurs during a session's Lifetime of Connection, the re-attestation
+Evidence reflects the Attester's state at the time of re-attestation,
+not at Connection Establishment Time.<a href="#section-9-6" class="pilcrow">¶</a></p>
+<p id="section-9-7"><strong>Evidence Confidentiality.</strong> Evidence payloads <span class="bcp14">SHOULD</span> be protected by
+object-level encryption to a key held exclusively by the intended
+recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-9-7" class="pilcrow">¶</a></p>
+<p id="section-9-8"><strong>Session Resumption.</strong> When a transport session is resumed, previously
 obtained Attestation Credential may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
-to a resumed session.<a href="#section-9-6" class="pilcrow">¶</a></p>
-<p id="section-9-7"><strong>Directional Endpoint Binding.</strong> Distinct Attestation Binders <span class="bcp14">MUST</span> be
+to a resumed session.<a href="#section-9-8" class="pilcrow">¶</a></p>
+<p id="section-9-9"><strong>Directional Endpoint Binding.</strong> Distinct Attestation Binders <span class="bcp14">MUST</span> be
 derived for the initiator and the responder from the same Session
 Binding Value using distinct inputs.  Evidence produced by one endpoint
 <span class="bcp14">MUST NOT</span> satisfy the verification requirement for the opposite endpoint.
-See <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a>.<a href="#section-9-7" class="pilcrow">¶</a></p>
-<p id="section-9-8"><strong>Transmission and Verification Anchor Soundness.</strong> An Attestation
+See <a href="#channel-binding-pattern" class="auto internal xref">Section 6</a>.<a href="#section-9-9" class="pilcrow">¶</a></p>
+<p id="section-9-10"><strong>Transmission and Verification Anchor Soundness.</strong> An Attestation
 Binder may be included in a transport message before peer
 authentication is complete (the Transmission Anchor).
 Implementations <span class="bcp14">MUST</span> ensure the transport protocol's integrity
 guarantee covers the message carrying the Attestation Binder; for
 example, the TLS 1.3 handshake MAC (the Verification Anchor)
 retroactively guarantees the Binder's integrity at handshake
-completion.<a href="#section-9-8" class="pilcrow">¶</a></p>
-<p id="section-9-9"><strong>Downgrade Prevention.</strong> Two endpoints that both support attestation
+completion.<a href="#section-9-10" class="pilcrow">¶</a></p>
+<p id="section-9-11"><strong>Downgrade Prevention.</strong> Two endpoints that both support attestation
 cannot be caused by an active adversary to negotiate a connection
 without it.  The negotiation of attestation capabilities is protected
-against suppression.<a href="#section-9-9" class="pilcrow">¶</a></p>
-<p id="section-9-10"><strong>Dynamic Verification Code Integrity.</strong> When client-side attestation
+against suppression.<a href="#section-9-11" class="pilcrow">¶</a></p>
+<p id="section-9-12"><strong>Dynamic Verification Code Integrity.</strong> When client-side attestation
 verification logic is dynamically delivered by the endpoint under
 appraisal (such as browser-based JavaScript), a circular trust
 dependency exists.  Unless the client's execution environment
 enforces an independent, orthogonal guarantee of code integrity
 and binary transparency, Application-layer attestation cannot
 provide security assurance, as the Attester may serve malicious
-code that bypasses cryptographic validation.<a href="#section-9-10" class="pilcrow">¶</a></p>
+code that bypasses cryptographic validation.<a href="#section-9-12" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
