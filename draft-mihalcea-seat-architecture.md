@@ -395,57 +395,6 @@ suppresses eviction signalling causes session termination, providing
 fail-secure behaviour without requiring the endpoints to detect
 adversarial intent.
 
-# Transport Integration Patterns {#integration-patterns}
-
-The Timing Models of {{timing-models}} describe when Evidence is
-conveyed relative to connection establishment.  This section
-describes two structural patterns by which a transport protocol
-conveys Evidence to, and receives an authorization decision from,
-the Verifier without requiring the transport specification itself
-to encode RATS semantics.
-
-## Extension-Based Conveyance
-
-In this pattern, the transport protocol's existing identity or
-authentication structures (such as an X.509 certificate
-extension, or a comparable protocol-specific extension point)
-are reused to carry Evidence.  The transport stack itself remains
-unaware of {{RFC9334}} semantics: it recognizes only that an
-extension it is configured to process is present, and delegates
-interpretation of the extension's contents to an external callback.
-
-The transport state machine suspends progress at the point the
-extension is processed, invokes the callback with the extension
-payload, and resumes or aborts the handshake based on the
-callback's return value.  The callback interface is
-transport-external: it need not be specified by the transport
-protocol itself, only supported by it as an extension point.
-
-## Structured Payload Conveyance
-
-In this pattern, the transport protocol defines a dedicated, opaque
-field for authorization-related data as part of its handshake or
-key-exchange messages, distinct from the identity structures used
-for peer authentication.  Evidence, and any associated
-attestation-specific protocol elements, are carried within this
-field.
-
-The transport stack extracts the field's contents and passes them
-to an adjacent component responsible for {{RFC9334}} semantics,
-without needing to parse or understand the contents itself.  As in
-Extension-Based Conveyance, the transport state machine halts
-pending the outcome of this processing.  The distinction between
-the two patterns is where the extension point is anchored: an
-existing identity structure being overloaded (Extension-Based
-Conveyance) versus a field purpose-defined by the transport
-protocol for authorization data (Structured Payload Conveyance).
-
-Both patterns satisfy the requirement that Evidence be conveyed
-prior to the transition to application data exchange; the choice
-between them depends on the target transport protocol's extension
-model and is otherwise architecturally equivalent from an {{RFC9334}}
-perspective.
-
 # Timing Models {#timing-models}
 
 The timing and conveyance of attestation data relative to the
@@ -765,4 +714,57 @@ This document has no IANA actions.
 The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
 for their thoughtful input and contributions that influenced this document.
 
-TODO
+# Appendix
+{:numbered="false"}
+
+## Implementing Transport Integration (informational) {#integration-patterns}
+
+The Timing Models of {{timing-models}} describe when Evidence is
+conveyed relative to connection establishment.  This section
+describes two structural implementation examples by which a transport 
+protocol conveys Evidence to, and receives an authorization decision from,
+the Verifier without requiring the transport specification itself
+to encode RATS semantics.
+
+### Extension-Based Conveyance
+
+In this pattern, the transport protocol's existing identity or
+authentication structures (such as an X.509 certificate
+extension, or a comparable protocol-specific extension point)
+are reused to carry Evidence.  The transport stack itself remains
+unaware of {{RFC9334}} semantics: it recognizes only that an
+extension it is configured to process is present, and delegates
+interpretation of the extension's contents to an external callback.
+
+The transport state machine suspends progress at the point the
+extension is processed, invokes the callback with the extension
+payload, and resumes or aborts the handshake based on the
+callback's return value.  The callback interface is
+transport-external: it need not be specified by the transport
+protocol itself, only supported by it as an extension point.
+
+### Structured Payload Conveyance
+
+In this pattern, the transport protocol defines a dedicated, opaque
+field for authorization-related data as part of its handshake or
+key-exchange messages, distinct from the identity structures used
+for peer authentication.  Evidence, and any associated
+attestation-specific protocol elements, are carried within this
+field.
+
+The transport stack extracts the field's contents and passes them
+to an adjacent component responsible for {{RFC9334}} semantics,
+without needing to parse or understand the contents itself.  As in
+Extension-Based Conveyance, the transport state machine halts
+pending the outcome of this processing.  The distinction between
+the two patterns is where the extension point is anchored: an
+existing identity structure being overloaded (Extension-Based
+Conveyance) versus a field purpose-defined by the transport
+protocol for authorization data (Structured Payload Conveyance).
+
+Both patterns satisfy the requirement that Evidence be conveyed
+prior to the transition to application data exchange; the choice
+between them depends on the target transport protocol's extension
+model and is otherwise architecturally equivalent from an {{RFC9334}}
+perspective.
+
