@@ -712,7 +712,7 @@ This document has no IANA actions.
 
 The Timing Models of {{timing-models}} describe when Evidence is
 conveyed relative to connection establishment.  This section
-describes two structural implementation examples by which a transport 
+describes two structural implementation examples by which a transport
 protocol conveys Evidence to, and receives an authorization decision from,
 the Verifier without requiring the transport specification itself
 to encode RATS semantics.
