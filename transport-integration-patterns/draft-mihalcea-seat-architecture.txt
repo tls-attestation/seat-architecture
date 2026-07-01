@@ -87,29 +87,29 @@ Table of Contents
      4.2.  Attester Trust
      4.3.  Verifier Trust
      4.4.  Participating Intermediary Trust
-   5.  Transport Integration Patterns
-     5.1.  Extension-Based Conveyance
-     5.2.  Structured Payload Conveyance
-   6.  Timing Models
-     6.1.  Intra-Handshake Attestation
-     6.2.  Post-Handshake Attestation
-     6.3.  Combining Timing Models
-   7.  Attestation Session Binding
-   8.  Freshness
-     8.1.  Per-session freshness
-     8.2.  Session resumption
-     8.3.  Re-Attestation in Long-Running Sessions
-   9.  Privacy Considerations
-     9.1.  Evidence Payload Confidentiality
-     9.2.  Transport Metadata
-     9.3.  Attestation Key Correlation
-     9.4.  Anonymous Client Attestation
-     9.5.  Scope Boundary and Internet Openness
-   10. Security Considerations
-   11. IANA Considerations
-   12. References
-     12.1.  Normative References
-     12.2.  Informative References
+   5.  Timing Models
+     5.1.  Intra-Handshake Attestation
+     5.2.  Post-Handshake Attestation
+     5.3.  Combining Timing Models
+   6.  Attestation Session Binding
+   7.  Freshness
+     7.1.  Per-session freshness
+     7.2.  Session resumption
+     7.3.  Re-Attestation in Long-Running Sessions
+   8.  Privacy Considerations
+     8.1.  Evidence Payload Confidentiality
+     8.2.  Transport Metadata
+     8.3.  Attestation Key Correlation
+     8.4.  Anonymous Client Attestation
+     8.5.  Scope Boundary and Internet Openness
+   9.  Security Considerations
+   10. IANA Considerations
+   11. References
+     11.1.  Normative References
+     11.2.  Informative References
+   Appendix A.  Implementing Transport Integration (informational)
+     A.1.  Extension-Based Conveyance
+     A.2.  Structured Payload Conveyance
    Acknowledgments
    Authors' Addresses
 
@@ -203,7 +203,7 @@ Table of Contents
    Attestation Timing Model:  The temporal relationship between Evidence
       conveyance and connection establishment time.  This document
       defines two timing models: Intra-Handshake Attestation and Post-
-      Handshake Attestation.  See Section 6.
+      Handshake Attestation.  See Section 5.
 
    Evidence Generation Time:  The point at which an Attester's Claims
       are signed to produce Evidence.  Depending on the internal
@@ -240,7 +240,7 @@ Table of Contents
       transport session, from which Attestation Binders are derived.  A
       Session Binding Value may be public or secret depending on the
       topology; what is required is that it cannot be known before the
-      session is initiated.  See Section 7.
+      session is initiated.  See Section 6.
 
    Attestation Binder:  A cryptographic value derived from a Session
       Binding Value and committed to by the Attesting Environment into
@@ -382,7 +382,7 @@ Table of Contents
    is bound to the current session — that it has not been replayed from
    a different session or transferred from a different endpoint.  This
    assurance is provided by the session binding mechanism described in
-   Section 7; the check may be performed by the Relying Party itself or
+   Section 6; the check may be performed by the Relying Party itself or
    delegated to the Verifier, but it cannot be pre-computed
    independently of the session.
 
@@ -424,63 +424,13 @@ Table of Contents
    fail-secure behaviour without requiring the endpoints to detect
    adversarial intent.
 
-5.  Transport Integration Patterns
-
-   The Timing Models of Section 6 describe when Evidence is conveyed
-   relative to connection establishment.  This section describes two
-   structural patterns by which a transport protocol conveys Evidence
-   to, and receives an authorization decision from, the Verifier without
-   requiring the transport specification itself to encode RATS
-   semantics.
-
-5.1.  Extension-Based Conveyance
-
-   In this pattern, the transport protocol's existing identity or
-   authentication structures (such as an X.509 certificate extension, or
-   a comparable protocol-specific extension point) are reused to carry
-   Evidence.  The transport stack itself remains unaware of [RFC9334]
-   semantics: it recognizes only that an extension it is configured to
-   process is present, and delegates interpretation of the extension's
-   contents to an external callback.
-
-   The transport state machine suspends progress at the point the
-   extension is processed, invokes the callback with the extension
-   payload, and resumes or aborts the handshake based on the callback's
-   return value.  The callback interface is transport-external: it need
-   not be specified by the transport protocol itself, only supported by
-   it as an extension point.
-
-5.2.  Structured Payload Conveyance
-
-   In this pattern, the transport protocol defines a dedicated, opaque
-   field for authorization-related data as part of its handshake or key-
-   exchange messages, distinct from the identity structures used for
-   peer authentication.  Evidence, and any associated attestation-
-   specific protocol elements, are carried within this field.
-
-   The transport stack extracts the field's contents and passes them to
-   an adjacent component responsible for [RFC9334] semantics, without
-   needing to parse or understand the contents itself.  As in Extension-
-   Based Conveyance, the transport state machine halts pending the
-   outcome of this processing.  The distinction between the two patterns
-   is where the extension point is anchored: an existing identity
-   structure being overloaded (Extension-Based Conveyance) versus a
-   field purpose-defined by the transport protocol for authorization
-   data (Structured Payload Conveyance).
-
-   Both patterns satisfy the requirement that Evidence be conveyed prior
-   to the transition to application data exchange; the choice between
-   them depends on the target transport protocol's extension model and
-   is otherwise architecturally equivalent from an [RFC9334]
-   perspective.
-
-6.  Timing Models
+5.  Timing Models
 
    The timing and conveyance of attestation data relative to the
    transport handshake define the two Attestation Timing Models used in
    this architecture.
 
-6.1.  Intra-Handshake Attestation
+5.1.  Intra-Handshake Attestation
 
    Evidence is conveyed by the Attester during the transport connection
    establishment to the Relying Party within the handshake messages
@@ -494,7 +444,7 @@ Table of Contents
    Evidence is carried within standard transport protocol extensions
    during the authentication phase of the handshake.
 
-6.2.  Post-Handshake Attestation
+5.2.  Post-Handshake Attestation
 
    Evidence is conveyed by the Attester after transport connection
    establishment to the Relying Party following the transition to
@@ -507,7 +457,7 @@ Table of Contents
    application data until attestation completes, decoupling attestation
    protocol from application logic.
 
-6.3.  Combining Timing Models
+5.3.  Combining Timing Models
 
    The two timing models are not mutually exclusive and their
    combination is the natural architecture for deployments requiring
@@ -525,7 +475,7 @@ Table of Contents
    Protocol specifications building on this architecture MAY support one
    or both timing models.
 
-7.  Attestation Session Binding
+6.  Attestation Session Binding
 
    Regardless of which timing model is used or which transport protocol
    is in use, a correctly bound attested channel requires that three
@@ -565,7 +515,7 @@ Table of Contents
    Key used for authentication was not generated or protected within
    that environment.  Session binding alone does not bind the Subject
    Key to the attested environment; this is handled at the RATS layer,
-   as discussed under Key Non-exportability in Section 10.
+   as discussed under Key Non-exportability in Section 9.
 
    The Evidence itself plays a critical role in verifying that these
    three session binding conditions have been successfully achieved.
@@ -583,18 +533,18 @@ Table of Contents
    Relying Party conveys the binder to the Verifier, which checks it
    against the binder in the Evidence.
 
-8.  Freshness
+7.  Freshness
 
    The freshness of Evidence is critical to its value as a
    trustworthiness signal.  In the transport context, freshness has
    several distinct scopes that must be addressed separately.
 
-8.1.  Per-session freshness
+7.1.  Per-session freshness
 
    Per-session freshness ensures that Evidence is bound to the specific
    session being evaluated and cannot be replayed from a prior session.
    This property is addressed directly by the session binding mechanism
-   of Section 7.  The Session Binding Value is specific to the session
+   of Section 6.  The Session Binding Value is specific to the session
    and cannot be known before the session is initiated, providing nonce-
    style freshness in the sense of [RFC9334] Section 10.  Evidence
    committed to an Attestation Binder derived from the Session Binding
@@ -603,13 +553,13 @@ Table of Contents
    derived from a different Session Binding Value, and appraisal will
    fail.
 
-8.2.  Session resumption
+7.2.  Session resumption
 
    Session resumption introduces a specific freshness consideration.
    When a transport session is resumed, previously obtained Attestation
    Results may no longer reflect the Attester's current state.
 
-8.3.  Re-Attestation in Long-Running Sessions
+7.3.  Re-Attestation in Long-Running Sessions
 
    Initial attestation at Connection Establishment Time addresses the
    architectural invariants the Relying Party's policy requires before
@@ -631,9 +581,9 @@ Table of Contents
    Whether to terminate a session upon re-attestation failure or
    continue with reduced privilege is a matter of Relying Party policy.
 
-9.  Privacy Considerations
+8.  Privacy Considerations
 
-9.1.  Evidence Payload Confidentiality
+8.1.  Evidence Payload Confidentiality
 
    The Evidence payload carries Claims about the Attester's state and is
    the most privacy-sensitive artifact in the protocol.  Evidence
@@ -652,14 +602,14 @@ Table of Contents
    classification, Trusted Verifier management, and Attestation Result
    minimization, is provided in [I-D.ounsworth-rats-privacy-framework].
 
-9.2.  Transport Metadata
+8.2.  Transport Metadata
 
    The transport connection discloses metadata — IP addresses, server
    name indications, and connection timing — that is visible to passive
    network observers.  This disclosure is inherent to the transport
    protocol and is not specific to the attestation layer.
 
-9.3.  Attestation Key Correlation
+8.3.  Attestation Key Correlation
 
    When the same attestation signing key is used across multiple
    sessions, any party with access to Evidence from more than one of
@@ -668,7 +618,7 @@ Table of Contents
    for client Attesters where privacy of individual connections is a
    concern.
 
-9.4.  Anonymous Client Attestation
+8.4.  Anonymous Client Attestation
 
    The SEAT architecture supports deployments where a client Attester
    attests to the trustworthiness of its Attesting Environment without
@@ -677,7 +627,7 @@ Table of Contents
    appraisal policy applies to the client's hardware and software state
    rather than to a disclosed identity.
 
-9.5.  Scope Boundary and Internet Openness
+8.5.  Scope Boundary and Internet Openness
 
    The IAB has issued a statement cautioning that using client
    attestation as a barrier to access for otherwise open protocols and
@@ -701,7 +651,7 @@ Table of Contents
    Attestation Result minimization controls described in this section
    and in [I-D.ounsworth-rats-privacy-framework].
 
-10.  Security Considerations
+9.  Security Considerations
 
    This section enumerates the security properties and considerations of
    the SEAT architecture.  Security goals state outcomes the
@@ -721,7 +671,7 @@ Table of Contents
    Evidence from one session cannot satisfy a Verifier on a different
    session or from a different endpoint; a replay carries a Binder
    derived from a different Session Binding Value and MUST be rejected.
-   See Section 7.
+   See Section 6.
 
    *Evidence Freshness.* Evidence reflects the Attester's state at or
    near the Evidence Generation Time for the session in which it is
@@ -750,7 +700,7 @@ Table of Contents
    derived for the initiator and the responder from the same Session
    Binding Value using distinct inputs.  Evidence produced by one
    endpoint MUST NOT satisfy the verification requirement for the
-   opposite endpoint.  See Section 7
+   opposite endpoint.  See Section 6
 
    *Transmission and Verification Anchor Soundness.* An Attestation
    Binder may be included in a transport message before peer
@@ -775,13 +725,13 @@ Table of Contents
    security assurance, as the Attester may serve malicious code that
    bypasses cryptographic validation.
 
-11.  IANA Considerations
+10.  IANA Considerations
 
    This document has no IANA actions.
 
-12.  References
+11.  References
 
-12.1.  Normative References
+11.1.  Normative References
 
    [I-D.mihalcea-seat-use-cases]
               Mihalcea, I., Sardar, M. U., Fossati, T., Reddy.K, T.,
@@ -806,7 +756,7 @@ Table of Contents
               Architecture", RFC 9334, DOI 10.17487/RFC9334, January
               2023, <https://www.rfc-editor.org/rfc/rfc9334>.
 
-12.2.  Informative References
+11.2.  Informative References
 
    [I-D.ounsworth-rats-privacy-framework]
               Ounsworth, M., Tschofenig, H., and G. Lehmann, "Privacy
@@ -840,13 +790,61 @@ Table of Contents
               ISBN ["9783030916244", "9783030916251"], 2021,
               <https://doi.org/10.1007/978-3-030-91625-1_10>.
 
+Appendix A.  Implementing Transport Integration (informational)
+
+   The Timing Models of Section 5 describe when Evidence is conveyed
+   relative to connection establishment.  This section describes two
+   structural implementation examples by which a transport protocol
+   conveys Evidence to, and receives an authorization decision from, the
+   Verifier without requiring the transport specification itself to
+   encode RATS semantics.
+
+A.1.  Extension-Based Conveyance
+
+   In this pattern, the transport protocol's existing identity or
+   authentication structures (such as an X.509 certificate extension, or
+   a comparable protocol-specific extension point) are reused to carry
+   Evidence.  The transport stack itself remains unaware of [RFC9334]
+   semantics: it recognizes only that an extension it is configured to
+   process is present, and delegates interpretation of the extension's
+   contents to an external callback.
+
+   The transport state machine suspends progress at the point the
+   extension is processed, invokes the callback with the extension
+   payload, and resumes or aborts the handshake based on the callback's
+   return value.  The callback interface is transport-external: it need
+   not be specified by the transport protocol itself, only supported by
+   it as an extension point.
+
+A.2.  Structured Payload Conveyance
+
+   In this pattern, the transport protocol defines a dedicated, opaque
+   field for authorization-related data as part of its handshake or key-
+   exchange messages, distinct from the identity structures used for
+   peer authentication.  Evidence, and any associated attestation-
+   specific protocol elements, are carried within this field.
+
+   The transport stack extracts the field's contents and passes them to
+   an adjacent component responsible for [RFC9334] semantics, without
+   needing to parse or understand the contents itself.  As in Extension-
+   Based Conveyance, the transport state machine halts pending the
+   outcome of this processing.  The distinction between the two patterns
+   is where the extension point is anchored: an existing identity
+   structure being overloaded (Extension-Based Conveyance) versus a
+   field purpose-defined by the transport protocol for authorization
+   data (Structured Payload Conveyance).
+
+   Both patterns satisfy the requirement that Evidence be conveyed prior
+   to the transition to application data exchange; the choice between
+   them depends on the target transport protocol's extension model and
+   is otherwise architecturally equivalent from an [RFC9334]
+   perspective.
+
 Acknowledgments
 
    The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling
    Chen for their thoughtful input and contributions that influenced
    this document.
-
-   TODO
 
 Authors' Addresses
 
