@@ -267,7 +267,7 @@ Environment independently generates Evidence bound to the session.
 
 ## Relying Party
 
-The Relying Party consumes an Attestation Credential and uses
+The Relying Party consumes an Attestation Result and uses
 it to make authorization decisions about the transport connection.
 In the transport context, the Relying Party is typically the endpoint
 opposite the Attester — the Server when the Client attests, or the
