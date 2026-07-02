@@ -149,6 +149,12 @@ context.
 This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
+Attestation Credential:
+: A collective term for Evidence and Attestation Results,
+used where a statement applies to both without distinguishing
+between them. Where a statement applies specifically to one but
+not the other, this document uses the more specific term.
+
 Attested Channel:
 : A transport session in which at least one endpoint
   has produced Evidence that has been appraised, and in which that
@@ -233,17 +239,6 @@ Split Deployment:
   input — typically a handshake transcript hash or exported key —
   from the transport stack via a trusted interface.
 
-Layered Attestation:
-: In layered attestation, Claims are collected
-  from multiple execution layers beginning with a foundational
-  Attesting Environment that is typically immutable or difficult to
-  modify.  A common example is a TEE executing within a virtual
-  machine, which is itself executing on a host platform.  In the
-  transport context, the critical question is whether the layer
-  holding the transport session's keying material is the same layer
-  that signs the Evidence, or whether the attestation binder input
-  must traverse a layer boundary.
-
 # Roles and Entities
 
 The SEAT architecture maps the roles defined in [RFC9334] to standard
@@ -263,10 +258,8 @@ The Attester's transport stack provides the attestation binder input
 to the Attesting Environment so that Evidence can be bound to the
 specific session.  In a Split Deployment, the transport stack is in
 the Target Environment and the interface between the transport stack
-and the Attesting Environment is a security-critical boundary: the
-Attesting Environment MUST NOT treat an attestation binder input
-received from an untrusted host as authoritative without first
-verifying it has not been substituted.
+and the Attesting Environment is a security-critical boundary.
+See {{security-considerations}}.
 
 In mutual attestation deployments, both the Client and the Server
 simultaneously act as Attesters.  Each endpoint's Attesting
@@ -274,8 +267,8 @@ Environment independently generates Evidence bound to the session.
 
 ## Relying Party
 
-The Relying Party consumes Attestation Results or Evidence and uses
-them to make authorization decisions about the transport connection.
+The Relying Party consumes an Attestation Result and uses
+it to make authorization decisions about the transport connection.
 In the transport context, the Relying Party is typically the endpoint
 opposite the Attester — the Server when the Client attests, or the
 Client when the Server attests.
@@ -305,8 +298,8 @@ Verifier location is an independent deployment choice: a co-located
 Verifier operates under the Background-Check Model, whereas a remote
 Verifier may operate under either model.
 
-{{fig-roles}} illustrates the Evidence and Attestation Results flows
-under the two conveyance models.
+{{fig-roles}} illustrates how Attestation Credentials (either Evidence
+or Attestation Results) flows under the two conveyance models.
 
 ~~~ aasvg
  Background-Check Model
@@ -344,13 +337,13 @@ context.
 
 ## Relying Party Trust
 
-The Relying Party must trust that the Attestation Results it receives
-accurately reflect the Attester's state, which depends on its trust
+The Relying Party must trust that the Attestation Credential it receives
+accurately reflects the Attester's state, which depends on its trust
 in the Verifier and in the Endorsement chain for the Attesting
 Environment.
 
 The Relying Party must additionally satisfy itself that
-the Evidence is bound to the current session — that it has not been
+the Attestation Credential is bound to the current session — that it has not been
 replayed from a different session or transferred from a different
 endpoint.  This assurance is provided by the session binding mechanism
 described in {{channel-binding-pattern}}; the check may be performed by
@@ -378,22 +371,7 @@ the Verifier's logic is part of the Relying Party's own
 implementation.  In the remote Verifier deployment, the Relying Party
 must authenticate the Verifier and confirm that the Verifier's
 Appraisal Policy for Evidence is consistent with the Relying Party's
-own requirements before accepting Attestation Results.
-
-## Participating Intermediary Trust
-
-The Participating Intermediary is explicitly not trusted for the
-security properties of the attested channel: not for Evidence
-confidentiality (hence object-level encryption), not for session
-integrity after eviction (hence key rotation that excludes it from
-deriving post-eviction traffic keys), and not for Evidence appraisal.
-
-The Participating Intermediary is trusted solely to correctly execute
-its transport-layer routing obligations.  A Participating
-Intermediary that fails to honour those obligations or that
-suppresses eviction signalling causes session termination, providing
-fail-secure behaviour without requiring the endpoints to detect
-adversarial intent.
+own requirements before accepting any Attestation Credentials.
 
 # Timing Models {#timing-models}
 
@@ -424,9 +402,9 @@ application data exchange.
 The Attestation Binder is derived after handshake completion,
 tying the Evidence to the completed session.
 
-This deployment can be localized to a sidecar
-that withholds application data until attestation completes, decoupling attestation
-protocol from application logic.
+This deployment can be localized to a sidecar that withholds
+application data until attestation completes, decoupling
+attestation protocol from application logic.
 
 ## Combining Timing Models
 
@@ -517,9 +495,8 @@ Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
 of {{channel-binding-pattern}}.  The Session Binding Value is specific
-to the session
-and cannot be known before the session is initiated, providing
-nonce-style freshness in the sense of {{RFC9334}} Section 10.
+to the session and cannot be known before the session is initiated,
+providing nonce-style freshness in the sense of {{RFC9334}} Section 10.
 Evidence committed to an Attestation Binder derived from the Session
 Binding Value is therefore intrinsically fresh with respect to the
 session: a replay from a different session will carry an Attestation
@@ -529,8 +506,9 @@ will fail.
 ## Session resumption
 
 Session resumption introduces a specific freshness consideration.
-When a transport session is resumed, previously obtained Attestation
-Results may no longer reflect the Attester's current state.
+When a transport session is resumed, previously obtained
+Attestation Credential may no longer reflect the Attester's
+current state.
 
 ## Re-Attestation in Long-Running Sessions
 
@@ -561,21 +539,19 @@ a matter of Relying Party policy.
 ## Evidence Payload Confidentiality
 
 The Evidence payload carries Claims about the Attester's state and is
-the most privacy-sensitive artifact in the protocol.  Evidence
-payloads SHOULD be protected using object-level encryption to a key
+the most privacy-sensitive artifact in the protocol.  It is
+RECOMMENDED that Evidence payloads be encrypted to a key
 held exclusively by the intended recipient (typically the Verifier),
 so that the Evidence content is disclosed only to that recipient and
 not to the Relying Party or to other parties on the path.
 
-The complementary control for the Relying Party surface is
-Attestation Result minimization: the Attestation Result returned to
-the Relying Party SHOULD NOT re-expose sensitive Claims that were
-protected in the encrypted Evidence.  Encrypting Evidence for the
-Verifier without minimizing the Attestation Result shifts rather than
-eliminates the disclosure risk.  A framework for consistent handling
-of sensitive Evidence across RATS roles, including claim
-classification, Trusted Verifier management, and Attestation Result
-minimization, is provided in {{I-D.ounsworth-rats-privacy-framework}}.
+The complementary control for the Relying Party surface is minimization:
+the Attestation Credentials returned to the Relying Party SHOULD NOT
+re-expose sensitive Claims that were protected in any encrypted Evidence.
+A framework for consistent handling of sensitive Evidence across RATS roles,
+including claim classification, Trusted Verifier management, and
+Attestation Credential minimization, is provided in
+{{I-D.ounsworth-rats-privacy-framework}}.
 
 ## Transport Metadata
 
@@ -623,7 +599,7 @@ attestation evidence that reveals which specific implementations are
 in use can restrict access and enable tracking in ways that undermine
 the open internet.  Protocol designs building on this architecture
 should minimize vendor-specific claim disclosure consistent with the
-Attestation Result minimization controls described in this section
+Attestation Credential minimization controls described in this section
 and in {{I-D.ounsworth-rats-privacy-framework}}.
 
 # Security Considerations {#security-considerations}
@@ -648,6 +624,25 @@ different session or from a different endpoint; a replay carries
 a Binder derived from a different Session Binding Value and MUST
 be rejected. See {{channel-binding-pattern}}.
 
+**Split-Deployments.** Because a compromised host could attempt to
+use the Attesting Environment as a signing oracle by substituting
+the attestation binder input, the architecture relies on
+cryptographic binding rather than continuous state monitoring.
+The Attesting Environment MUST bind the Evidence to the private
+identity key it holds to authenticate a connection (for example,
+by including a hash of the associated public key in the
+signed Evidence).
+
+The Relying Party then verifies that this claim matches the
+identity key presented in the transport handshake, preventing
+an untrusted host from successfully substituting the binder.
+
+**Key Non-exportability (informative).** The specific concern of
+demonstrating that the Subject Key used for transport authentication
+is physically confined within the attested execution environment is
+addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
+not re-specified here.
+
 **Evidence Freshness.** Evidence reflects the Attester's state at or
 near the Evidence Generation Time for the session in which it is
 presented.  Per-session freshness ensures Evidence from a prior
@@ -660,23 +655,16 @@ not at Connection Establishment Time.
 object-level encryption to a key held exclusively by the intended
 recipient.  See {{I-D.ounsworth-rats-privacy-framework}}.
 
-**Key Non-exportability (informative).** The specific concern of
-demonstrating that the Subject Key used for transport authentication
-is physically confined within the attested execution environment is
-addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
-not re-specified here.
-
 **Session Resumption.** When a transport session is resumed, previously
-obtained Attestation Results may no longer reflect the Attester's
+obtained Attestation Credential may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
 to a resumed session.
 
 **Directional Endpoint Binding.** Distinct Attestation Binders MUST be
 derived for the initiator and the responder from the same Session
-Binding Value using distinct inputs.  Evidence produced by one
-endpoint MUST NOT
-satisfy the verification requirement for the opposite endpoint.  See
-{{channel-binding-pattern}}
+Binding Value using distinct inputs.  Evidence produced by one endpoint
+MUST NOT satisfy the verification requirement for the opposite endpoint.
+See {{channel-binding-pattern}}.
 
 **Transmission and Verification Anchor Soundness.** An Attestation
 Binder may be included in a transport message before peer
@@ -711,7 +699,8 @@ This document has no IANA actions.
 # Acknowledgments
 {:numbered="false"}
 
-The authors wish to thank Usama Sardar, Yuning Jiang, and Meiling Chen
-for their thoughtful input and contributions that influenced this document.
+The authors wish to thank all SEAT WG participants for their
+thoughtful input and contributions that have helped influence
+this document.
 
 TODO
