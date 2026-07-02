@@ -90,22 +90,25 @@ Table of Contents
      5.1.  Intra-Handshake Attestation
      5.2.  Post-Handshake Attestation
      5.3.  Combining Timing Models
-   6.  Attestation Session Binding
-   7.  Freshness
-     7.1.  Per-session freshness
-     7.2.  Session resumption
-     7.3.  Re-Attestation in Long-Running Sessions
-   8.  Privacy Considerations
-     8.1.  Evidence Payload Confidentiality
-     8.2.  Transport Metadata
-     8.3.  Attestation Key Correlation
-     8.4.  Anonymous Client Attestation
-     8.5.  Scope Boundary and Internet Openness
-   9.  Security Considerations
-   10. IANA Considerations
-   11. References
-     11.1.  Normative References
-     11.2.  Informative References
+   6.  Failure handling considerations
+     6.1.  Failure handing within Intra-Handshake Window
+     6.2.  Failure handing within Post-Handshake Window
+   7.  Attestation Session Binding
+   8.  Freshness
+     8.1.  Per-session freshness
+     8.2.  Session resumption
+     8.3.  Re-Attestation in Long-Running Sessions
+   9.  Privacy Considerations
+     9.1.  Evidence Payload Confidentiality
+     9.2.  Transport Metadata
+     9.3.  Attestation Key Correlation
+     9.4.  Anonymous Client Attestation
+     9.5.  Scope Boundary and Internet Openness
+   10. Security Considerations
+   11. IANA Considerations
+   12. References
+     12.1.  Normative References
+     12.2.  Informative References
    Appendix A.  Implementing Transport Integration (informational)
      A.1.  Extension-Based Conveyance
      A.2.  Structured Payload Conveyance
@@ -116,7 +119,7 @@ Table of Contents
 
 1.1.  Establishing Trust in Secure Communications
 
-      "Cryptography [without system integrity] is like investing in an
+      "Cryptography _without system integrity_ is like investing in an
       armored car to carry money between a customer living in a
       cardboard box and a person doing business on a park bench."
 
@@ -245,7 +248,7 @@ Table of Contents
       transport session, from which Attestation Binders are derived.  A
       Session Binding Value may be public or secret depending on the
       topology; what is required is that it cannot be known before the
-      session is initiated.  See Section 6.
+      session is initiated.  See Section 7.
 
    Attestation Binder:  A cryptographic value derived from a Session
       Binding Value and committed to by the Attesting Environment into
@@ -319,7 +322,7 @@ Table of Contents
    specific session.  In a Split Deployment, the transport stack is in
    the Target Environment and the interface between the transport stack
    and the Attesting Environment is a security-critical boundary.  See
-   Section 9.
+   Section 10.
 
    In mutual attestation deployments, both the Client and the Server
    simultaneously act as Attesters.  Each endpoint's Attesting
@@ -403,7 +406,7 @@ Table of Contents
    Attestation Credential is bound to the current session — that it has
    not been replayed from a different session or transferred from a
    different endpoint.  This assurance is provided by the session
-   binding mechanism described in Section 6; the check may be performed
+   binding mechanism described in Section 7; the check may be performed
    by the Relying Party itself or delegated to the Verifier, but it
    cannot be pre-computed independently of the session.
 
@@ -481,7 +484,43 @@ Table of Contents
    Protocol specifications building on this architecture MAY support one
    or both timing models.
 
-6.  Attestation Session Binding
+6.  Failure handling considerations
+
+6.1.  Failure handing within Intra-Handshake Window
+
+   When remote attestation occurs within the Intra-Handshake Window, the
+   transport handshake withholds progression to application data
+   exchange until the Attestation Result is available: application data
+   exchange has not yet begun.  A Verifier rejection, or a Relying Party
+   policy rejection of an otherwise valid Attestation Result, MUST
+   result in a fatal error consistent with the transport protocol's
+   existing handshake-failure handling.
+
+   It is RECOMMENDED that the failure mode be interpretable by the
+   application as a remote-attestation-related fault.  Remote
+   attestation specificity provides greater flexibility to apply
+   application-layer policies, and assists in auditing and general
+   debugging.
+
+6.2.  Failure handing within Post-Handshake Window
+
+   When attestation occurs within the Post-Handshake Window, or when Re-
+   attestation fails during the Lifetime of Connection, the transport
+   session already exists and application data may already be flowing.
+   [RFC9334] expects a failed Attester appraisal to result in reduced
+   access or privileges rather than outright rejection.  In the event of
+   failures occurring within the Post-Handshake Window, this behaviour
+   is to be handled at the transport layer.
+
+   As the Relying Party's enforcement point sits outside the transport
+   handshake, operating on already-established application-layer
+   traffic, the Appraisal Policy determines whether the connection is
+   torn down, or restricted to a subset of application-layer
+   functionality.  Failure handling of Post-Handshake Attestation does
+   not retroactively protect application data already exchanged prior to
+   the failed appraisal; it bounds further exposure going forward.
+
+7.  Attestation Session Binding
 
    Regardless of which timing model is used or which transport protocol
    is in use, a correctly bound attested channel requires that three
@@ -521,7 +560,7 @@ Table of Contents
    Key used for authentication was not generated or protected within
    that environment.  Session binding alone does not bind the Subject
    Key to the attested environment; this is handled at the RATS layer,
-   as discussed under Key Non-exportability in Section 9.
+   as discussed under Key Non-exportability in Section 10.
 
    The Evidence itself plays a critical role in verifying that these
    three session binding conditions have been successfully achieved.
@@ -539,18 +578,18 @@ Table of Contents
    Relying Party conveys the binder to the Verifier, which checks it
    against the binder in the Evidence.
 
-7.  Freshness
+8.  Freshness
 
    The freshness of Evidence is critical to its value as a
    trustworthiness signal.  In the transport context, freshness has
    several distinct scopes that must be addressed separately.
 
-7.1.  Per-session freshness
+8.1.  Per-session freshness
 
    Per-session freshness ensures that Evidence is bound to the specific
    session being evaluated and cannot be replayed from a prior session.
    This property is addressed directly by the session binding mechanism
-   of Section 6.  The Session Binding Value is specific to the session
+   of Section 7.  The Session Binding Value is specific to the session
    and cannot be known before the session is initiated, providing nonce-
    style freshness in the sense of [RFC9334] Section 10.  Evidence
    committed to an Attestation Binder derived from the Session Binding
@@ -559,13 +598,13 @@ Table of Contents
    derived from a different Session Binding Value, and appraisal will
    fail.
 
-7.2.  Session resumption
+8.2.  Session resumption
 
    Session resumption introduces a specific freshness consideration.
    When a transport session is resumed, previously obtained Attestation
    Credential may no longer reflect the Attester's current state.
 
-7.3.  Re-Attestation in Long-Running Sessions
+8.3.  Re-Attestation in Long-Running Sessions
 
    Initial attestation at Connection Establishment Time addresses the
    architectural invariants the Relying Party's policy requires before
@@ -585,11 +624,12 @@ Table of Contents
    a state change occurred.  It bounds further exposure by conditioning
    continued sensitive data transmission on a current trust assessment.
    Whether to terminate a session upon re-attestation failure or
-   continue with reduced privilege is a matter of Relying Party policy.
+   continue with reduced privilege is a matter of Relying Party policy;
+   see Section 6.
 
-8.  Privacy Considerations
+9.  Privacy Considerations
 
-8.1.  Evidence Payload Confidentiality
+9.1.  Evidence Payload Confidentiality
 
    The Evidence payload carries Claims about the Attester's state and is
    the most privacy-sensitive artifact in the protocol.  It is
@@ -606,14 +646,14 @@ Table of Contents
    Trusted Verifier management, and Attestation Credential minimization,
    is provided in [I-D.ounsworth-rats-privacy-framework].
 
-8.2.  Transport Metadata
+9.2.  Transport Metadata
 
    The transport connection discloses metadata — IP addresses, server
    name indications, and connection timing — that is visible to passive
    network observers.  This disclosure is inherent to the transport
    protocol and is not specific to the attestation layer.
 
-8.3.  Attestation Key Correlation
+9.3.  Attestation Key Correlation
 
    When the same attestation signing key is used across multiple
    sessions, any party with access to Evidence from more than one of
@@ -622,7 +662,7 @@ Table of Contents
    for client Attesters where privacy of individual connections is a
    concern.
 
-8.4.  Anonymous Client Attestation
+9.4.  Anonymous Client Attestation
 
    The SEAT architecture supports deployments where a client Attester
    attests to the trustworthiness of its Attesting Environment without
@@ -631,7 +671,7 @@ Table of Contents
    appraisal policy applies to the client's hardware and software state
    rather than to a disclosed identity.
 
-8.5.  Scope Boundary and Internet Openness
+9.5.  Scope Boundary and Internet Openness
 
    The IAB has issued a statement cautioning that using client
    attestation as a barrier to access for otherwise open protocols and
@@ -655,7 +695,7 @@ Table of Contents
    Attestation Credential minimization controls described in this
    section and in [I-D.ounsworth-rats-privacy-framework].
 
-9.  Security Considerations
+10.  Security Considerations
 
    This section enumerates the security properties and considerations of
    the SEAT architecture.  Security goals state outcomes the
@@ -675,7 +715,7 @@ Table of Contents
    Evidence from one session cannot satisfy a Verifier on a different
    session or from a different endpoint; a replay carries a Binder
    derived from a different Session Binding Value and MUST be rejected.
-   See Section 6.
+   See Section 7.
 
    *Split-Deployments.* Because a compromised host could attempt to use
    the Attesting Environment as a signing oracle by substituting the
@@ -716,7 +756,7 @@ Table of Contents
    derived for the initiator and the responder from the same Session
    Binding Value using distinct inputs.  Evidence produced by one
    endpoint MUST NOT satisfy the verification requirement for the
-   opposite endpoint.  See Section 6.
+   opposite endpoint.  See Section 7.
 
    *Transmission and Verification Anchor Soundness.* An Attestation
    Binder may be included in a transport message before peer
@@ -741,13 +781,13 @@ Table of Contents
    security assurance, as the Attester may serve malicious code that
    bypasses cryptographic validation.
 
-10.  IANA Considerations
+11.  IANA Considerations
 
    This document has no IANA actions.
 
-11.  References
+12.  References
 
-11.1.  Normative References
+12.1.  Normative References
 
    [I-D.mihalcea-seat-use-cases]
               Mihalcea, I., Sardar, M. U., Fossati, T., Reddy.K, T.,
@@ -772,7 +812,7 @@ Table of Contents
               Architecture", RFC 9334, DOI 10.17487/RFC9334, January
               2023, <https://www.rfc-editor.org/rfc/rfc9334>.
 
-11.2.  Informative References
+12.2.  Informative References
 
    [I-D.ounsworth-rats-privacy-framework]
               Ounsworth, M., Tschofenig, H., and G. Lehmann, "Privacy
