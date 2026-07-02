@@ -450,13 +450,18 @@ or both timing models.
 
 ## Failure handing within Intra-Handshake Window
 
-When remote attestation occurs within the Intra-Handshake Window, the
-transport handshake withholds progression to application data
+When remote attestation occurs within the Intra-Handshake Window,
+the transport handshake withholds progression to application data
 exchange until the Attestation Result is available: application
 data exchange has not yet begun. A Verifier rejection, or a
 Relying Party policy rejection of an otherwise valid Attestation
-Result, MUST process a fatal error consistent with the transport
+Result, MUST result in a fatal error consistent with the transport
 protocol's existing handshake-failure handling.
+
+It is RECOMMENDED that the failure mode be interpretable by the
+application as a remote-attestation-related fault. Remote attestation
+specificity provides greater flexibility to apply application-layer
+policies, and assists in auditing and general debugging.
 
 ## Failure handing within Post-Handshake Window
 
