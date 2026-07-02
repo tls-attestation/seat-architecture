@@ -246,7 +246,7 @@ Layered Attestation:
 
 # Roles and Entities
 
-The SEAT architecture maps the roles defined in [RFC9334] to standard
+The SEAT architecture maps the roles defined in {{RFC9334}} to standard
 transport protocol entities.  The subsections below describe each
 role and its specific character in the transport context.
 
