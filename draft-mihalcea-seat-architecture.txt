@@ -274,6 +274,34 @@ Table of Contents
    transport protocol entities.  The subsections below describe each
    role and its specific character in the transport context.
 
+   The overarching SEAT goal is to establish an Attested Channel between
+   two entities.  Figure 1 shows the TLS and RATS roles that are
+   involved in achieving this goal, and how they interact.
+
+                                .--------.
+               .---------------+ Verifier +---------------.
+              |                 '--------'                 |
+              |                                            |
+              |                                            |
+    .---------|----------.  Nonce-based         .----------|---------.
+    |  .------+------.   |  Remote Attestation  |   .------+------.  |
+    | |   Attesting   |<-+----------------------+->| Relying Party | |
+    | |  Environment  |  |          ^           |   '-------------'  |
+    |  '-+-----------'   |          |           |                    |
+    |    | Collect       |          | Attest'n  |                    |
+    |    v Claims        |          | Binder    |                    |
+    |  .-------------.   |          |           |                    |
+    | |  .--------.   |  |          |           |   .-------------.  |
+    | | | TLS peer |<-+--+----------+------------->|   TLS peer    | |
+    | |  '--------'   |  |    Secure Channel    |   '-------------'  |
+    | |               |  |                      |                    |
+    | |    Target     |  |                      |                    |
+    | |  Environment  |  |                      |                    |
+    |  '-------------'   |                      |                    |
+    '--------------------'                      '--------------------'
+
+                     Figure 1: Attested Secure Channel
+
 3.1.  Attester
 
    The Attester produces Evidence about its current state for
@@ -325,7 +353,7 @@ Table of Contents
    Verifier operates under the Background-Check Model, whereas a remote
    Verifier may operate under either model.
 
-   Figure 1 illustrates how Attestation Credentials (either Evidence or
+   Figure 2 illustrates how Attestation Credentials (either Evidence or
    Attestation Results) flows under the two conveyance models.
 
     Background-Check Model
@@ -352,7 +380,7 @@ Table of Contents
      | Relying Party |
      +---------------+
 
-         Figure 1: RATS Conveyance Models in the Transport Context
+         Figure 2: RATS Conveyance Models in the Transport Context
 
 4.  Trust Model
 

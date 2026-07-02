@@ -1526,6 +1526,110 @@ from the transport stack via a trusted interface.<a href="#section-2-4.28.1" cla
 <p id="section-3-1">The SEAT architecture maps the roles defined in <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> to standard
 transport protocol entities.  The subsections below describe each
 role and its specific character in the transport context.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">The overarching SEAT goal is to establish an Attested Channel between two
+entities.  <a href="#fig-atls" class="auto internal xref">Figure 1</a> shows the TLS and RATS roles that are involved in
+achieving this goal, and how they interact.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<span id="name-attested-secure-channel"></span><div id="fig-atls">
+<figure id="figure-1">
+        <div id="section-3-3.1">
+          <div class="alignCenter art-svg artwork" id="section-3-3.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="368" width="536" viewBox="0 0 536 368" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+              <path d="M 8,112 L 8,352" fill="none" stroke="black"></path>
+              <path d="M 24,144 L 24,160" fill="none" stroke="black"></path>
+              <path d="M 24,240 L 24,320" fill="none" stroke="black"></path>
+              <path d="M 48,176 L 48,216" fill="none" stroke="black"></path>
+              <path d="M 88,64 L 88,128" fill="none" stroke="black"></path>
+              <path d="M 152,144 L 152,160" fill="none" stroke="black"></path>
+              <path d="M 152,240 L 152,320" fill="none" stroke="black"></path>
+              <path d="M 176,112 L 176,352" fill="none" stroke="black"></path>
+              <path d="M 264,152 L 264,256" fill="none" stroke="black"></path>
+              <path d="M 360,112 L 360,248" fill="none" stroke="black"></path>
+              <path d="M 360,264 L 360,352" fill="none" stroke="black"></path>
+              <path d="M 448,64 L 448,128" fill="none" stroke="black"></path>
+              <path d="M 528,112 L 528,352" fill="none" stroke="black"></path>
+              <path d="M 240,32 L 296,32" fill="none" stroke="black"></path>
+              <path d="M 104,48 L 224,48" fill="none" stroke="black"></path>
+              <path d="M 312,48 L 432,48" fill="none" stroke="black"></path>
+              <path d="M 240,64 L 296,64" fill="none" stroke="black"></path>
+              <path d="M 8,112 L 80,112" fill="none" stroke="black"></path>
+              <path d="M 96,112 L 176,112" fill="none" stroke="black"></path>
+              <path d="M 360,112 L 440,112" fill="none" stroke="black"></path>
+              <path d="M 456,112 L 528,112" fill="none" stroke="black"></path>
+              <path d="M 40,128 L 136,128" fill="none" stroke="black"></path>
+              <path d="M 400,128 L 496,128" fill="none" stroke="black"></path>
+              <path d="M 160,144 L 376,144" fill="none" stroke="black"></path>
+              <path d="M 400,160 L 496,160" fill="none" stroke="black"></path>
+              <path d="M 40,176 L 136,176" fill="none" stroke="black"></path>
+              <path d="M 40,224 L 136,224" fill="none" stroke="black"></path>
+              <path d="M 56,240 L 112,240" fill="none" stroke="black"></path>
+              <path d="M 400,240 L 496,240" fill="none" stroke="black"></path>
+              <path d="M 136,256 L 376,256" fill="none" stroke="black"></path>
+              <path d="M 56,272 L 112,272" fill="none" stroke="black"></path>
+              <path d="M 400,272 L 496,272" fill="none" stroke="black"></path>
+              <path d="M 40,336 L 136,336" fill="none" stroke="black"></path>
+              <path d="M 8,352 L 176,352" fill="none" stroke="black"></path>
+              <path d="M 360,352 L 528,352" fill="none" stroke="black"></path>
+              <path d="M 240,32 C 231.16936,32 224,39.16936 224,48" fill="none" stroke="black"></path>
+              <path d="M 296,32 C 304.83064,32 312,39.16936 312,48" fill="none" stroke="black"></path>
+              <path d="M 104,48 C 95.16936,48 88,55.16936 88,64" fill="none" stroke="black"></path>
+              <path d="M 432,48 C 440.83064,48 448,55.16936 448,64" fill="none" stroke="black"></path>
+              <path d="M 240,64 C 231.16936,64 224,56.83064 224,48" fill="none" stroke="black"></path>
+              <path d="M 296,64 C 304.83064,64 312,56.83064 312,48" fill="none" stroke="black"></path>
+              <path d="M 40,128 C 31.16936,128 24,135.16936 24,144" fill="none" stroke="black"></path>
+              <path d="M 136,128 C 144.83064,128 152,135.16936 152,144" fill="none" stroke="black"></path>
+              <path d="M 400,128 C 391.16936,128 384,135.16936 384,144" fill="none" stroke="black"></path>
+              <path d="M 496,128 C 504.83064,128 512,135.16936 512,144" fill="none" stroke="black"></path>
+              <path d="M 400,160 C 391.16936,160 384,152.83064 384,144" fill="none" stroke="black"></path>
+              <path d="M 496,160 C 504.83064,160 512,152.83064 512,144" fill="none" stroke="black"></path>
+              <path d="M 40,176 C 31.16936,176 24,168.83064 24,160" fill="none" stroke="black"></path>
+              <path d="M 136,176 C 144.83064,176 152,168.83064 152,160" fill="none" stroke="black"></path>
+              <path d="M 40,224 C 31.16936,224 24,231.16936 24,240" fill="none" stroke="black"></path>
+              <path d="M 136,224 C 144.83064,224 152,231.16936 152,240" fill="none" stroke="black"></path>
+              <path d="M 56,240 C 47.16936,240 40,247.16936 40,256" fill="none" stroke="black"></path>
+              <path d="M 112,240 C 120.83064,240 128,247.16936 128,256" fill="none" stroke="black"></path>
+              <path d="M 400,240 C 391.16936,240 384,247.16936 384,256" fill="none" stroke="black"></path>
+              <path d="M 496,240 C 504.83064,240 512,247.16936 512,256" fill="none" stroke="black"></path>
+              <path d="M 56,272 C 47.16936,272 40,264.83064 40,256" fill="none" stroke="black"></path>
+              <path d="M 112,272 C 120.83064,272 128,264.83064 128,256" fill="none" stroke="black"></path>
+              <path d="M 400,272 C 391.16936,272 384,264.83064 384,256" fill="none" stroke="black"></path>
+              <path d="M 496,272 C 504.83064,272 512,264.83064 512,256" fill="none" stroke="black"></path>
+              <path d="M 40,336 C 31.16936,336 24,328.83064 24,320" fill="none" stroke="black"></path>
+              <path d="M 136,336 C 144.83064,336 152,328.83064 152,320" fill="none" stroke="black"></path>
+              <polygon class="arrowhead" points="384,256 372,250.4 372,261.6" fill="black" transform="rotate(0,376,256)"></polygon>
+              <polygon class="arrowhead" points="384,144 372,138.4 372,149.6" fill="black" transform="rotate(0,376,144)"></polygon>
+              <polygon class="arrowhead" points="272,152 260,146.4 260,157.6" fill="black" transform="rotate(270,264,152)"></polygon>
+              <polygon class="arrowhead" points="168,144 156,138.4 156,149.6" fill="black" transform="rotate(180,160,144)"></polygon>
+              <polygon class="arrowhead" points="144,256 132,250.4 132,261.6" fill="black" transform="rotate(180,136,256)"></polygon>
+              <polygon class="arrowhead" points="56,216 44,210.4 44,221.6" fill="black" transform="rotate(90,48,216)"></polygon>
+              <g class="text">
+                <text x="268" y="52">Verifier</text>
+                <text x="240" y="116">Nonce-based</text>
+                <text x="220" y="132">Remote</text>
+                <text x="296" y="132">Attestation</text>
+                <text x="88" y="148">Attesting</text>
+                <text x="424" y="148">Relying</text>
+                <text x="480" y="148">Party</text>
+                <text x="88" y="164">Environment</text>
+                <text x="88" y="196">Collect</text>
+                <text x="308" y="196">Attest'n</text>
+                <text x="84" y="212">Claims</text>
+                <text x="300" y="212">Binder</text>
+                <text x="64" y="260">TLS</text>
+                <text x="100" y="260">peer</text>
+                <text x="424" y="260">TLS</text>
+                <text x="460" y="260">peer</text>
+                <text x="236" y="276">Secure</text>
+                <text x="296" y="276">Channel</text>
+                <text x="84" y="308">Target</text>
+                <text x="88" y="324">Environment</text>
+              </g>
+            </svg><a href="#section-3-3.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-attested-secure-channel" class="selfRef">Attested Secure Channel</a>
+        </figcaption></figure>
+</div>
 <div id="attester">
 <section id="section-3.1">
         <h3 id="name-attester">
@@ -1591,10 +1695,10 @@ Party.<a href="#section-3.3-3.4.1" class="pilcrow">¶</a></p>
 <p id="section-3.3-4">Verifier location is an independent deployment choice: a co-located
 Verifier operates under the Background-Check Model, whereas a remote
 Verifier may operate under either model.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
-<p id="section-3.3-5"><a href="#fig-roles" class="auto internal xref">Figure 1</a> illustrates how Attestation Credentials (either Evidence
+<p id="section-3.3-5"><a href="#fig-roles" class="auto internal xref">Figure 2</a> illustrates how Attestation Credentials (either Evidence
 or Attestation Results) flows under the two conveyance models.<a href="#section-3.3-5" class="pilcrow">¶</a></p>
 <span id="name-rats-conveyance-models-in-t"></span><div id="fig-roles">
-<figure id="figure-1">
+<figure id="figure-2">
           <div id="section-3.3-6.1">
             <div class="alignLeft art-svg artwork" id="section-3.3-6.1.1">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="416" width="520" viewBox="0 0 520 416" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
@@ -1694,7 +1798,7 @@ or Attestation Results) flows under the two conveyance models.<a href="#section-
               </svg><a href="#section-3.3-6.1.1" class="pilcrow">¶</a>
 </div>
 </div>
-<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
 <a href="#name-rats-conveyance-models-in-t" class="selfRef">RATS Conveyance Models in the Transport Context</a>
           </figcaption></figure>
 </div>
