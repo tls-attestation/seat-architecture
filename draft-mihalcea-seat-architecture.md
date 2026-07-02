@@ -25,18 +25,18 @@ venue:
   latest: "https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html"
 
 author:
-  - fullname: Ionuț Mihalcea
-    organization: Arm
-    email: ionut.mihalcea@arm.com
-  - fullname: Thomas Fossati
-    organization: Linaro
-    email: thomas.fossati@linaro.org
-  - fullname: Tirumaleswar Reddy
-    organization: Nokia
-    email: "kondtir@gmail.com"
   - fullname: Nathanael Ritz
     organization: Independent
     email: "ietf@nritz.com"
+  - fullname: Thomas Fossati
+    organization: Independent
+    email: "tho.ietf@gmail.com"
+  - fullname: Tirumaleswar Reddy
+    organization: Nokia
+    email: "kondtir@gmail.com"
+  - fullname: Ionuț Mihalcea
+    organization: Arm
+    email: "ionut.mihalcea@arm.com"
 
 normative:
   RFC2119:
