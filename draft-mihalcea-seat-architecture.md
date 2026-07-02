@@ -250,6 +250,15 @@ The SEAT architecture maps the roles defined in [RFC9334] to standard
 transport protocol entities.  The subsections below describe each
 role and its specific character in the transport context.
 
+The overarching SEAT goal is to establish an Attested Channel between two
+entities.  {{fig-atls}} shows the TLS and RATS roles that are involved in
+achieving this goal, and how they interact.
+
+~~~ aasvg
+{::include img/arch.ascii-art}
+~~~
+{: #fig-atls artwork-align="center" title="Attested Secure Channel"}
+
 ## Attester
 
 The Attester produces Evidence about its current state for
