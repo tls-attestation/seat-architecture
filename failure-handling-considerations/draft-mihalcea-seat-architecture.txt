@@ -5,12 +5,12 @@
 Network Working Group                                        I. Mihalcea
 Internet-Draft                                                       Arm
 Intended status: Informational                                T. Fossati
-Expires: 2 January 2027                                           Linaro
+Expires: 3 January 2027                                           Linaro
                                                                 T. Reddy
                                                                    Nokia
                                                                  N. Ritz
                                                              Independent
-                                                             1 July 2026
+                                                             2 July 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -54,7 +54,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 January 2027.
+   This Internet-Draft will expire on 3 January 2027.
 
 Copyright Notice
 
@@ -484,8 +484,14 @@ Table of Contents
    exchange until the Attestation Result is available: application data
    exchange has not yet begun.  A Verifier rejection, or a Relying Party
    policy rejection of an otherwise valid Attestation Result, MUST
-   process a fatal error consistent with the transport protocol's
+   result in a fatal error consistent with the transport protocol's
    existing handshake-failure handling.
+
+   It is RECOMMENDED that the failure mode be interpretable by the
+   application as a remote-attestation-related fault.  Remote
+   attestation specificity provides greater flexibility to apply
+   application-layer policies, and assists in auditing and general
+   debugging.
 
 6.2.  Failure handing within Post-Handshake Window
 
