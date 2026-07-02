@@ -25,18 +25,18 @@ venue:
   latest: "https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html"
 
 author:
-  - fullname: Ionuț Mihalcea
-    organization: Arm
-    email: ionut.mihalcea@arm.com
-  - fullname: Thomas Fossati
-    organization: Linaro
-    email: thomas.fossati@linaro.org
-  - fullname: Tirumaleswar Reddy
-    organization: Nokia
-    email: "kondtir@gmail.com"
   - fullname: Nathanael Ritz
     organization: Independent
     email: "ietf@nritz.com"
+  - fullname: Thomas Fossati
+    organization: Independent
+    email: "tho.ietf@gmail.com"
+  - fullname: Tirumaleswar Reddy
+    organization: Nokia
+    email: "kondtir@gmail.com"
+  - fullname: Ionuț Mihalcea
+    organization: Arm
+    email: "ionut.mihalcea@arm.com"
 
 normative:
   RFC2119:
@@ -457,7 +457,9 @@ Re-attestation fails during the Lifetime of Connection, the
 transport session already exists and application data may already
 be flowing.  {{RFC9334}} expects a failed Attester appraisal to
 result in reduced access or privileges rather than outright
-rejection.  In the event of failures occurring within the Post-Handshake Window, this behaviour is to be handled at the transport layer.
+rejection.  In the event of failures occurring within the
+Post-Handshake Window, this behaviour is to be handled at
+the transport layer.
 
 As the Relying Party's enforcement point sits outside the
 transport handshake, operating on already-established
