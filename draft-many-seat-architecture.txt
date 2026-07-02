@@ -2,14 +2,13 @@
 
 
 
-Network Working Group                                        I. Mihalcea
-Internet-Draft                                                       Arm
-Intended status: Informational                                T. Fossati
-Expires: 3 January 2027                                           Linaro
-                                                                T. Reddy
+Network Working Group                                            N. Ritz
+Internet-Draft                                                T. Fossati
+Intended status: Informational                               Independent
+Expires: 3 January 2027                                         T. Reddy
                                                                    Nokia
-                                                                 N. Ritz
-                                                             Independent
+                                                             I. Mihalcea
+                                                                     Arm
                                                              2 July 2026
 
 
@@ -903,14 +902,14 @@ Acknowledgments
 
 Authors' Addresses
 
-   Ionuț Mihalcea
-   Arm
-   Email: ionut.mihalcea@arm.com
+   Nathanael Ritz
+   Independent
+   Email: ietf@nritz.com
 
 
    Thomas Fossati
-   Linaro
-   Email: thomas.fossati@linaro.org
+   Independent
+   Email: tho.ietf@gmail.com
 
 
    Tirumaleswar Reddy
@@ -918,6 +917,6 @@ Authors' Addresses
    Email: kondtir@gmail.com
 
 
-   Nathanael Ritz
-   Independent
-   Email: ietf@nritz.com
+   Ionuț Mihalcea
+   Arm
+   Email: ionut.mihalcea@arm.com
