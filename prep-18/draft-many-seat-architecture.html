@@ -1419,122 +1419,159 @@ context.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">This document adopts terms of art such as <code>intra-</code> and <code>post-</code>
 as coined by <span>[<a href="#NIEME2021" class="cite xref">NIEME2021</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-2-4">
-        <dt id="section-2-4.1">Attestation Credential:</dt>
+        <dt id="section-2-4.1">Target/TEE‑Bound Key (<code>tbK</code>):</dt>
         <dd style="margin-left: 1.5em" id="section-2-4.2">
-          <p id="section-2-4.2.1">A collective term for Evidence and Attestation Results,
-used where a statement applies to both without distinguishing
-between them. Where a statement applies specifically to one but
-not the other, this document uses the more specific term.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
+          <p id="section-2-4.2.1">An asymmetric key pair whose private key is generated
+and maintained exclusively within the Target Environment
+(e.g., a TEE). The <code>tbK</code> is used to authenticate the Attester’s
+transport endpoint (for example, signing the TLS CertificateVerify
+message). Evidence produced by the Attesting Environment
+<span class="bcp14">MUST</span> include a binding to the <code>tbK</code>.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.3">Attested Channel:</dt>
+<dt id="section-2-4.3">Hardware‑Bound Key (<code>hbK</code>):</dt>
         <dd style="margin-left: 1.5em" id="section-2-4.4">
-          <p id="section-2-4.4.1">A transport session in which at least one endpoint
+          <p id="section-2-4.4.1">A long‑lived asymmetric key pair whose private key resides
+outside the Target Environment, typically in a Hardware Security
+Module (HSM) or similar hardened service. The <code>hbK</code>’s certificate
+provides the conventional identity (e.g., a WebPKI domain
+validation) to the Relying Party. In deployments where a
+short‑lived <code>tbK</code> is used, the <code>hbK</code> <span class="bcp14">MAY</span> authorise the <code>tbK</code>.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-4.5">Attesting Environment Key (<code>aeK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.6">
+          <p id="section-2-4.6.1">The asymmetric key used by the Attesting Environment
+to sign Evidence. The Verifier trusts the <code>aeK</code> through an
+Endorsement chain that typically roots in a hardware manufacturer
+or a device‑specific CA. The <code>aeK</code> is used solely for attestation
+and is distinct from any key used for transport authentication.<a href="#section-2-4.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-4.7">Attestation Result Key (<code>arK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.8">
+          <p id="section-2-4.8.1">The asymmetric key used by a Verifier to sign
+Attestation Results. The Relying Party must possess the
+corresponding trust anchor for the <code>arK</code> so that it can verify
+the integrity and authenticity of received Attestation Results.<a href="#section-2-4.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-4.9">Attestation Credential:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.10">
+          <p id="section-2-4.10.1">A collective term for Evidence and Attestation Results,
+used where a statement applies to both without distinguishing
+between them. Where a statement applies specifically to one but
+not the other, this document uses the more specific term.<a href="#section-2-4.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-4.11">Attested Channel:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.12">
+          <p id="section-2-4.12.1">A transport session in which at least one endpoint
 has produced Evidence that has been appraised, and in which that
 Evidence is cryptographically bound to the session such that the
 appraisal cannot be replayed to a different session or transferred
-to a different endpoint.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
+to a different endpoint.<a href="#section-2-4.12.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.5">Attestation Timing Model:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.6">
-          <p id="section-2-4.6.1">The temporal relationship between Evidence
+<dt id="section-2-4.13">Attestation Timing Model:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.14">
+          <p id="section-2-4.14.1">The temporal relationship between Evidence
 conveyance and connection establishment time.  This document
 defines two timing models: Intra-Handshake Attestation and Post-
-Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-4.6.1" class="pilcrow">¶</a></p>
+Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-4.14.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.7">Evidence Generation Time:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.8">
-          <p id="section-2-4.8.1">The point at which an Attester's Claims
+<dt id="section-2-4.15">Evidence Generation Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.16">
+          <p id="section-2-4.16.1">The point at which an Attester's Claims
 are signed to produce Evidence. Depending on the internal workings
 of the Attester, the Evidence reflects the reported state at the
 time the underlying Claims were collected and may not represent a
 snapshot of state at the exact moment of signing the evidence. In all cases, it
-makes no representation about the Attester's state at any later time.<a href="#section-2-4.8.1" class="pilcrow">¶</a></p>
+makes no representation about the Attester's state at any later time.<a href="#section-2-4.16.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.9">Connection Establishment Time:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.10">
-          <p id="section-2-4.10.1">The point at which a transport
+<dt id="section-2-4.17">Connection Establishment Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.18">
+          <p id="section-2-4.18.1">The point at which a transport
 handshake completes and the session becomes usable for application
-data exchange.<a href="#section-2-4.10.1" class="pilcrow">¶</a></p>
+data exchange.<a href="#section-2-4.18.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.11">Lifetime of Connection:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.12">
-          <p id="section-2-4.12.1">The period from Connection Establishment
+<dt id="section-2-4.19">Lifetime of Connection:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.20">
+          <p id="section-2-4.20.1">The period from Connection Establishment
 Time until the session is torn down.  Post-handshake re-
 attestation operates during the Lifetime of Connection, allowing
 Evidence to reflect the Attester's current state rather than its
-state at Connection Establishment Time.<a href="#section-2-4.12.1" class="pilcrow">¶</a></p>
+state at Connection Establishment Time.<a href="#section-2-4.20.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.13">Re-attestation:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.14">
-          <p id="section-2-4.14.1">The production and appraisal of fresh Evidence during an
-established session's Lifetime of Connection.<a href="#section-2-4.14.1" class="pilcrow">¶</a></p>
+<dt id="section-2-4.21">Re-attestation:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.22">
+          <p id="section-2-4.22.1">The production and appraisal of fresh Evidence during an
+established session's Lifetime of Connection.<a href="#section-2-4.22.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.15">Intra-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.16">
-          <p id="section-2-4.16.1">The interval during transport connection
+<dt id="section-2-4.23">Intra-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.24">
+          <p id="section-2-4.24.1">The interval during transport connection
 establishment in which Evidence is conveyed within the handshake
 messages themselves, prior to the transition to application data
-exchange.<a href="#section-2-4.16.1" class="pilcrow">¶</a></p>
+exchange.<a href="#section-2-4.24.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.17">Post-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.18">
-          <p id="section-2-4.18.1">The interval following connection establishment in which Evidence
+<dt id="section-2-4.25">Post-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.26">
+          <p id="section-2-4.26.1">The interval following connection establishment in which Evidence
 is conveyed to the Relying Party using post-handshake protocol
 mechanisms (e.g., Exported Authenticators or application-layer
-exchanges).<a href="#section-2-4.18.1" class="pilcrow">¶</a></p>
+exchanges).<a href="#section-2-4.26.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.19">Session Binding Value:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.20">
-          <p id="section-2-4.20.1">A value, uniquely determined by a specific transport
+<dt id="section-2-4.27">Session Binding Value:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.28">
+          <p id="section-2-4.28.1">A value, uniquely determined by a specific transport
 session, from which Attestation Binders are derived.  A Session
 Binding Value may be public or secret depending on the topology;
 what is required is that it cannot be known before the session is
-initiated.  See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-2-4.20.1" class="pilcrow">¶</a></p>
+initiated.  See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-2-4.28.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.21">Attestation Binder:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.22">
-          <p id="section-2-4.22.1">A cryptographic value derived from a Session Binding
+<dt id="section-2-4.29">Attestation Binder:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.30">
+          <p id="section-2-4.30.1">A cryptographic value derived from a Session Binding
 Value and committed to by the Attesting Environment into its
 Evidence payload. This value binds the Evidence to a specific
-session guaranteed under typical cryptographic assumptions.<a href="#section-2-4.22.1" class="pilcrow">¶</a></p>
+session guaranteed under typical cryptographic assumptions.<a href="#section-2-4.30.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.23">Transmission Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.24">
-          <p id="section-2-4.24.1">The point in the protocol at which an
+<dt id="section-2-4.31">Transmission Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.32">
+          <p id="section-2-4.32.1">The point in the protocol at which an
 Attestation Binder is included in a protocol message.  A binder
 may be computed and transmitted before peer authentication is
-complete.<a href="#section-2-4.24.1" class="pilcrow">¶</a></p>
+complete.<a href="#section-2-4.32.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.25">Verification Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.26">
-          <p id="section-2-4.26.1">The protocol mechanism by which the integrity
+<dt id="section-2-4.33">Verification Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.34">
+          <p id="section-2-4.34.1">The protocol mechanism by which the integrity
 of a transmitted Attestation Binder is established. Depending on
 the Attestation Timing Model, this may be achieved via a MAC
 that authenticates the handshake transcript (e.g., the TLS Finished
 message), or through post-handshake cryptographic binding (e.g.,
-Exported Authenticators).<a href="#section-2-4.26.1" class="pilcrow">¶</a></p>
+Exported Authenticators).<a href="#section-2-4.34.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.27">Split Deployment:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-4.28">
-          <p id="section-2-4.28.1">A deployment in which the Attesting Environment
+<dt id="section-2-4.35">Split Deployment:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-4.36">
+          <p id="section-2-4.36.1">A deployment in which the Attesting Environment
 and the transport stack reside in different execution contexts.
 The transport stack is in the Target Environment; the Attesting
 Environment (e.g., a TEE) must receive the attestation binder
 input — typically a handshake transcript hash or exported key —
-from the transport stack via a trusted interface.<a href="#section-2-4.28.1" class="pilcrow">¶</a></p>
+from the transport stack via a trusted interface.<a href="#section-2-4.36.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
