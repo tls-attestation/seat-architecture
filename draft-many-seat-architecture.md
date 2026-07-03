@@ -586,12 +586,17 @@ generated through alternative means such as side-channel exploits.
 When all three conditions are met, the channel-binding check may be
 performed either by the Relying Party itself or by the Verifier.  As a
 session participant, the Relying Party holds the Session Binding Value
-and can derive the expected Attestation Binder locally. If the Relying
-Party is directly consuming Evidence (Background-Check model), it rejects
-Evidence whose binder does not match. If the Relying Party is consuming
-an Attestation Result (Passport model), it must verify that the Verifier
-explicitly tied the Attestation Result to the current session's
-Attestation Binder.
+and can compute the binder locally and MAY send it to the Verifier
+which compares it with the binder in the Evidence, avoiding the
+need requiring that the Relying Party decode the Evidence first.
+
+If the Relying Party is directly consuming Evidence (Background-Check
+model), it rejects Evidence whose binder does not match. If the Relying
+Party is consuming an Attestation Result (Passport model) and expects
+per-session freshness (see {{per-session-freshness}}), it MUST reject
+the Attestation Result if it cannot affirmatively evaluate that the
+Verifier explicitly tied the Attestation Result to the current
+session's Attestation Binder.
 
 # Freshness
 
@@ -599,7 +604,7 @@ The freshness of Evidence is critical to its value as a
 trustworthiness signal.  In the transport context, freshness has
 several distinct scopes that must be addressed separately.
 
-## Per-session freshness
+## Per-session freshness {#per-session-freshness}
 
 Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
