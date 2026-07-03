@@ -2124,12 +2124,16 @@ generated through alternative means such as side-channel exploits.<a href="#sect
 <p id="section-7-9">When all three conditions are met, the channel-binding check may be
 performed either by the Relying Party itself or by the Verifier.  As a
 session participant, the Relying Party holds the Session Binding Value
-and can derive the expected Attestation Binder locally. If the Relying
-Party is directly consuming Evidence (Background-Check model), it rejects
-Evidence whose binder does not match. If the Relying Party is consuming
-an Attestation Result (Passport model), it must verify that the Verifier
-explicitly tied the Attestation Result to the current session's
-Attestation Binder.<a href="#section-7-9" class="pilcrow">¶</a></p>
+and can compute the binder locally and <span class="bcp14">MAY</span> send it to the Verifier
+which compares it with the binder in the Evidence, avoiding the
+need requiring that the Relying Party decode the Evidence first.<a href="#section-7-9" class="pilcrow">¶</a></p>
+<p id="section-7-10">If the Relying Party is directly consuming Evidence (Background-Check
+model), it rejects Evidence whose binder does not match. If the Relying
+Party is consuming an Attestation Result (Passport model) and expects
+per-session freshness (see <a href="#per-session-freshness" class="auto internal xref">Section 8.1</a>), it <span class="bcp14">MUST</span> reject
+the Attestation Result if it cannot affirmatively evaluate that the
+Verifier explicitly tied the Attestation Result to the current
+session's Attestation Binder.<a href="#section-7-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="freshness">

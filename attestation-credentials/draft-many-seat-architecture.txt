@@ -636,12 +636,17 @@ Table of Contents
    When all three conditions are met, the channel-binding check may be
    performed either by the Relying Party itself or by the Verifier.  As
    a session participant, the Relying Party holds the Session Binding
-   Value and can derive the expected Attestation Binder locally.  If the
-   Relying Party is directly consuming Evidence (Background-Check
+   Value and can compute the binder locally and MAY send it to the
+   Verifier which compares it with the binder in the Evidence, avoiding
+   the need requiring that the Relying Party decode the Evidence first.
+
+   If the Relying Party is directly consuming Evidence (Background-Check
    model), it rejects Evidence whose binder does not match.  If the
-   Relying Party is consuming an Attestation Result (Passport model), it
-   must verify that the Verifier explicitly tied the Attestation Result
-   to the current session's Attestation Binder.
+   Relying Party is consuming an Attestation Result (Passport model) and
+   expects per-session freshness (see Section 8.1), it MUST reject the
+   Attestation Result if it cannot affirmatively evaluate that the
+   Verifier explicitly tied the Attestation Result to the current
+   session's Attestation Binder.
 
 8.  Freshness
 
