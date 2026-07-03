@@ -5,11 +5,11 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                                T. Fossati
 Intended status: Informational                               Independent
-Expires: 3 January 2027                                         T. Reddy
+Expires: 4 January 2027                                         T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
-                                                             2 July 2026
+                                                             3 July 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -52,7 +52,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 January 2027.
+   This Internet-Draft will expire on 4 January 2027.
 
 Copyright Notice
 
@@ -284,6 +284,7 @@ Table of Contents
 
                                 .--------.
                .---------------+ Verifier +---------------.
+              |                |  [arK]   |                |
               |                 '--------'                 |
               |                                            |
               |                                            |
@@ -291,7 +292,7 @@ Table of Contents
    |   .------+------.   |  Remote Attestation  |   .------+------.   |
    |  |   Attesting   |<-+----------------------+->| Relying Party |  |
    |  |  Environment  |  |          ^           |   '-------------'   |
-   |  |     (K_x)     |  |          |           |                     |
+   |  |     [aeK]     |  |          |           |                     |
    |   '-+-----------'   |          |           |                     |
    |     | Collect       |          | Attest'n  |                     |
    |     v Claims        |          | Binder    |                     |
@@ -299,7 +300,7 @@ Table of Contents
    |  |  .--------.   |  |          |           |   .-------------.   |
    |  | | TLS peer |<-+--+----------+------------->|   TLS peer    |  |
    |  |  '--------'   |  |    Secure Channel    |   '-------------'   |
-   |  |     (K_y)     |  |                      |                     |
+   |  |  [tbK / hbK]  |  |                      |                     |
    |  |               |  |                      |                     |
    |  |    Target     |  |                      |                     |
    |  |  Environment  |  |                      |                     |
