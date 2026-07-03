@@ -149,11 +149,40 @@ context.
 This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
+Target/TEE‑Bound Key (`tbK`):
+: An asymmetric key pair whose private key is generated
+  and maintained exclusively within the Target Environment
+  (e.g., a TEE). The `tbK` is used to authenticate the Attester’s
+  transport endpoint (for example, signing the TLS CertificateVerify
+  message). Evidence produced by the Attesting Environment
+  MUST include a binding to the `tbK`.
+
+Hardware‑Bound Key (`hbK`):
+: A long‑lived asymmetric key pair whose private key resides
+  outside the Target Environment, typically in a Hardware Security
+  Module (HSM) or similar hardened service. The `hbK`’s certificate
+  provides the conventional identity (e.g., a WebPKI domain
+  validation) to the Relying Party. In deployments where a
+  short‑lived `tbK` is used, the `hbK` MAY authorise the `tbK`.
+
+Attesting Environment Key (`aeK`):
+: The asymmetric key used by the Attesting Environment
+  to sign Evidence. The Verifier trusts the `aeK` through an
+  Endorsement chain that typically roots in a hardware manufacturer
+  or a device‑specific CA. The `aeK` is used solely for attestation
+  and is distinct from any key used for transport authentication.
+
+Attestation Result Key (`arK`):
+: The asymmetric key used by a Verifier to sign
+  Attestation Results. The Relying Party must possess the
+  corresponding trust anchor for the `arK` so that it can verify
+  the integrity and authenticity of received Attestation Results.
+
 Attestation Credential:
 : A collective term for Evidence and Attestation Results,
-used where a statement applies to both without distinguishing
-between them. Where a statement applies specifically to one but
-not the other, this document uses the more specific term.
+  used where a statement applies to both without distinguishing
+  between them. Where a statement applies specifically to one but
+  not the other, this document uses the more specific term.
 
 Attested Channel:
 : A transport session in which at least one endpoint
