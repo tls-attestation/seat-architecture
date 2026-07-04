@@ -21,8 +21,8 @@ venue:
 #  type: Working Group
 #  mail: seat@ietf.org
 #  arch: https://example.com/WG
-  github: "telephonicrobotics/seat-architecture"
-  latest: "https://telephonicrobotics.github.io/seat-architecture/draft-seat-architecture.html"
+  github: "tls-attestation/seat-architecture"
+  latest: "https://tls-attestation.github.io/seat-architecture/draft-seat-architecture.html"
 
 author:
   - fullname: Nathanael Ritz
