@@ -1,7 +1,7 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-02T03:38:25.140252+00:00",
-  "repo": "telephonicrobotics/seat-architecture",
+  "timestamp": "2026-07-05T03:27:46.769165+00:00",
+  "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
       "name": "bug",
@@ -59,10 +59,10 @@
       "number": 3,
       "id": "I_kwDOTCeSC88AAAABGcbQaA",
       "title": "Privacy Preservation",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/3",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/3",
       "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The following section is borrowed in part by Yaron's suggestion at https://github.com/tls-attestation/use-cases-and-properties/issues/12\nhttps://github.com/telephonicrobotics/seat-architecture/blob/5a11861cea39138ebeeb4844e38cdc3a15be127f/draft-mihalcea-seat-architecture.md?plain=1#L554\n\nThere is also the IAB's response to the CCC's response to the IAB statement \ud83d\ude03 https://datatracker.ietf.org/liaison/1897/",
@@ -75,10 +75,10 @@
       "number": 4,
       "id": "I_kwDOTCeSC88AAAABGfeoGQ",
       "title": "Service mesh / Logical TEE",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/4",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/4",
       "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [
         "telephonicrobotics"
       ],
@@ -93,10 +93,10 @@
       "number": 5,
       "id": "I_kwDOTCeSC88AAAABGfidog",
       "title": "LAKE RA  use-cases/architectural patterns?",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/5",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/5",
+      "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [
         "telephonicrobotics"
       ],
@@ -105,15 +105,15 @@
       ],
       "body": "https://datatracker.ietf.org/doc/draft-ietf-lake-ra/\n\nLAKE WG has their own RA over EDHOC. Analyze how it works, what's different from Early Attestation / EXPAT over TLS.\n\n",
       "createdAt": "2026-06-24T00:52:47Z",
-      "updatedAt": "2026-07-01T23:13:38Z",
-      "closedAt": null,
+      "updatedAt": "2026-07-02T07:43:21Z",
+      "closedAt": "2026-07-02T07:43:21Z",
       "comments": []
     },
     {
       "number": 6,
       "id": "I_kwDOTCeSC88AAAABGtpeuw",
       "title": "quick & incomplete review of the editor\u2019s copy",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/6",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/6",
       "state": "CLOSED",
       "author": "thomas-fossati",
       "authorAssociation": "COLLABORATOR",
@@ -128,28 +128,28 @@
       "comments": [
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "Thanks for the review! I'm going to jump on the most contentious part and address the others in a separate reply. \n\n> ### \u00a74.4\n> This one's a tough cookie :-)\n> \n> It is unclear what \"eviction\" and \"eviction signalling\" refer to. They don't seem to appear anywhere else.\n> \n> It says\" \"[...] transport-layer routing obligations\" which seems to downplay what a real L7 device can do somewhat.\n> \n> <snip>\n> ### 6.1\n> This breaks the e2e invariant provided by the secure transport layer, requiring a new way to establish the broken e2e invariant at a higher layer. This increases the complexity of implementation and deployment, and therefore fragility.\n\n>  Do we really want to go there?\n\nAs it turns out, yes, kinda (I do). I've roped Hannes in on the idea with some enthusiasm (and Ionut has humoured me, and I also invited Tiru in on it not super long ago-- who may or may not agree). It makes use of [EKU ](https://datatracker.ietf.org/doc/draft-ietf-tls-extended-key-update/). However; I will repeat what I shared with Markus at https://github.com/tls-attestation/use-cases-and-properties/pull/48#issuecomment-4687308877 : \n\n\"I have a concept for how to allow an attestation aware proxy to cooperate without requiring nested encryption, but if that was not to pan out for any number of reasons, then the property would basically just affirm that the protocol should abort the connection if intercepted by a malicious intermediary.\"\n\nHowever-- these parts of the review make it clear that these sections needs additional abstractions and smoothing over from stuff that was borrowed over from my other draft I mentioned, so I'll prioritize that to minimize distractions on this document.",
           "createdAt": "2026-06-25T19:38:13Z",
           "updatedAt": "2026-06-25T19:48:09Z"
         },
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "\n\n### General Comments\n\n> \"We should either s/transport/secure transport/g (or secure channel) or establish the equivalence of the terms (within the scope of this document) very early on.\"\n> \n> \n\nAddressed in #10 (Established technical equivalence in Section 1.3).\n\n> \"We could add Gene Spafford's usual quote somewhere: 'Cryptography [without system integrity] is like investing in an armored car to carry money between a customer living in a cardboard box and a person doing business on a park bench.' An rfcxml 'aside' should do the trick.\"\n> \n> \n\nAddressed in #10 (Added to Section 1.1).\n\n---\n\n### \u00a72\n\n> \"Verification Anchor def: seems to bias towards intra- ('typically')\"\n> \n> \n\nAddressed in #10 (Rewritten to explicitly account for post-handshake Exported Authenticators).\n\n---\n\n### \u00a75\n\n> \"Should the title be 'Timing Models'? ('Topology' is about space, not time.)\"\n> \n> \n\nAddressed in #10 (Section 5 renamed).\n\n> \"I'd add a reference to the paper by Arto et al. that introduced the pre-/intra-/post- nomenclature: [https://dl.acm.org/doi/10.1007/978-3-030-91625-1_10](https://www.google.com/search?q=https%3A%2F%2Fdl.acm.org%2Fdoi%2F10.1007%2F978-3-030-91625-1_10)\"\n> \n> \n\nAddressed in #10 (Reference added to informative bibliography and referenced in Section 2).\n\n---\n\n### \u00a75.2\n\n> \"It says: 'Post-handshake is an application-layer mechanism.' It is unclear what 'mechanism' is supposed to mean in this context.\"\n> \n> \n\nAddressed in #10 (Removed the ambiguous text and replaced it with an exact operational sequence mapping out the post-handshake timeline).\n\n---\n\nI will keep the remaining architectural items from your review (such as key naming guidance, sequence diagrams, and Section 4.4 updates) open on this thread as we work through them.\n",
           "createdAt": "2026-06-30T20:59:49Z",
           "updatedAt": "2026-06-30T20:59:49Z"
         },
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "Creating a comment isolating this one for posterity / future ref\n\n> ### \u00a75\n> In keeping with the \u201cmoar pics\u201d theme, we could show a breakdown of the two timing models to illustrate how the elementary actions are sequenced differently:\n> \n> * Intra-\n> \n> ```\n> secure channel session initialisation\n> \n> binder derivation from session\n> \n> attestation credential creation using binder\n> \n> attestation credential delivery\n> \n>   attestation credential receipt\n> \n>   attestation credential binder extraction\n> \n>   attestation credential binder check\n> \n>   attestation credential verification\n> \n>   transport session finalisation\n> \n> secure and attested channel session established\n> ```\n> \n> * Post-\n> \n> ```\n> secure transport session established\n> \n> binder derivation from session\n> \n> attestation credential creation using binder\n> \n> attestation credential delivery\n> \n>   attestation credential receipt\n> \n>   attestation credential binder extraction\n> \n>   attestation credential binder check\n> \n>   attestation credential verification\n> \n> attested channel session established\n> ```\n> \n",
           "createdAt": "2026-06-30T21:01:36Z",
           "updatedAt": "2026-06-30T21:01:36Z"
         },
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "Okay, I have pulled apart the remaining unresolved TODOs from this one as unique issues on their own. Closing this to try and keep things tidy, but feel free to re-open or add new issues.",
           "createdAt": "2026-07-01T23:04:38Z",
           "updatedAt": "2026-07-01T23:04:38Z"
@@ -160,10 +160,10 @@
       "number": 11,
       "id": "I_kwDOTCeSC88AAAABHO473Q",
       "title": "Ionut's feedback imported from PDF",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/11",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/11",
       "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "These items are still TODO, not yet addressed by PR #10:\n(LLM assisted summary)\n\n---\n\n## \u00a72\n\n~~### Layered Attestation def~~\nIt says: \n> \"A common example is a TEE executing within a virtual machine, which is itself executing on a host platform.\"\n\nNot sure I follow this expression; maybe it's a case of using different terminology. In my view, the VM is the TEE (e.g., a Trusted Domain on Intel TDX platforms). We should refine the wording here to ensure it represents current confidential computing isolation patterns accurately.\n\n> Note: Addressed in https://github.com/telephonicrobotics/seat-architecture/pull/14 (deleted whole section)\n\n---\n\n## \u00a73.2\n\n### Relying Party definition\nIt says:\n> \"The Relying Party consumes Attestation Results or Evidence and uses them to make authorization decisions...\"\n\nDon't think this is correct as per RATS architecture. A Relying Party strictly consumes Attestation Results to make downstream authorization decisions. If it evaluates raw Evidence directly, it is functionally fulfilling the role of a Verifier (which matches our co-located topology, but the definitions should remain separated at the role level).\n\n---\n\n## \u00a73.3\n\n### Verifier definition\nIt says:\n> \"The Verifier appraises Evidence by applying an Appraisal Policy for Evidence and produces Attestation Results.\"\n\nYou can probably mirror the standard Verifier terminology here and state that it applies an *Appraisal Policy for Evidence* to generate those results, or clarify how the policy objects are structurally designated in the mapping.\n\n### Remote Verifier def\nIt says:\n> \"The Attester contacts the Verifier prior to or during the session and obtains Attestation Results, which it then presents to the Relying Party. This variant may be more common in post-handshake attestation flows. This deployment corresponds to the Passport Model of RFC9334.\"\n\nI don't think Remote Verifiers should be strictly relegated to the Passport model here. A Remote Verifier can easily operate under a Background-Check model where the Relying Party passes the data out-of-band during an active handshake. We should decouple the physical location of the service from the RATS conveyance model choice.\n\n---\n\n## \u00a76\n\n### Attestation Session Binding\nThroughout this section, the text explicitly mandates binding the transport session tracking to the \"Evidence\" payload. \n\nNote that focusing exclusively on Evidence excludes the Passport model, where the Attester presents pre-obtained Attestation Results to the Relying Party instead of raw Evidence. Broadening our terminology to \"Attestation Credentials\" or something along those lines throughout this sequence would provide much better architectural agnosticism.\n",
@@ -173,7 +173,7 @@
       "comments": [
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "Okay, I *think* I have addressed everything excluding the yet-to-be-addressed Background-Check-heavy bias, which has it's own dedicated issue now!  https://github.com/telephonicrobotics/seat-architecture/issues/15",
           "createdAt": "2026-07-01T23:12:01Z",
           "updatedAt": "2026-07-01T23:12:01Z"
@@ -184,104 +184,131 @@
       "number": 15,
       "id": "I_kwDOTCeSC88AAAABHXWSdA",
       "title": "Document needs a thorough pass to ensure both RATS topologies are covered",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/15",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/15",
+      "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [
         "telephonicrobotics"
       ],
       "labels": [],
       "body": "> Btw, I notice that this is very background-check-leaning - is that on purpose? \n\nOops, nope! Will fix :)",
       "createdAt": "2026-07-01T21:06:27Z",
-      "updatedAt": "2026-07-01T21:06:27Z",
-      "closedAt": null,
+      "updatedAt": "2026-07-04T15:57:38Z",
+      "closedAt": "2026-07-04T15:57:38Z",
       "comments": []
     },
     {
       "number": 16,
       "id": "I_kwDOTCeSC88AAAABHXcFHQ",
       "title": "Discuss points regarding application behavior with -intra",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/16",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/16",
+      "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [
         "Has PR"
       ],
       "body": ">> A Verifier rejection, or a\n>> Relying Party policy rejection of an otherwise valid Attestation\n>> Result, MUST process a fatal error consistent with the transport\n>> protocol's existing handshake-failure handling.\n\n> I would actually go further and suggest that the failure reported to the application layer should make it clear it was to do with remote attestation. If the application layer doesn't understand then so be it, but specificity is probably better in general for a few reasons (auditing, more flexibility in application layer policies, debugging...)\n\n_Originally posted by @ionut-arm in https://github.com/telephonicrobotics/seat-architecture/pull/12#discussion_r3508892453_\n\n> To my knowledge, nobody so far has explained how the verifier is plugged into the TLS stack without application level intervention.\n\n_Originally posted by mr@edgeless.systems in https://mailarchive.ietf.org/arch/msg/seat/eP98dR0h7GreIfs_1ysfVTu_pGI/_\n\n---\n\nI am curious if these two things are compatible, related or point to a shared tension that could be addressed more clearly in this document (or otherwise maybe be a point added to the use-cases document)? \n\nThis does seem like an implementation thing -- but is there a pattern that we could extract and define from a zoomed out point of view?\n\n",
       "createdAt": "2026-07-01T21:23:01Z",
-      "updatedAt": "2026-07-01T23:14:12Z",
-      "closedAt": null,
+      "updatedAt": "2026-07-02T07:43:21Z",
+      "closedAt": "2026-07-02T07:43:21Z",
       "comments": []
     },
     {
       "number": 17,
       "id": "I_kwDOTCeSC88AAAABHXygGw",
       "title": "Swap authors and change ID",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/17",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/17",
+      "state": "CLOSED",
       "author": "ionut-arm",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "Has PR"
+      ],
       "body": "I'd prefer to swap with @telephonicrobotics if you'd be keen too :] I'll raise the PR tomorrow if so.",
       "createdAt": "2026-07-01T22:30:18Z",
-      "updatedAt": "2026-07-01T22:30:18Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-07-02T13:53:16Z",
+      "closedAt": "2026-07-02T13:53:16Z",
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "So, I cleared out the existing PRs, swapped with @ionut-arm and decided on 'draft-many' and raised PR #22",
+          "createdAt": "2026-07-02T07:50:53Z",
+          "updatedAt": "2026-07-02T07:50:53Z"
+        }
+      ]
     },
     {
       "number": 18,
       "id": "I_kwDOTCeSC88AAAABHX5rpg",
       "title": "Key Naming Conventions",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/18",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/18",
+      "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "> I believe we would be doing the community a great service if we provided definitive guidance on naming the involved keys.\n\n",
       "createdAt": "2026-07-01T22:55:25Z",
-      "updatedAt": "2026-07-01T22:55:25Z",
-      "closedAt": null,
+      "updatedAt": "2026-07-04T06:52:35Z",
+      "closedAt": "2026-07-04T06:52:35Z",
       "comments": []
     },
     {
       "number": 19,
       "id": "I_kwDOTCeSC88AAAABHX6uiQ",
       "title": "Sequence Diagram Enhancements",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/19",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/19",
+      "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "enhancement"
+      ],
       "body": "Enhance Figure 1?\n\nWith something like what Thomas [suggested](https://github.com/telephonicrobotics/seat-architecture/issues/6#issuecomment-4847880704)? Or otherwise find a good place to include it.",
       "createdAt": "2026-07-01T22:58:37Z",
-      "updatedAt": "2026-07-01T22:59:15Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2026-07-04T06:52:45Z",
+      "closedAt": "2026-07-04T06:52:45Z",
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Pulled over from merged PR https://github.com/telephonicrobotics/seat-architecture/pull/21\n\nFor the sake of comparison, this is the structural topology that I've run `expat` and `early-attestation` drafts against to prove single key compromise resilience. In this case, the Cloud Service Provider issues a \u2705 and the RPs are configured to trust that token across any of the target environments hosted on any number of physical server blades controlled by a CSP. \n\nThis ascii art is not part of the original modeling, I put it together to try and make heads and tails out of the model from a couple months back. This is topology I imagined when Yaron was talking about issue[ #8 from use-cases ](https://github.com/tls-attestation/use-cases-and-properties/issues/8) and [on-list](https://mailarchive.ietf.org/arch/msg/seat/wBj829Yaa-osa5XQn2688zf9X-0/). \n\n> Aside: Oh and please tell me if that's insane or something because this is the mental model I've had based on the ID-Crisis model for a good while :D\n\nI am happy with the example in the PR, but I am curious if we might want to tidy this up and incorporate it further down the draft, or maybe it goes into use-cases (post-adoption)?\n\n~~~ocaml\n  (* ~==================================================~ *)\n  (* Topology                                             *)\n  (* ~==================================================~ \n\n              Infrastructure Topology\n .---------------------------------------------.\n | .--------------------.  .-----------------. |\n | |     Machine 1      |  |    Machine 2    | |\n | |                    |  |                 | |\n | | +------+ +------+  |  | +------+        | |\n | | |ID_S1 | |ID_S2 |  |  | |ID_S3 |  ...   | |\n | | |prLTK1| |prLTK2|  |  | |prLTK3|        | |\n | | +------+ +------+  |  | +------+        | |\n | '---------+----------'  '---------+-------' |\n |           ^                       ^         |\n |           | shared                | shared  |\n |       .-----------------------------.       |\n |       |        Platform/CSP A       |       |\n |       |          privAK_A           |       |\n |       '-----------------------------'       |\n |                                             |\n |           .------------------------.        |\n |      +----|     Platform/CSP B     |        |\n |      |    |        privAK_B        |        |\n |      v    '------------------------'        |\n |   .--+----------------------------------.   |\n |   |             Machine n               |   |\n |   | +------+ +------+ +------+          |   |\n |   | |ID_S4 | |ID_S5 | |ID_S n|  ...     |   |\n |   | |prLTK4| |prLTK5| |prLTKn|          |   |\n |   | +------+ +------+ +------+          |   |\n |   '-------------------------------------'   |\n '---------------------------------------------'\n\n  Each unique platform shares the same trusted \n  private Attestation Key (AK). Each unique CVM/Tenant has \n  it's own unique Identity Key (LTK). \n\n*)\n~~~",
+          "createdAt": "2026-07-02T06:56:00Z",
+          "updatedAt": "2026-07-02T06:56:00Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Pulling comment from @thomas-fossati from closed PR https://github.com/telephonicrobotics/seat-architecture/pull/21\n>> I am happy with the example in the PR, but I am curious if we might want to tidy this up and incorporate it further down the draft, or maybe it goes into use-cases (post-adoption)?\n\n\"I should have clarified that I omitted key material from the diagram, mainly because I wasn't sure what names to use.\n I intended to expand the diagram once #18 had been resolved.\n However, if it would be clearer to show the Attestation Binder dimension separately from the crypto keys dimension, I am happy to have a separate diagram.\"",
+          "createdAt": "2026-07-02T06:58:31Z",
+          "updatedAt": "2026-07-02T06:58:31Z"
+        }
+      ]
     },
     {
       "number": 20,
       "id": "I_kwDOTCeSC88AAAABHX70eQ",
       "title": "Run a pass to apply \u201cAttestation Credential\u201d throughout",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/issues/20",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/20",
+      "state": "CLOSED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "> I would add an \u201cAttestation Credential\u201d def to encompass Evidence and Attestation Results.\n\n",
       "createdAt": "2026-07-01T23:02:25Z",
-      "updatedAt": "2026-07-01T23:19:24Z",
-      "closedAt": null,
+      "updatedAt": "2026-07-04T15:57:39Z",
+      "closedAt": "2026-07-04T15:57:39Z",
       "comments": [
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "Outstanding from @ionut-arm's review was:\n\n---\n\n## \u00a73.3\n\n### Verifier definition\nIt says:\n> \"The Verifier appraises Evidence by applying an Appraisal Policy for Evidence and produces Attestation Results.\"\n\nYou can probably mirror the standard Verifier terminology here and state that it applies an *Appraisal Policy for Evidence* to generate those results, or clarify how the policy objects are structurally designated in the mapping.\n\n### Remote Verifier def\nIt says:\n> \"The Attester contacts the Verifier prior to or during the session and obtains Attestation Results, which it then presents to the Relying Party. This variant may be more common in post-handshake attestation flows. This deployment corresponds to the Passport Model of RFC9334.\"\n\nI don't think Remote Verifiers should be strictly relegated to the Passport model here. A Remote Verifier can easily operate under a Background-Check model where the Relying Party passes the data out-of-band during an active handshake. We should decouple the physical location of the service from the RATS conveyance model choice.\n\n---\n\n## \u00a76\n\n### Attestation Session Binding\nThroughout this section, the text explicitly mandates binding the transport session tracking to the \"Evidence\" payload. \n\nNote that focusing exclusively on Evidence excludes the Passport model, where the Attester presents pre-obtained Attestation Results to the Relying Party instead of raw Evidence. Broadening our terminology to \"Attestation Credentials\" or something along those lines throughout this sequence would provide much better architectural agnosticism.\n",
           "createdAt": "2026-07-01T23:19:24Z",
           "updatedAt": "2026-07-01T23:19:24Z"
@@ -294,19 +321,19 @@
       "number": 1,
       "id": "PR_kwDOTCeSC87phu9_",
       "title": "feat: add periodic re-attestation",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/1",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/1",
       "state": "MERGED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Add periodic re-attestation following from a thread which followed [a technical discussion between Ionut and Ekr ](https://mailarchive.ietf.org/arch/msg/seat/B9syKKTyDwzSO30o7VOAXfnUUdQ/)on the same subject.",
       "createdAt": "2026-06-23T07:23:03Z",
       "updatedAt": "2026-06-23T15:47:05Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "b43ac823b5d686938b63d7dda40cb3cf2493e12d",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "telephonicrobotics-reattestation-1",
       "headRefOid": "cbe16495aa5c72e36dfb44909f83179dd2a6c391",
       "closedAt": "2026-06-23T07:29:34Z",
@@ -431,19 +458,19 @@
       "number": 2,
       "id": "PR_kwDOTCeSC87puCQH",
       "title": "Add Dynamic Verification Code Integrity considerations per Ekr",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/2",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/2",
       "state": "MERGED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Incorporate concerns raised by Ekr [on-list](https://mailarchive.ietf.org/arch/msg/seat/-wOnrqnQZPY4s19y7_Kj1zifwn0/).\r\n\r\nIn part: \"[...] I don't see how anything implemented in browser-based JS can provide any kind of assurance unless there is *also* some form of assurance for the JS itself [[0]](https://realworldcrypto.iacr.org/2026/program.php). Otherwise, the attester (who, remember, is the attacker) can just serve JS that pretends to verify the proofs.\"",
       "createdAt": "2026-06-23T15:37:49Z",
       "updatedAt": "2026-06-23T15:47:33Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "bad85eb2e3a0a9914a373df3d66b0869729e24d0",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "telephonicrobotics-dynamic-integrity-considerations",
       "headRefOid": "8a18f00a19ef8edc42937446c624cc2b97baf69a",
       "closedAt": "2026-06-23T15:39:59Z",
@@ -459,7 +486,7 @@
       "number": 7,
       "id": "PR_kwDOTCeSC87sGzAY",
       "title": "Initial updates to the draft",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/7",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/7",
       "state": "MERGED",
       "author": "tireddy2",
       "authorAssociation": "COLLABORATOR",
@@ -468,10 +495,10 @@
       "body": "",
       "createdAt": "2026-06-30T07:09:02Z",
       "updatedAt": "2026-06-30T17:21:39Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "c4b4715f89ae5f1e1663353162387c2c23bd19c1",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "tireddy2-patch-1",
       "headRefOid": "2759a7a6033637497e6b07d1db27176433546006",
       "closedAt": "2026-06-30T12:53:10Z",
@@ -600,7 +627,7 @@
             "abbreviatedOid": "2896646"
           },
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2026-06-30T17:21:38Z",
@@ -620,7 +647,7 @@
       "number": 8,
       "id": "PR_kwDOTCeSC87sMJwS",
       "title": "high-level diagrams",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/8",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/8",
       "state": "MERGED",
       "author": "thomas-fossati",
       "authorAssociation": "COLLABORATOR",
@@ -629,10 +656,10 @@
       "body": "A couple of architectural diagrams showing entities, channels and binding at a very high level.\r\n\r\nThe idea is to `{::include img/arch.ascii-art}` somewhere convenient and let `aasvg` handle the beautification.",
       "createdAt": "2026-06-30T11:04:57Z",
       "updatedAt": "2026-06-30T13:43:38Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "c4b4715f89ae5f1e1663353162387c2c23bd19c1",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "pic",
       "headRefOid": "6e5f0d3f3bed3bcb44b32a6eab61de8b2c14e662",
       "closedAt": "2026-06-30T13:43:38Z",
@@ -677,7 +704,7 @@
       "number": 9,
       "id": "PR_kwDOTCeSC87sQwPY",
       "title": "Further updates to the draft",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/9",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/9",
       "state": "MERGED",
       "author": "tireddy2",
       "authorAssociation": "COLLABORATOR",
@@ -686,10 +713,10 @@
       "body": "",
       "createdAt": "2026-06-30T14:12:22Z",
       "updatedAt": "2026-07-01T05:17:44Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "ee4f5d6183023187cadb3f2e836dd7748efdd76c",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "tireddy2-patch-2",
       "headRefOid": "ae8122e6f8eb6c3f1e7f8bc078d7bcf1a5048072",
       "closedAt": "2026-07-01T05:17:44Z",
@@ -726,7 +753,7 @@
             "abbreviatedOid": "ae8122e"
           },
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2026-06-30T17:38:49Z",
@@ -746,7 +773,7 @@
             "abbreviatedOid": "ae8122e"
           },
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "state": "APPROVED",
           "body": "I'm okay to merge and look at a seperate PR to address iterating on the introduced diagrams. ",
           "createdAt": "2026-06-30T17:42:35Z",
@@ -759,19 +786,19 @@
       "number": 10,
       "id": "PR_kwDOTCeSC87sZ0_X",
       "title": "Initial patch based on various co-author feedback",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/10",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/10",
       "state": "MERGED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Addresses an initial batch of unresolved feedback compiled across two separate reviews: Thomas Fossati's issue review (Issue #6) and Ionut Mihalcea's inline PDF annotations.\r\n\r\nThis represents a partial resolution of the open commentary. Outstanding structural and architectural items will be tracked via dedicated follow-up work items.\r\n\r\n---\r\n\r\n* **Change**: Added reference `NIEME2021` (\"Trusted Sockets Layer: A TLS 1.3 Based Trusted Channel Protocol\"). (Thomas)\r\n\r\n* **Change**: Added Gene Spafford's quote regarding cryptography and system integrity as an `rfcxml` aside block. (Thomas)\r\n\r\n* **Change**: Explicitly stated that \"transport\" and \"secure transport\" are used interchangeably throughout the architecture document. (Thomas)\r\n\r\n* **Change**: Formally acknowledged the adoption of terms coined by `NIEME2021`. (Thomas)\r\n\r\n* **Change**: Updated the definition of `Attestation Timing Model` to reference \"connection establishment time\" instead of \"transport handshake completion\". (Ionut)\r\n\r\n* **Change**: Rephrased `Evidence Generation Time` to state that evidence reflects the reported state when underlying Claims were collected, rather than an absolute snapshot of the exact millisecond of signing. (Ionut)\r\n\r\n* **Change**: Redrafted `Verification Anchor` to mention both handshake transcript MACs (TLS Finished) and post-handshake bindings (Exported Authenticators). (Thomas)\r\n\r\n* **Change**: Renamed Section 5 from \"Topological Patterns for Transport\" to \"Timing Models\". (Thomas)\r\n\r\n* **Change**: Removed the ambiguous sentence \"Post-handshake is an application-layer mechanism\" and replaced it with concrete timing anchors mapping out when evidence is conveyed relative to application data transition. (Thomas)\r\n\r\n* **Change**: Appended a closing paragraph explaining that the internal structure of the Evidence and logical safeguards are fundamentally required to prove session binding conditions are met. (Ionut)\r\n\r\n* **Change**: Merged the separate list items for \"**Session Binding and Relay Prevention**\" and \"**Cryptographic Session Binding**\" into a unified, normative item titled \"**Cryptographic Session Binding and Relay Prevention**\". (Ionut)\r\n\r\n* **Change** Removed Contributors and moved to Acknowledgments (NR)\r\n\r\n* **Chore** Delete initial HTML render of draft from root directory (NR)",
       "createdAt": "2026-06-30T20:44:59Z",
       "updatedAt": "2026-07-01T16:27:55Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "d74c7ec2a8187df5da2fcf8a565349c0deeb16a4",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "nr-coauthor-feedback-1",
       "headRefOid": "4f23bb59d753d23f0a6ac164297e646cccac553c",
       "closedAt": "2026-07-01T16:27:55Z",
@@ -950,7 +977,7 @@
             "abbreviatedOid": "8d08f33"
           },
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2026-07-01T05:47:31Z",
@@ -990,29 +1017,31 @@
       "number": 12,
       "id": "PR_kwDOTCeSC87sxW3e",
       "title": "Add dedicated section describing failure handling considerations",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/12",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/12",
+      "state": "MERGED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Provides a high level expectation for how errors are to be treated between the two Timing Models.",
       "createdAt": "2026-07-01T16:37:52Z",
-      "updatedAt": "2026-07-01T21:27:15Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "updatedAt": "2026-07-02T07:42:43Z",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "435cbbd407527ebe1a6e501382a041ef073a2a1f",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "failure-handling-considerations",
-      "headRefOid": "0d41fd3551a0bab24ce7fe8cc4761fb10219e0e4",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "7f5e71ef33046f9dcc26719a73f3faaf3aec5f37",
+      "closedAt": "2026-07-02T07:42:43Z",
+      "mergedAt": "2026-07-02T07:42:43Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "35a65bfab84602f91518a1c678a32afa9dd39fc5"
+      },
       "comments": [
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "It's very funny to me to have so many angry gh-action nits while trying to add a section talking about failure handling conditions...",
           "createdAt": "2026-07-01T16:50:40Z",
           "updatedAt": "2026-07-01T16:50:40Z"
@@ -1077,7 +1106,7 @@
             "abbreviatedOid": "1823672"
           },
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2026-07-01T21:27:15Z",
@@ -1090,6 +1119,179 @@
               "updatedAt": "2026-07-01T21:27:15Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABEw6_Ww",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-02T05:17:32Z",
+          "updatedAt": "2026-07-02T05:17:32Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExDszw",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM.  I have left a clarification request in the comments.",
+          "createdAt": "2026-07-02T05:51:59Z",
+          "updatedAt": "2026-07-02T05:52:38Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "It\u2019s unclear to me what \u201cthis pattern\u201d refers to.",
+              "createdAt": "2026-07-02T05:51:59Z",
+              "updatedAt": "2026-07-02T05:52:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExGMgQ",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T05:59:37Z",
+          "updatedAt": "2026-07-02T05:59:37Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "> It\u2019s unclear to me what \u201cthis pattern\u201d refers to.\r\n\r\n\"this pattern\" is lazy shorthand for \"post-handshake attestation error handling\". \r\n\r\nI.e. \"RFC9334 expects an Attester's failing appraisal to result in reduced access or privileges rather than outright rejection; post-handshake attestation error handling instantiates such policy enforcement at the transport layer\"\r\n\r\n\r\n",
+              "createdAt": "2026-07-02T05:59:37Z",
+              "updatedAt": "2026-07-02T05:59:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExJLEA",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T06:10:23Z",
+          "updatedAt": "2026-07-02T06:10:24Z",
+          "comments": [
+            {
+              "originalPosition": 30,
+              "body": "```suggestion\nbe flowing.  {{RFC9334}} expects a failed Attester appraisal to\n```",
+              "createdAt": "2026-07-02T06:10:24Z",
+              "updatedAt": "2026-07-02T06:10:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExK7YQ",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T06:15:43Z",
+          "updatedAt": "2026-07-02T06:15:44Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "```suggestion\r\nrejection.  In the event of failures occurring within the Post-Handshake Window, this behaviour is to be handled at the transport layer.\r\n```",
+              "createdAt": "2026-07-02T06:15:44Z",
+              "updatedAt": "2026-07-02T07:14:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExLTUg",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T06:16:53Z",
+          "updatedAt": "2026-07-02T06:16:53Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "Thanks.  I suggest unpacking it.  (See below a possible reflow.)  (I am also very happy with your suggestion above.)",
+              "createdAt": "2026-07-02T06:16:53Z",
+              "updatedAt": "2026-07-02T06:17:53Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExPOgg",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T06:29:50Z",
+          "updatedAt": "2026-07-02T06:29:51Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "Checking to be clear, did you intend a non-normative \"must\"? Alternatively, what about 'is to be handled at [...]'?",
+              "createdAt": "2026-07-02T06:29:51Z",
+              "updatedAt": "2026-07-02T06:29:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExdpLA",
+          "commit": {
+            "abbreviatedOid": "0d41fd3"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T07:13:24Z",
+          "updatedAt": "2026-07-02T07:13:24Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "\u201cis to be handled\u201d WFM, thanks! (Suggestion updated accordingly.)",
+              "createdAt": "2026-07-02T07:13:24Z",
+              "updatedAt": "2026-07-02T07:14:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExgINg",
+          "commit": {
+            "abbreviatedOid": "1823672"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T07:20:57Z",
+          "updatedAt": "2026-07-02T07:20:57Z",
+          "comments": [
+            {
+              "originalPosition": 23,
+              "body": "@ionut-arm I pushed a commit which should tackle your feedback",
+              "createdAt": "2026-07-02T07:20:57Z",
+              "updatedAt": "2026-07-02T07:20:57Z"
+            }
+          ]
         }
       ]
     },
@@ -1097,29 +1299,31 @@
       "number": 13,
       "id": "PR_kwDOTCeSC87syK_G",
       "title": "Introduce transport integration patterns",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/13",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/13",
+      "state": "MERGED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Addresses #5 (but doesn't yet mention [draft-song-lake-ra](https://datatracker.ietf.org/doc/draft-song-lake-ra/) by name yet). \r\n\r\nIntroduces transport integration as a composable building block that reduces the current TLS-only perspective of current SEAT drafts, and is intended to suggest a top down view for how \"Future Work\" might approach the challenge.\r\n\r\n> After the initial Milestones are complete, the WG may recharter to work\r\n> on adding attestation to protocols other than (D)TLS, such as IKEv2 or\r\n> SSH, provided there is sufficient interest.",
       "createdAt": "2026-07-01T17:12:00Z",
-      "updatedAt": "2026-07-01T23:38:37Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "updatedAt": "2026-07-02T07:01:47Z",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "435cbbd407527ebe1a6e501382a041ef073a2a1f",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "transport-integration-patterns",
       "headRefOid": "2fa8e1e184413fc308b2d50e6192bd9052db1a9c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-07-02T07:01:47Z",
+      "mergedAt": "2026-07-02T07:01:47Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "290542ab103bd2455b593b0f4f636e49ced1e4b1"
+      },
       "comments": [
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "> I'm not sure if this is an architectural consideration. Although it is interesting and well described, it looks like an implementation detail to me. I wonder if it should be included in a dedicated appendix.\r\n\r\nYeah... I was sort of hoping that maybe defining the two and seeing them side by side might help me (and/or us) spot how to describe what shared pattern there between both. If that ends up being redundant with the rest of the draft, I wouldn't mind it being adjusted and put into an appendix.",
           "createdAt": "2026-07-01T19:36:53Z",
           "updatedAt": "2026-07-01T19:36:53Z"
@@ -1133,10 +1337,17 @@
         },
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "> Btw, I notice that this is very background-check-leaning - is that on purpose? I don't see it spelled out anywhere that this is an assumption, but the text reads as if only Evidence will be carried between peers.\r\n\r\nNo, not strictly intentional.  I've been focusing on background-check as that's where my mind is stuck on while discussing certain public releases of certain artifacts. I'm going to make a dedicated issue (https://github.com/telephonicrobotics/seat-architecture/issues/15) reminding us (me) to take a full pass on the document to ensure both RATS models are addressed evenly throughout!\r\n",
           "createdAt": "2026-07-01T21:06:40Z",
           "updatedAt": "2026-07-01T21:07:09Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm merging this as-is with a plan to include it in my sweep with issue https://github.com/telephonicrobotics/seat-architecture/issues/15\r\n\r\nIf you don't like it in the meantime in general feel free to challenge it post-merge!",
+          "createdAt": "2026-07-02T07:01:33Z",
+          "updatedAt": "2026-07-02T07:01:33Z"
         }
       ],
       "reviews": [
@@ -1172,6 +1383,19 @@
               "updatedAt": "2026-07-01T23:29:38Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABEw8R0g",
+          "commit": {
+            "abbreviatedOid": "2fa8e1e"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-02T05:23:40Z",
+          "updatedAt": "2026-07-02T05:23:40Z",
+          "comments": []
         }
       ]
     },
@@ -1179,29 +1403,31 @@
       "number": 14,
       "id": "PR_kwDOTCeSC87s2_Xz",
       "title": "Address additional co-author feedback",
-      "url": "https://github.com/telephonicrobotics/seat-architecture/pull/14",
-      "state": "OPEN",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/14",
+      "state": "MERGED",
       "author": "telephonicrobotics",
-      "authorAssociation": "OWNER",
+      "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "- Prune proxy mechanism left-overs and light changes to line endings (so far)\r\n\r\n- Changes to acknowledgements to recognize the entire SEAT WG, as the document incorporates broad feedback from many members over time.",
       "createdAt": "2026-07-01T20:59:50Z",
-      "updatedAt": "2026-07-01T23:15:09Z",
-      "baseRepository": "telephonicrobotics/seat-architecture",
+      "updatedAt": "2026-07-02T05:53:14Z",
+      "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "435cbbd407527ebe1a6e501382a041ef073a2a1f",
-      "headRepository": "telephonicrobotics/seat-architecture",
+      "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "nr-coauthor-feedback-2",
       "headRefOid": "d44ee2e5b6f18a53cb625852fb62ceb6d61dfcf8",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-07-02T05:53:14Z",
+      "mergedAt": "2026-07-02T05:53:14Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "898ea8737ebd18ae562039f0cf1d973a26967f97"
+      },
       "comments": [
         {
           "author": "telephonicrobotics",
-          "authorAssociation": "OWNER",
+          "authorAssociation": "COLLABORATOR",
           "body": "One of these days I will update my git-hooks to include a step to prune line endings before commiting >:(",
           "createdAt": "2026-07-01T22:44:52Z",
           "updatedAt": "2026-07-01T22:44:52Z"
@@ -1279,8 +1505,822 @@
               "updatedAt": "2026-07-01T22:40:42Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABEw9Ltg",
+          "commit": {
+            "abbreviatedOid": "d44ee2e"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-02T05:27:26Z",
+          "updatedAt": "2026-07-02T05:27:26Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExCe9w",
+          "commit": {
+            "abbreviatedOid": "d44ee2e"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "\ud83d\udea2 it!",
+          "createdAt": "2026-07-02T05:47:04Z",
+          "updatedAt": "2026-07-02T05:47:04Z",
+          "comments": []
         }
       ]
+    },
+    {
+      "number": 21,
+      "id": "PR_kwDOTCeSC87s9TN9",
+      "title": "Include aTLS pic",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/21",
+      "state": "MERGED",
+      "author": "thomas-fossati",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Add the aTLS pic to the \"Roles and Entities\u201d section.",
+      "createdAt": "2026-07-02T04:09:38Z",
+      "updatedAt": "2026-07-02T06:54:38Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "435cbbd407527ebe1a6e501382a041ef073a2a1f",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "piv",
+      "headRefOid": "c4e28d6707c77c22684d25fa99b560ccbdc70f1f",
+      "closedAt": "2026-07-02T06:54:38Z",
+      "mergedAt": "2026-07-02T06:54:38Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "7f18f1f792b3662695287e951af48ad75b5c5dd1"
+      },
+      "comments": [
+        {
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > Aside: Oh and please tell me if that's insane or something because this is the mental model I've had based on the ID-Crisis model for a good while :D\r\n\r\n\ud83e\udd23 \r\n\r\n> I am happy with the example in the PR, but I am curious if we might want to tidy this up and incorporate it further down the draft, or maybe it goes into use-cases (post-adoption)?\r\n\r\nI should have clarified that I omitted key material from the diagram, mainly because I wasn't sure what names to use.\r\nI intended to expand the diagram once #18 had been resolved.\r\nHowever, if it would be clearer to show the Attestation Binder dimension separately from the crypto keys dimension, I am happy to have a separate diagram.",
+          "createdAt": "2026-07-02T06:05:07Z",
+          "updatedAt": "2026-07-02T06:06:38Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABEw9uVg",
+          "commit": {
+            "abbreviatedOid": "c4e28d6"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-02T05:29:08Z",
+          "updatedAt": "2026-07-02T05:29:08Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABExAr2w",
+          "commit": {
+            "abbreviatedOid": "c4e28d6"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "The diagram makes sense. \r\n\r\nFor the sake of comparison, this is the structural topology that I've run `expat` and `early-attestation` drafts against to prove single key compromise resilience. In this case, the Cloud Service Provider issues a \u2705 and the RPs are configured to trust that token across any of the target environments hosted on any number of physical server blades controlled by a CSP. \r\n\r\nThis ascii art is not part of the original modeling, I put it together to try and make heads and tails out of the model from a couple months back. This is topology I imagined when Yaron was talking about issue[ #8 from use-cases ](https://github.com/tls-attestation/use-cases-and-properties/issues/8) and [on-list](https://mailarchive.ietf.org/arch/msg/seat/wBj829Yaa-osa5XQn2688zf9X-0/). \r\n\r\n> Aside: Oh and please tell me if that's insane or something because this is the mental model I've had based on the ID-Crisis model for a good while :D\r\n\r\nI am happy with the example in the PR, but I am curious if we might want to tidy this up and incorporate it further down the draft, or maybe it goes into use-cases (post-adoption)?\r\n\r\n~~~ocaml\r\n  (* ~==================================================~ *)\r\n  (* Topology                                             *)\r\n  (* ~==================================================~ \r\n\r\n              Infrastructure Topology\r\n .---------------------------------------------.\r\n | .--------------------.  .-----------------. |\r\n | |     Machine 1      |  |    Machine 2    | |\r\n | |                    |  |                 | |\r\n | | +------+ +------+  |  | +------+        | |\r\n | | |ID_S1 | |ID_S2 |  |  | |ID_S3 |  ...   | |\r\n | | |prLTK1| |prLTK2|  |  | |prLTK3|        | |\r\n | | +------+ +------+  |  | +------+        | |\r\n | '---------+----------'  '---------+-------' |\r\n |           ^                       ^         |\r\n |           | shared                | shared  |\r\n |       .-----------------------------.       |\r\n |       |        Platform/CSP A       |       |\r\n |       |          privAK_A           |       |\r\n |       '-----------------------------'       |\r\n |                                             |\r\n |           .------------------------.        |\r\n |      +----|     Platform/CSP B     |        |\r\n |      |    |        privAK_B        |        |\r\n |      v    '------------------------'        |\r\n |   .--+----------------------------------.   |\r\n |   |             Machine n               |   |\r\n |   | +------+ +------+ +------+          |   |\r\n |   | |ID_S4 | |ID_S5 | |ID_S n|  ...     |   |\r\n |   | |prLTK4| |prLTK5| |prLTKn|          |   |\r\n |   | +------+ +------+ +------+          |   |\r\n |   '-------------------------------------'   |\r\n '---------------------------------------------'\r\n\r\n  Each unique platform shares the same trusted \r\n  private Attestation Key (AK). Each unique CVM/Tenant has \r\n  it's own unique Identity Key (LTK). \r\n\r\n*)\r\n~~~",
+          "createdAt": "2026-07-02T05:39:57Z",
+          "updatedAt": "2026-07-02T05:41:30Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 22,
+      "id": "PR_kwDOTCeSC87tBD7d",
+      "title": "Update authors and document ID",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/22",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This resolves #17 ",
+      "createdAt": "2026-07-02T07:46:37Z",
+      "updatedAt": "2026-07-02T13:53:15Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "a2187fb351a5133a2af376cf4884d60e7c8c6f49",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "author-update",
+      "headRefOid": "67b06995a336bf705defb059cc2cac328f122b97",
+      "closedAt": "2026-07-02T13:53:15Z",
+      "mergedAt": "2026-07-02T13:53:15Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "32ead9a84b33ad06b957a398a8a9b7819a2a17aa"
+      },
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This also updates the affiliation for @thomas-fossati ",
+          "createdAt": "2026-07-02T07:52:46Z",
+          "updatedAt": "2026-07-02T07:52:46Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABEx-7uA",
+          "commit": {
+            "abbreviatedOid": "67b0699"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Thank you! ",
+          "createdAt": "2026-07-02T08:37:29Z",
+          "updatedAt": "2026-07-02T08:37:29Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABEyh3Cg",
+          "commit": {
+            "abbreviatedOid": "67b0699"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-02T09:55:06Z",
+          "updatedAt": "2026-07-02T09:55:06Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "id": "PR_kwDOTCeSC87tRkaU",
+      "title": "Make room for the attestation and TLS keys",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/23",
+      "state": "MERGED",
+      "author": "thomas-fossati",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "When working on #18, K_x and K_y must be replaced with the chosen names.",
+      "createdAt": "2026-07-02T18:55:02Z",
+      "updatedAt": "2026-07-03T18:23:39Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "32ead9a84b33ad06b957a398a8a9b7819a2a17aa",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "prep-18",
+      "headRefOid": "c6fa5b5be2eb72d5a55b9939b2adb10923d65fb9",
+      "closedAt": "2026-07-03T18:23:39Z",
+      "mergedAt": "2026-07-03T18:23:39Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "bdcc3d7b312e886271494ce6d3f384fcd4bcb50a"
+      },
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "aeK - Attesting Environment Key\r\n\r\ntbK - TEE/Target-Bound Key (ephemeral)\r\n\r\nhbK - Hardware-Bound (HSM, TPM, etc) Key\r\n\r\nFor \u2018expat\u2019, the \u201cephemeral key\u201d add no value. Security assumption is that hbK (\u201cLTK\u201d) is secure or aeK (\u201cAK\u201d) is secure. \r\n\r\nFor \u2018early\u2019, either the tbK or the hbK can serve as the \u201cTIK\u201d, but it also reduces to trust in \u201cTIK\u201d or \u201cAK\u201d, in the formal analysis I have \r\n\r\nanyway, what do you think of the names? ",
+          "createdAt": "2026-07-03T02:05:24Z",
+          "updatedAt": "2026-07-03T02:05:24Z"
+        },
+        {
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> aeK - Attesting Environment Key\r\n> \r\n> tbK - TEE/Target-Bound Key (ephemeral)\r\n> \r\n> hbK - Hardware-Bound (HSM, TPM, etc) Key\r\n> \r\n> For \u2018expat\u2019, the \u201cephemeral key\u201d add no value. Security assumption is that hbK (\u201cLTK\u201d) is secure or aeK (\u201cAK\u201d) is secure.\r\n> \r\n> For \u2018early\u2019, either the tbK or the hbK can serve as the \u201cTIK\u201d, but it also reduces to trust in \u201cTIK\u201d or \u201cAK\u201d, in the formal analysis I have\r\n\r\nThanks!\r\n\r\n> anyway, what do you think of the names?\r\n\r\nTL; DR. \ud83d\udcaf from me.\r\n\r\nLonger version: whilst they may lack a bit of charm \ud83d\ude04, they are pretty straightforward and clear in communicating intent.\r\nThey also have the nice property of avoiding conflict/overlap with previously used names, which should prevent readers from getting dizzy.",
+          "createdAt": "2026-07-03T02:16:35Z",
+          "updatedAt": "2026-07-03T02:17:00Z"
+        },
+        {
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> aeK - Attesting Environment Key\r\n> \r\n> tbK - TEE/Target-Bound Key (ephemeral)\r\n> \r\n> hbK - Hardware-Bound (HSM, TPM, etc) Key\r\n\r\nBTW, related to the discussion in #24, we should also add the Verifier\u2019s signing key to this lot.",
+          "createdAt": "2026-07-03T02:20:25Z",
+          "updatedAt": "2026-07-03T02:20:25Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\n> Longer version: whilst they may lack a bit of charm \ud83d\ude04\n\nLack of charm!! \ud83d\udc7e Ah well. ",
+          "createdAt": "2026-07-03T02:22:30Z",
+          "updatedAt": "2026-07-03T02:22:30Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > aeK - Attesting Environment Key\r\n> > tbK - TEE/Target-Bound Key (ephemeral)\r\n> > hbK - Hardware-Bound (HSM, TPM, etc) Key\r\n> \r\n> BTW, related to the discussion in #24, we should also add the Verifier\u2019s signing key to this lot.\r\n\r\nAh! Hrm. Something (non)charming\u2026 \r\n\r\n\u2018arK\u2019 - Attestation Result Key?",
+          "createdAt": "2026-07-03T02:29:11Z",
+          "updatedAt": "2026-07-03T02:29:11Z"
+        },
+        {
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> LGTM! Are you waiting for ACKs for the key names [\u2026]\r\n\r\nSince you also approve, I\u2019ve gone ahead and made the change: \r\n[34d5bab](https://github.com/telephonicrobotics/seat-architecture/pull/23/commits/34d5babbad1183716892212f582264cbb3d89cbb)\r\n\r\n",
+          "createdAt": "2026-07-03T10:15:35Z",
+          "updatedAt": "2026-07-03T10:15:35Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@thomas-fossati @ionut-arm I added [key definitions ](https://github.com/telephonicrobotics/seat-architecture/pull/23/files)with this PR at [c6fa5b5](https://github.com/telephonicrobotics/seat-architecture/pull/23/commits/c6fa5b5be2eb72d5a55b9939b2adb10923d65fb9)\r\n\r\n\r\n",
+          "createdAt": "2026-07-03T16:31:20Z",
+          "updatedAt": "2026-07-03T16:31:20Z"
+        },
+        {
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @thomas-fossati @ionut-arm I added [key definitions ](https://github.com/telephonicrobotics/seat-architecture/pull/23/files)with this PR at [c6fa5b5](https://github.com/telephonicrobotics/seat-architecture/pull/23/commits/c6fa5b5be2eb72d5a55b9939b2adb10923d65fb9)\r\n\r\nVery nice, thanks!\r\n\r\n(Apparently, I cannot approve this PR because I initiated it, but consider this my \ud83d\udea2 it!)\r\n",
+          "createdAt": "2026-07-03T17:27:32Z",
+          "updatedAt": "2026-07-03T17:27:32Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE6qXLQ",
+          "commit": {
+            "abbreviatedOid": "c6e8ce7"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM! Are you waiting for ACKs for the key names, or will that change be done in a subsequent PR?\n\nHappy with the proposals above as well!",
+          "createdAt": "2026-07-03T10:01:01Z",
+          "updatedAt": "2026-07-03T10:01:01Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 24,
+      "id": "PR_kwDOTCeSC87tVlA3",
+      "title": "Balance passport and background-check, and apply Attestation Credential",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/24",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This resolves #15 and resolves #20\r\n\r\nThis is a big one and my brain was starting to melt staring at the text diff, so thanks for the reviews!\r\n\r\nThis PR also substantially updates the Verifier definition, borrowing much from RFC9334 (from previous review comment).",
+      "createdAt": "2026-07-02T22:33:30Z",
+      "updatedAt": "2026-07-04T15:57:38Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "bdcc3d7b312e886271494ce6d3f384fcd4bcb50a",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "attestation-credentials",
+      "headRefOid": "75e838c2a70ce6ecc2d4b988caad589cb7741ed1",
+      "closedAt": "2026-07-04T15:57:37Z",
+      "mergedAt": "2026-07-04T15:57:37Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "d7a5ab057ab531c5162ff605c42b94549ca2179a"
+      },
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@ionut-arm \r\n> Thanks! Please see two novellas below.\r\n\r\nIf that's all you had for me, I am not very upset.\r\n",
+          "createdAt": "2026-07-02T23:31:18Z",
+          "updatedAt": "2026-07-02T23:31:18Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE3hJZQ",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Thanks! Please see two novellas below.",
+          "createdAt": "2026-07-02T22:52:06Z",
+          "updatedAt": "2026-07-02T23:14:24Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "This is a bit confusing. The Attester always presents an Attestation Credential to the RP. The RP might sometimes need to send that credential to a Verifier to get a different one back (this is based on the current definition above). Might be better to change the definition of Attestation Credential to \"whatever the Attester sends to the RP, regardless of whether it's Evidence or AR\". So it's not necessarily a term for \"one of {Evidence, AR}\", just syntactic sugar for what's passed between those specific participants.\r\n\r\n(it's late, the above paragraph might not make much sense, feedback is welcome :D )",
+              "createdAt": "2026-07-02T22:52:06Z",
+              "updatedAt": "2026-07-02T23:15:08Z"
+            },
+            {
+              "originalPosition": 103,
+              "body": "So what do we think about binding ARs to the connection, in the end? I think this point has flopped both ways. Binding means better security. Not binding means better perf. For use-cases where perf is critical it doesn't sound far-fetched that unbound ARs would be preferred. I guess it comes down to what your acceptable threat model looks like.",
+              "createdAt": "2026-07-02T23:01:50Z",
+              "updatedAt": "2026-07-02T23:14:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE3nEYA",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T23:21:45Z",
+          "updatedAt": "2026-07-02T23:21:45Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "@ionut-arm \r\n> So what do we think about binding ARs to the connection, in the end? I think this point has flopped both ways. Binding means better security. Not binding means better perf. \r\n\r\n> For use-cases where perf is critical it doesn't sound far-fetched that unbound ARs would be preferred. I guess it comes down to what your acceptable threat model looks like.\r\n\r\nHrm. Is https://github.com/telephonicrobotics/seat-architecture/blob/main/img/arch.ascii-art  another example of background-check only? :D To be honest, the formal analysis is always assuming that the Client is a so-called \"Verifying Relying Party\". So, I would say I am a bit less confident about how AR binding works at like the concrete API/wire format level. \r\n\r\nedit: Let me try and unpack that.\r\n\r\nThe formal models deeply compress a lot:\r\n\r\n1. RP Client connects to Attesting Server\r\n2. Attesting Server collects claims, generates Evidence, gets it signed by \"AK\"\r\n3. Evidence is conveyed back to the RP Client by the Attesting Server in a CMW\r\n4. RP Client appraises the Evidence and compares the nonce with what\u2019s expected, checks if they trust AK, the TLS identity signing key etc\r\n\r\nThe end. \r\n\r\nThere's obviously more going on in the real world, yeah? But that\u2019s background check. \r\n\r\nIf an RP is being served an AR from 12 minutes ago, that nonce isn\u2019t getting attested, right? Or does it depend on how complex a team wants to build out an RFC9334 aligned system in the real world? \r\n\r\n",
+              "createdAt": "2026-07-02T23:21:45Z",
+              "updatedAt": "2026-07-03T00:01:56Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE3nPQQ",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-02T23:22:47Z",
+          "updatedAt": "2026-07-02T23:22:47Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "I honestly think this one is just trying to deal with the fact that I feel 'Attestation Credential' is overloaded here and was uncertain about how to unpack it.",
+              "createdAt": "2026-07-02T23:22:47Z",
+              "updatedAt": "2026-07-02T23:22:47Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE37IMA",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T01:10:43Z",
+          "updatedAt": "2026-07-03T01:10:43Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "Ooh, I see the challenge is an open issue, at least in the editors copy of \u2018early\u2019 it seems https://www.ietf.org/archive/id/draft-fossati-seat-early-attestation-04.html#name-verification",
+              "createdAt": "2026-07-03T01:10:43Z",
+              "updatedAt": "2026-07-03T01:10:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE3-OhA",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T01:26:13Z",
+          "updatedAt": "2026-07-03T01:26:13Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "When discussing passport, we tend to conflate the freshness model and the topological pattern, but these are actually orthogonal.\r\n\r\nIn our case, an AR could be generated when the transport connection is established and used once, or it could be created before the transport connection begins and used one or more times.\r\n\r\nI believe the former (\u201cfresh, single use passport\u201d) should be fully compatible with the background check and verifying-relying party simplification made in current models because the freshness/binding properties are essentially the same.\r\n\r\nThe second use (\u201creusable passport\u201d) has not yet been modelled in the aTLS context, at least as far as I am aware.  So, its security is a big question mark.",
+              "createdAt": "2026-07-03T01:26:13Z",
+              "updatedAt": "2026-07-03T01:26:13Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE4AbmQ",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T01:36:29Z",
+          "updatedAt": "2026-07-03T01:36:29Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "@thomas-fossati thanks. I see expat say little that is super helpful; https://www.ietf.org/archive/id/draft-fossati-seat-expat-02.html#name-architecture\r\n\r\nOkay. Well, on one hand, again I am glad I am not crazy, but on the other hand I see that part of why I struggled with this is because this hasn\u2019t been modeled! I wonder what choices where made over with LAKE RA\u2026",
+              "createdAt": "2026-07-03T01:36:29Z",
+              "updatedAt": "2026-07-03T01:36:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE4EHyA",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T01:50:11Z",
+          "updatedAt": "2026-07-03T01:50:11Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "@thomas-fossati @ionut-arm\r\n\r\nhttps://www.ietf.org/archive/id/draft-ietf-lake-ra-05.html#name-instantiation-of-remote-att\r\n\r\nLAKE RA chose both options for\r\nPassport.  Option A is cached and I suppose the security properties are reduced to that of the EDHOC\u2019s typical assumptions. And then option B looks like a 3 party loop? \r\n\r\n I propose we borrow LAKE\u2019s homework",
+              "createdAt": "2026-07-03T01:50:11Z",
+              "updatedAt": "2026-07-03T01:50:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE4FAlw",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T01:53:36Z",
+          "updatedAt": "2026-07-03T01:53:36Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "> I wonder what choices where made over with LAKE RA\u2026\r\n\r\nThe RA document appears to support both modes (see the [third para of \u00a75.4](https://www.ietf.org/archive/id/draft-ietf-lake-ra-05.html#section-5.4-3)).\r\n\r\nProbably worth asking Yuxuan (ysong02 on G-H) whether this choice is backed by formal analysis.",
+              "createdAt": "2026-07-03T01:53:36Z",
+              "updatedAt": "2026-07-03T01:53:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE4H5gg",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T02:06:17Z",
+          "updatedAt": "2026-07-03T02:06:17Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "Apologies, I didn\u2019t refresh the page and therefore didn\u2019t see your comment!\r\n\r\nIn any case, before borrowing the cached AR option from LAKE, I suggest we establish whether any formal proof is available.  If not, it should be explicitly noted.\r\n\r\n(Also, a random thought: if we allow cached AR, we probably need to evaluate its impact \u2014 if any \u2014 on re-attestation.)",
+              "createdAt": "2026-07-03T02:06:17Z",
+              "updatedAt": "2026-07-03T02:06:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE5DUGw",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T06:09:53Z",
+          "updatedAt": "2026-07-03T06:13:42Z",
+          "comments": [
+            {
+              "originalPosition": 200,
+              "body": "Alternatively, the RP can compute the binder locally and send it to the verifier which compares it with the binder in the Evidence. It has an advantage that RP does not have to decode the Evidence. ",
+              "createdAt": "2026-07-03T06:09:53Z",
+              "updatedAt": "2026-07-03T06:13:42Z"
+            },
+            {
+              "originalPosition": 103,
+              "body": "The charter text says:\n\nA Standards Track document defining an attested (D)TLS protocol extension supporting remote peer and mutual attestation bound to the (D)TLS connection.\n\nIt needs to be discussed in the WG whether the optimization to not bind the AR to the TLS session is acceptable or not.",
+              "createdAt": "2026-07-03T06:13:38Z",
+              "updatedAt": "2026-07-03T06:13:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE6atnw",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T09:27:42Z",
+          "updatedAt": "2026-07-03T09:27:43Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "> It needs to be discussed in the WG whether the optimization to not bind the AR to the TLS session is acceptable or not.\r\n\r\nAlternatively, the discussion could be about how strict the threat model can be given various forms of binding. For example, I'd consider an AR that contains a claim about an attested key to be bound to the connection if that key signs the handshake, but it offers a lower security bar.",
+              "createdAt": "2026-07-03T09:27:42Z",
+              "updatedAt": "2026-07-03T09:27:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE6gL5A",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T09:38:36Z",
+          "updatedAt": "2026-07-03T09:38:36Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "> [\u2026] I'd consider an AR that contains a claim about an attested key to be bound to the connection if that key signs the handshake, but it offers a lower security bar.\r\n\r\nThe presence of the TLS key is a basic requirement for any AR that wants to be used in TLS.  This should be stated prominently.\r\n\r\nOn top of that, the debate should focus on acceptable levels of freshness and session binding for ARs.",
+              "createdAt": "2026-07-03T09:38:36Z",
+              "updatedAt": "2026-07-03T09:38:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE6jjTw",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T09:45:20Z",
+          "updatedAt": "2026-07-03T09:45:20Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "I don't know if y'all have read it already, but [draft-zhang-seat-selection](https://datatracker.ietf.org/doc/draft-zhang-seat-selection/) has kicked off a (fairly high-level) assessment of different integration models, though they don't cover these options AFAICT, and the modelling doesn't go that deep.",
+              "createdAt": "2026-07-03T09:45:20Z",
+              "updatedAt": "2026-07-03T09:45:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE6nG2g",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T09:53:16Z",
+          "updatedAt": "2026-07-03T09:53:16Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "> I don't know if y'all have read it already, but [draft-zhang-seat-selection](https://datatracker.ietf.org/doc/draft-zhang-seat-selection/) has kicked off a (fairly high-level) assessment of different integration models, though they don't cover these options AFAICT, and the modelling doesn't go that deep.\r\n\r\nYes, I read it; they make good observations.\r\n",
+              "createdAt": "2026-07-03T09:53:16Z",
+              "updatedAt": "2026-07-03T09:53:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE6x2YQ",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T10:20:32Z",
+          "updatedAt": "2026-07-03T10:20:33Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "I don't agree intra-handshake is impacted by firewalls; TLS 1.3 requires firewall to act as proxy. If a firewall is just inspecting TLS traffic, it does not have any visibility into a the handshake beyond ClientHello and ServerHello. Further, with Encrypted ClientHello, the visibility further reduces.",
+              "createdAt": "2026-07-03T10:20:33Z",
+              "updatedAt": "2026-07-03T10:20:33Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE61PJg",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T10:30:26Z",
+          "updatedAt": "2026-07-03T10:30:26Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "> I don't agree intra-handshake is impacted by firewalls; TLS 1.3 requires firewall to act as proxy. If a firewall is just inspecting TLS traffic, it does not have any visibility into a the handshake beyond ClientHello and ServerHello. Further, with Encrypted ClientHello, the visibility further reduces.\r\n\r\nSure, not all their observations are necessarily correct. That doesn\u2019t detract, though, from the fact that their observations are interesting and worthy of discussion.",
+              "createdAt": "2026-07-03T10:30:26Z",
+              "updatedAt": "2026-07-03T10:30:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE9vCcg",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T21:46:35Z",
+          "updatedAt": "2026-07-03T21:46:35Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "@tireddy2 @thomas-fossati @ionut-arm \r\n> The charter text says:\r\n>\r\n>> A Standards Track document defining an attested (D)TLS protocol extension supporting remote peer and mutual attestation bound to the (D)TLS connection.\r\n> \r\n> It needs to be discussed in the WG whether the optimization to not bind the AR to the TLS session is acceptable or not.\r\n\r\nI agree that the WG should be asked, although I think that the following also from the charter gives us some leeway:\r\n\r\n> The attested (D)TLS protocol extension will **allow** per-connection [freshness](https://www.ietf.org/rfc/rfc9334.html#section-10) of Evidence and Attestation Results.\r\n\r\nIn my view that means that we will need to emulate the 3-party round-trip like LAKE RA uses with the passport model, but at the very same time, by *allowing* per-connection freshness of Attestation Results in that way, I believe we would be in the position to offer a cached version, as the charter doesn't state per-freshness as strictly **mandatory** as long as per-freshness for AR is *possible*.\r\n\r\nMy question is, for Vienna, do we put in a bunch of TODOs for the -00 submission in the meantime?",
+              "createdAt": "2026-07-03T21:46:35Z",
+              "updatedAt": "2026-07-03T21:46:35Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE90Dlg",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T22:12:08Z",
+          "updatedAt": "2026-07-03T22:12:09Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "@ionut-arm This should be handled at 7386eee",
+              "createdAt": "2026-07-03T22:12:08Z",
+              "updatedAt": "2026-07-03T22:12:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE906DQ",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T22:16:42Z",
+          "updatedAt": "2026-07-03T22:16:42Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "Thank you!!",
+              "createdAt": "2026-07-03T22:16:42Z",
+              "updatedAt": "2026-07-03T22:16:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE91J9g",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T22:18:20Z",
+          "updatedAt": "2026-07-03T22:18:20Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "I think for now it's ok to just leave it as is, but it's good to have agreed on the need to flesh this out more :) ",
+              "createdAt": "2026-07-03T22:18:20Z",
+              "updatedAt": "2026-07-03T22:18:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE95DVA",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T22:35:25Z",
+          "updatedAt": "2026-07-03T22:35:25Z",
+          "comments": [
+            {
+              "originalPosition": 200,
+              "body": "Addressed with https://github.com/telephonicrobotics/seat-architecture/pull/24/commits/75e838c2a70ce6ecc2d4b988caad589cb7741ed1\r\n\r\nI added an 'if' regarding an RP policy requiring per-session freshness in this commit as well, to facilitate the charter question in the WG. ",
+              "createdAt": "2026-07-03T22:35:25Z",
+              "updatedAt": "2026-07-03T22:35:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE97lXg",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T22:52:26Z",
+          "updatedAt": "2026-07-03T22:52:26Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "@thomas-fossati \r\n> Probably worth asking Yuxuan (ysong02 on G-H) whether this choice is backed by formal analysis.\r\n\r\nThanks, I reached out to Yuxuan by email to ask.",
+              "createdAt": "2026-07-03T22:52:26Z",
+              "updatedAt": "2026-07-03T23:01:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE-1fyQ",
+          "commit": {
+            "abbreviatedOid": "75e838c"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": ":shipit: ",
+          "createdAt": "2026-07-04T09:47:25Z",
+          "updatedAt": "2026-07-04T09:47:25Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE_RDYQ",
+          "commit": {
+            "abbreviatedOid": "7f6d4cf"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-04T14:30:44Z",
+          "updatedAt": "2026-07-04T14:30:44Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "> e interesting and worthy of discussi\r\n\r\nAgreed. ",
+              "createdAt": "2026-07-04T14:30:44Z",
+              "updatedAt": "2026-07-04T14:30:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABE_RL5w",
+          "commit": {
+            "abbreviatedOid": "75e838c"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-04T14:31:50Z",
+          "updatedAt": "2026-07-04T14:31:50Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 25,
+      "id": "PR_kwDOTCeSC87t45kG",
+      "title": "Update repository location metadata",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/25",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-07-04T16:06:04Z",
+      "updatedAt": "2026-07-04T16:09:50Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "d7a5ab057ab531c5162ff605c42b94549ca2179a",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "repo-update",
+      "headRefOid": "327f35a13bae95a11135ddd3c80d40df9978dd5c",
+      "closedAt": "2026-07-04T16:09:50Z",
+      "mergedAt": "2026-07-04T16:09:50Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1"
+      },
+      "comments": [],
+      "reviews": []
     }
   ]
 }
