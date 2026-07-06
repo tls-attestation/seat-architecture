@@ -1,0 +1,29 @@
+       .------------.
+       |  Verifier  |
+       |   [arK]    |
+       '------------'
+          ^      | 
+          |      | EAR
+ Evidence |      |   
+          |      v
+  .---------------------. EAR keyset
+  |   .-------------.   | containing      (RP holds this ahead of hs)
+  |  |   Attesting   |  | tbK & keK . . . . . . . . . . .
+  |  |  Environment  |  |                               .
+  |  |     [aeK]     |  |                               .
+  |   '-------------'   |                     .---------v----------.
+  |       Collects      |                     |   Relying Party    |
+  |       Claims        |                     |   .------------.   |
+  |                     |                     |  |              |  |
+  |   .-------------.   |  Challenge (ct)     |  |   TLS peer   |  |
+  |  |  .--------.   |  |  [sealed to keK]    |  |              |  |
+  |  | |          |  |<-+---------------------+--| Encapsulates |  |
+  |  | | TLS peer |  |  |  Liveness Proof     |  | KEM secret   |  |
+  |  | |          |  |--+---------------------+->| to keK       |  |     
+  |  |  '--------'   |  |                     |  |              |  |
+  |  | [tbK] & [keK] |<=+=====================+=>|              |  |
+  |  |               |  |   Secure Channel    |  |              |  |
+  |  |    Target     |  |  [signed by tbK]    |   '------------'   |
+  |  |  Environment  |  |                     '--------------------'
+  |   '-------------'   |                    
+  '---------------------'

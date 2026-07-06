@@ -47,6 +47,7 @@ normative:
 informative:
   I-D.ounsworth-rats-privacy-framework:
   I-D.reddy-rats-key-binding:
+  I-D.ietf-rats-epoch-markers:
   IAB-Attestation-Risks:
     title: "IAB Statement on the Risks of Attestation of Software and Hardware on the Open Internet"
     date: 2023-09-25
@@ -156,6 +157,22 @@ Target/TEE‑Bound Key (`tbK`):
   transport endpoint (for example, signing the TLS CertificateVerify
   message). Evidence produced by the Attesting Environment
   MUST include a binding to the `tbK`.
+
+KEM Encapsulation Key (`keK`):
+: An asymmetric Key Encapsulation Mechanism (KEM) key pair generated
+  and maintained exclusively within the Target Environment. The
+  Attester uses the `keK` to decapsulate session-specific challenges.
+  The `keK` is an ephemeral key closely tied to the lifecycle of an
+  Attestation Result, and its rotation is governed by freshness
+  boundaries (e.g., temporal nonces such as Epoch Markers distributed
+  by an Epoch Bell {{I-D.ietf-rats-epoch-markers}}). Regularly
+  rotating the `keK` strictly bounds the vulnerability window of
+  an exfiltrated key to the current validity period.
+
+> Under the Passport Model, the Verifier includes the public `keK`
+> within the Attestation Result, allowing the Relying Party to
+> cryptographically bind the credential to the current session
+> and enforce per-session freshness (see {{per-session-freshness}}).
 
 Hardware‑Bound Key (`hbK`):
 : A long‑lived asymmetric key pair whose private key resides
@@ -399,12 +416,12 @@ in the Verifier and in the Endorsement chain for the Attesting
 Environment.
 
 The Relying Party must additionally satisfy itself that
-the Attestation Credential is bound to the current session — that it has not been
-replayed from a different session or transferred from a different
-endpoint.  This assurance is provided by the session binding mechanism
-described in {{channel-binding-pattern}}; the check may be performed by
-the Relying Party itself or delegated to the Verifier, but it cannot
-be pre-computed independently of the session.
+the Attestation Credential is bound to the current session — that it
+has not been replayed from a different session or transferred from a
+different endpoint.  This assurance is provided by the session binding
+mechanism described in {{channel-binding-pattern}}; the check may be
+performed by the Relying Party itself or delegated to the Verifier,
+but it cannot be pre-computed independently of the session.
 
 ## Attester Trust
 
@@ -590,13 +607,29 @@ and can compute the binder locally and MAY send it to the Verifier
 which compares it with the binder in the Evidence, avoiding the
 need requiring that the Relying Party decode the Evidence first.
 
+## Background-Check Conveyance Model
+
 If the Relying Party is directly consuming Evidence (Background-Check
-model), it rejects Evidence whose binder does not match. If the Relying
-Party is consuming an Attestation Result (Passport model) and expects
-per-session freshness (see {{per-session-freshness}}), it MUST reject
-the Attestation Result if it cannot affirmatively evaluate that the
-Verifier explicitly tied the Attestation Result to the current
+model), it rejects Evidence whose binder does not match.
+
+## Passport Conveyance Model
+
+If the Relying party is consuming an Attestation Result (Passport model)
+and expects per-session freshness (see {{per-session-freshness}}), it
+MUST reject the Attestation Result if it cannot affirmatively evaluate
+that the Verifier explicitly tied the Attestation Result to the current
 session's Attestation Binder.
+
+To fulfill these binding conditions without requiring the Attester to
+contact the Verifier during connection establishment, deployments
+utilizing the Passport model MAY employ an interactive challenge.
+By encapsulating a session-specific challenge to a `keK` whose public
+component is bound within the Attestation Result, the Relying Party
+can verify the Attester's active control over the Target Environment.
+The decapsulated secret is subsequently mixed into the Session Binding
+Value, cryptographically tying the cached credential to the active
+transport session. See {{interactive-passport}} for an illustative
+example of this pattern in TLS.
 
 # Freshness
 
@@ -611,12 +644,21 @@ session being evaluated and cannot be replayed from a prior session.
 This property is addressed directly by the session binding mechanism
 of {{channel-binding-pattern}}.  The Session Binding Value is specific
 to the session and cannot be known before the session is initiated,
-providing nonce-style freshness in the sense of {{RFC9334}} Section 10.
+providing nonce-style freshness in the sense of {{Section 10 of RFC9334}}.
 Evidence committed to an Attestation Binder derived from the Session
 Binding Value is therefore intrinsically fresh with respect to the
 session: a replay from a different session will carry an Attestation
 Binder derived from a different Session Binding Value, and appraisal
 will fail.
+
+For deployments utilizing cached Attestation Results (the Passport model),
+per-session freshness of the transport connection must be decoupled from
+the generation time of the credential itself. This is achieved by binding
+the lifecycle of the keK to a strict freshness boundary, such as an Epoch
+Marker {{I-D.ietf-rats-epoch-markers}}. While the transport nonces provide
+network freshness, the successful decapsulation of a `keK` challenge proves
+the Attesting Environment is operating within the acceptable epoch window,
+mitigating the risk of indefinitely replaying exfiltrated credentials.
 
 ## Session resumption
 
@@ -865,6 +907,46 @@ be conveyed prior to the transition to application data exchange; the
 choice between them depends on the target transport protocol's
 extension model and is otherwise architecturally equivalent from an
 {{RFC9334}} perspective.
+
+## Interactive Passport Conveyance {#interactive-passport}
+
+In this pattern, the Relying Party binds a cached Attestation Result
+to the current transport session without contacting the Verifier.
+The Attestation Result contains the public component of a `keK`,
+whose private component resides exclusively within the Attester's
+Target Environment. Binding is achieved by a one‑round‑trip
+cryptographic challenge.
+
+~~~ aasvg
+{::include img/interactive-passport.ascii-art}
+~~~
+{: #fig-passport artwork-align="center" title="Per-Session Freshness with Interactive Passport Challenge"}
+
+### Example algorithm (informational)
+
+1. The Relying Party executes a KEM encapsulation operation to the
+   public `keK` obtained from the Attestation Result. The Relying
+   Party transmits the resulting ciphertext `ct` to the Attester.
+
+2. The Attester's Target Environment decapsulates `ct` with its
+   private `keK` to recover the shared secret. Both endpoints derive
+   a transient symmetric MAC key via HKDF.
+
+3. The Attester constructs a Session Binding Value specific to this
+   proof, which MUST incorporate the transport handshake transcript
+   (e.g., from ClientHello through the message carrying the challenge),
+   the Attester's transport authentication public key (`tbK`), and the
+   decapsulated shared secret.
+
+4. The Attester computes a liveness proof (e.g., an HMAC) over the
+   Session Binding Value using the derived MAC key and returns it to
+   the Relying Party.
+
+5. The Relying Party constructs the identical Session Binding Value
+   and local MAC key to verify the returned proof, confirming the
+   Attester's active control over the private `keK` bound to the
+   active session transcript.
+
 
 # Acknowledgments
 {:numbered="false"}
