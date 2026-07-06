@@ -4,10 +4,10 @@
 
 This is the working area for the individual Internet-Draft, "Secure Evidence and Attestation Transport (SEAT) Architecture".
 
-* [Editor's Copy](https://tls-attestation.github.io/seat-architecture/#go.draft-seat-architecture.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-seat-architecture)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-seat-architecture)
-* [Compare Editor's Copy to Individual Draft](https://tls-attestation.github.io/seat-architecture/#go.draft-seat-architecture.diff)
+* [Editor's Copy](https://tls-attestation.github.io/seat-architecture/#go.draft-many-seat-architecture.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-many-seat-architecture)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-many-seat-architecture)
+* [Compare Editor's Copy to Individual Draft](https://tls-attestation.github.io/seat-architecture/#go.draft--many-seat-architecture.diff)
 
 
 ## Contributing
