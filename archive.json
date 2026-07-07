@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-05T03:27:46.769165+00:00",
+  "timestamp": "2026-07-07T03:26:37.728812+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -314,6 +314,22 @@
           "updatedAt": "2026-07-01T23:19:24Z"
         }
       ]
+    },
+    {
+      "number": 27,
+      "id": "I_kwDOTCeSC88AAAABH1v1Uw",
+      "title": "Markus' Review",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/27",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "_Originally posted by @burgerdev [on the mailing list](https://mailarchive.ietf.org/arch/msg/seat/cDQRqCD63EAyR-m59W6W3bUO3F0/)_\n\n> Sec 2.\n> (tbK): An asymmetric key pair whose private key is generated and maintained exclusively within the Target Environment (e.g., a TEE).\n> [...]\n> Evidence produced by the Attesting Environment MUST include a binding to the tbK.\n> \n> \n\n- [ ] \"This reads to me as if a tbk was mandatory for all attested TLS schemes. However, I don't think a tbk is always necessary and I'd thus like to avoid setting that requirement in stone. Sufficient for me would be to condition the requirement, along the lines of \"if a tbk is used, it needs to be bound ...\". Same concern for the \"Key Non-exportability\" paragraph in section 10.\"\n\nComments: A similar question was also raised in an issue by Markus [here ](https://github.com/tls-attestation/exported-attestation/issues/58)\n\nMarkus followed-up with a concrete use-case to consider which I've added via a PR here: https://github.com/tls-attestation/use-cases-and-properties/pull/56\n\n\n> Sec 6.1\n> [RFC9334] expects a failed Attester appraisal to result in reduced access or privileges rather than outright rejection.\n> In the event of failures occurring within the Post-Handshake Window, this behaviour is to be handled at the transport layer.\n> \n> \n\n- [ ] \"This seems to be at odds with the definition of the post-handshake window in sec. 2, which explicitly allows the application layer to handle attestation, and with the guidance in the following paragraph. Is this a load-bearing requirement, or can it just be relaxed?\"\n\n\n> 9.3. Attestation Key Correlation\n> \n> \n\n- [ ] \"This seems to be a general consideration for RATS, if there is no conclusion for attested TLS I'd just remove it.\"\n\n\n> Sec 10\n> When a transport session is resumed, previously obtained Attestation Credential may no longer reflect the Attester's current state. Attestation from a prior session does not carry over to a resumed session.\n> \n> \n\n- [ ] \"This seems to be overly restrictive: even if I accept the need for periodic re-attestation (which I don't), I don't see why resumption needs to be outright forbidden. Either describe a concern which applies universally, or relax the requirement?\"\n",
+      "createdAt": "2026-07-06T16:26:41Z",
+      "updatedAt": "2026-07-06T21:55:50Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -2320,6 +2336,61 @@
         "oid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1"
       },
       "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 26,
+      "id": "PR_kwDOTCeSC87uIuwD",
+      "title": "Introduce \"Interactive Passport\" concept",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/26",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Adds new Key Encapsulation Material (KEM) \"keK\" with definition\r\n- Adds additional references to per-session freshness\r\n- Adds new appendix entry and illustration\r\n\r\n(Indirectly tested with previous formal analysis, needs a direct model)",
+      "createdAt": "2026-07-06T00:17:12Z",
+      "updatedAt": "2026-07-06T22:03:43Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "interactive-passport",
+      "headRefOid": "02a7dd71aa7878bd17ca06024008db93d73b2199",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@henkbirkholz WDYT?\r\n",
+          "createdAt": "2026-07-06T00:50:26Z",
+          "updatedAt": "2026-07-06T00:50:26Z"
+        },
+        {
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Just a note that, while I like the solution, I'm not sure if an arch document is the right place for it. Not a hard \"no\", I just don't know how this is usually done.",
+          "createdAt": "2026-07-06T08:12:09Z",
+          "updatedAt": "2026-07-06T08:12:09Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@ionut-arm \n> Just a note that, while I like the solution, I'm not sure if an arch document is the right place for it. Not a hard \"no\", I just don't know how this is usually done.\n\nNo specific disagreement from me! I did imagine that just dropping in a secondary ephemeral key (keK) without some kind of supporting context might raise some question marks otherwise.\n\nHowever, depending on additional feedback, if other people like it, it might get adopted into a concrete protocol or the use-cases draft etc and this draft would just briefly touch on the concept. \n\n",
+          "createdAt": "2026-07-06T08:22:56Z",
+          "updatedAt": "2026-07-06T08:22:56Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@ionut-arm @tireddy2 @thomas-fossati \r\n\r\nRather than filling the appendix with concrete mechanisms, maybe this stuff could go into the repo's wiki when it isn't something already proposed elsewhere in a concrete draft? Until the community sort of centres or lands on a pattern that could then be codified in the draft? \r\n\r\nCause I am about to propose another mechanism to address the security concerns from this use-case where the private identity key *is not* always tied to the target environment: \r\n\r\nhttps://github.com/tls-attestation/use-cases-and-properties/pull/56 (this is the use case, not my new mechanism idea)",
+          "createdAt": "2026-07-06T22:03:43Z",
+          "updatedAt": "2026-07-06T22:03:43Z"
+        }
+      ],
       "reviews": []
     }
   ]
