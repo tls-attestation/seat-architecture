@@ -1060,7 +1060,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Ritz, et al.</td>
-<td class="center">Expires 7 January 2027</td>
+<td class="center">Expires 8 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1073,12 +1073,12 @@ svg {
 <dd class="internet-draft">draft-many-seat-architecture-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-06" class="published">6 July 2026</time>
+<time datetime="2026-07-07" class="published">7 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-07">7 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-01-08">8 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1141,7 +1141,7 @@ given transport connection.<a href="#section-abstract-1" class="pilcrow">¶</a><
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 7 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 8 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1251,6 +1251,11 @@ given transport connection.<a href="#section-abstract-1" class="pilcrow">¶</a><
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-passport-conveyance-model" class="internal xref">Passport Conveyance Model</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2.2.1">
+                    <p id="section-toc.1-1.7.2.2.2.1.1"><a href="#section-7.2.1" class="auto internal xref">7.2.1</a>.  <a href="#name-interactive-passport-convey" class="internal xref">Interactive Passport Conveyance</a></p>
+</li>
+                </ul>
 </li>
             </ul>
 </li>
@@ -1313,14 +1318,6 @@ given transport connection.<a href="#section-abstract-1" class="pilcrow">¶</a><
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.2">
                 <p id="section-toc.1-1.13.2.2.1"><a href="#appendix-A.2" class="auto internal xref">A.2</a>.  <a href="#name-structured-payload-conveyan" class="internal xref">Structured Payload Conveyance</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.3">
-                <p id="section-toc.1-1.13.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-interactive-passport-convey" class="internal xref">Interactive Passport Conveyance</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.3.2.1">
-                    <p id="section-toc.1-1.13.2.3.2.1.1"><a href="#appendix-A.3.1" class="auto internal xref">A.3.1</a>.  <a href="#name-example-algorithm-informati" class="internal xref">Example algorithm (informational)</a></p>
-</li>
-                </ul>
 </li>
             </ul>
 </li>
@@ -1439,32 +1436,36 @@ as coined by <span>[<a href="#NIEME2021" class="cite xref">NIEME2021</a>]</span>
         <dd style="margin-left: 1.5em" id="section-2-4.2">
           <p id="section-2-4.2.1">An asymmetric key pair whose private key is generated
 and maintained exclusively within the Target Environment
-(e.g., a TEE). The <code>tbK</code> is used to authenticate the Attester’s
-transport endpoint (for example, signing the TLS CertificateVerify
-message). Evidence produced by the Attesting Environment
-<span class="bcp14">MUST</span> include a binding to the <code>tbK</code>.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
+(e.g., a TEE). If a deployment's policy requires Compound
+Authentication (see <a href="#security-considerations" class="auto internal xref">Section 10</a>), where the
+transport authentication key itself natively proves Target
+Environment residency, a <code>tbK</code> <span class="bcp14">MUST</span> be used to authenticate
+the Attester’s transport endpoint (for example, signing the
+TLS CertificateVerify message), and Evidence produced by the
+Attesting Environment <span class="bcp14">MUST</span> include a binding to the <code>tbK</code>.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-2-4.3">KEM Encapsulation Key (<code>keK</code>):</dt>
         <dd style="margin-left: 1.5em" id="section-2-4.4">
           <p id="section-2-4.4.1">An asymmetric Key Encapsulation Mechanism (KEM) key pair generated
 and maintained exclusively within the Target Environment. The
-Attester uses the <code>keK</code> to decapsulate session-specific challenges.
-The <code>keK</code> is an ephemeral key closely tied to the lifecycle of an
-Attestation Result, and its rotation is governed by freshness
-boundaries (e.g., temporal nonces such as Epoch Markers distributed
-by an Epoch Bell <span>[<a href="#I-D.ietf-rats-epoch-markers" class="cite xref">I-D.ietf-rats-epoch-markers</a>]</span>). Regularly
-rotating the <code>keK</code> strictly bounds the vulnerability window of
-an exfiltrated key to the current validity period.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
+Attester uses the <code>keK</code> to decapsulate session-specific challenges.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
+<p id="section-2-4.4.2">As a per-session liveness anchor, the <code>keK</code> is ephemeral and closely tied
+to the lifecycle of a single Attestation Result; its rotation is
+governed by freshness boundaries (e.g., temporal nonces such as Epoch
+Markers distributed by an Epoch Bell <span>[<a href="#I-D.ietf-rats-epoch-markers" class="cite xref">I-D.ietf-rats-epoch-markers</a>]</span>).
+Regularly rotating the <code>keK</code> in this role strictly bounds the
+vulnerability window of an exfiltrated key to the current validity
+period.<a href="#section-2-4.4.2" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-2-5.1">
-          <p id="section-2-5.1.1">Under the Passport Model, the Verifier includes the public <code>keK</code>
-within the Attestation Result, allowing the Relying Party to
-cryptographically bind the credential to the current session
-and enforce per-session freshness (see <a href="#per-session-freshness" class="auto internal xref">Section 8.1</a>).<a href="#section-2-5.1.1" class="pilcrow">¶</a></p>
+          <p id="section-2-5.1.1">The Verifier includes the public <code>keK</code> within the Attestation Result,
+allowing the Relying Party to cryptographically bind the credential
+to the current session and enforce per-session freshness
+(see <a href="#per-session-freshness" class="auto internal xref">Section 8.1</a>).<a href="#section-2-5.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <span class="break"></span><dl class="dlParallel" id="section-2-6">
@@ -1477,153 +1478,183 @@ provides the conventional identity (e.g., a WebPKI domain
 validation) to the Relying Party. In deployments where a
 short‑lived <code>tbK</code> is used, the <code>hbK</code> <span class="bcp14">MAY</span> authorise the <code>tbK</code>.<a href="#section-2-6.2.1" class="pilcrow">¶</a></p>
 </dd>
-        <dd class="break"></dd>
-<dt id="section-2-6.3">Attesting Environment Key (<code>aeK</code>):</dt>
-        <dd style="margin-left: 1.5em" id="section-2-6.4">
-          <p id="section-2-6.4.1">The asymmetric key used by the Attesting Environment
-to sign Evidence. The Verifier trusts the <code>aeK</code> through an
-Endorsement chain that typically roots in a hardware manufacturer
-or a device‑specific CA. The <code>aeK</code> is used solely for attestation
-and is distinct from any key used for transport authentication.<a href="#section-2-6.4.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-6.5">Attestation Result Key (<code>arK</code>):</dt>
-        <dd style="margin-left: 1.5em" id="section-2-6.6">
-          <p id="section-2-6.6.1">The asymmetric key used by a Verifier to sign
-Attestation Results. The Relying Party must possess the
-corresponding trust anchor for the <code>arK</code> so that it can verify
-the integrity and authenticity of received Attestation Results.<a href="#section-2-6.6.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-6.7">Attestation Credential:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-6.8">
-          <p id="section-2-6.8.1">The attestation payload conveyed by the Attester to the Relying
-Party across the transport connection. Depending on the RATS
-conveyance model in use, this payload consists of either Evidence
-(Background-Check Model) or an Attestation Result (Passport Model).
-Where a statement applies specifically to one but not the other,
-this document uses the more specific term.<a href="#section-2-6.8.1" class="pilcrow">¶</a></p>
-</dd>
       <dd class="break"></dd>
 </dl>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-2-7.1">
-          <p id="section-2-7.1.1">While Evidence is exclusively generated by the Attester and
-Attestation Results are generated by a Verifier, in the SEAT
-transport context, the Attestation Credential is always presented
-by the Attester directly to the Relying Party over the secure channel.<a href="#section-2-7.1.1" class="pilcrow">¶</a></p>
+          <p id="section-2-7.1.1">Alternatively, the <code>hbK</code> <span class="bcp14">MAY</span> be provisioned directly into the
+Target Environment as the transport authentication key itself.
+This pattern can be applied for deployments such as hardened
+external Key/Secret Management Services (KSMs) or certificate
+managers. Using an injected hbK shifts the security anchor from a
+hardware-backed guarantee to the integrity of the local
+provisioning pipeline and does not carry the exclusivity or
+non-exportability guarantees of a natively generated <code>tbK</code>.<a href="#section-2-7.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<span class="break"></span><dl class="dlParallel" id="section-2-8">
-        <dt id="section-2-8.1">Attested Channel:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.2">
-          <p id="section-2-8.2.1">A transport session in which at least one endpoint
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-2-8.1">
+          <p id="section-2-8.1.1">To cryptographically anchor the session to the Target Environment,
+a deployment <span class="bcp14">MUST</span> employ at least one natively generated key
+(either a <code>tbK</code> or a <code>keK</code>).<a href="#section-2-8.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<span class="break"></span><dl class="dlParallel" id="section-2-9">
+        <dt id="section-2-9.1">Attesting Environment Key (<code>aeK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.2">
+          <p id="section-2-9.2.1">The asymmetric key used by the Attesting Environment
+to sign Evidence. The Verifier trusts the <code>aeK</code> through an
+Endorsement chain that typically roots in a hardware manufacturer
+or a device‑specific CA. The <code>aeK</code> is used solely for attestation
+and is distinct from any key used for transport authentication.<a href="#section-2-9.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-9.3">Attestation Result Key (<code>arK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.4">
+          <p id="section-2-9.4.1">The asymmetric key used by a Verifier to sign
+Attestation Results. The Relying Party must possess the
+corresponding trust anchor for the <code>arK</code> so that it can verify
+the integrity and authenticity of received Attestation Results.<a href="#section-2-9.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-9.5">Attestation Credential:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.6">
+          <p id="section-2-9.6.1">The attestation payload conveyed by the Attester to the Relying
+Party across the transport connection. Depending on the RATS
+conveyance model in use, this payload consists of either Evidence
+(Background-Check Model) or an Attestation Result (Passport Model).
+Where a statement applies specifically to one but not the other,
+this document uses the more specific term.<a href="#section-2-9.6.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-2-10.1">
+          <p id="section-2-10.1.1">While Evidence is exclusively generated by the Attester and
+Attestation Results are generated by a Verifier, in the SEAT
+transport context, the Attestation Credential is always presented
+by the Attester directly to the Relying Party over the secure channel.<a href="#section-2-10.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<ul class="normal ulEmpty">
+<li class="normal ulEmpty" id="section-2-11.1">
+          <p id="section-2-11.1.1">An Attestation Result <span class="bcp14">MAY</span> be cached by the Attester and reused
+across multiple subsequent sessions rather than obtained anew for
+each session. Where per-session freshness is required for a cached
+Attestation Result, this is established separately from the
+Result's issuance; see <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>.<a href="#section-2-11.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<span class="break"></span><dl class="dlParallel" id="section-2-12">
+        <dt id="section-2-12.1">Attested Channel:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.2">
+          <p id="section-2-12.2.1">A transport session in which at least one endpoint
 has produced Evidence that has been appraised, and in which that
 Evidence is cryptographically bound to the session such that the
 appraisal cannot be replayed to a different session or transferred
-to a different endpoint.<a href="#section-2-8.2.1" class="pilcrow">¶</a></p>
+to a different endpoint.<a href="#section-2-12.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.3">Attestation Timing Model:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.4">
-          <p id="section-2-8.4.1">The temporal relationship between Evidence
+<dt id="section-2-12.3">Attestation Timing Model:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.4">
+          <p id="section-2-12.4.1">The temporal relationship between Evidence
 conveyance and connection establishment time.  This document
 defines two timing models: Intra-Handshake Attestation and Post-
-Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-8.4.1" class="pilcrow">¶</a></p>
+Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-12.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.5">Evidence Generation Time:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.6">
-          <p id="section-2-8.6.1">The point at which an Attester's Claims
+<dt id="section-2-12.5">Evidence Generation Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.6">
+          <p id="section-2-12.6.1">The point at which an Attester's Claims
 are signed to produce Evidence. Depending on the internal workings
 of the Attester, the Evidence reflects the reported state at the
 time the underlying Claims were collected and may not represent a
 snapshot of state at the exact moment of signing the evidence.
 In all cases, it makes no representation about the Attester's
-state at any later time.<a href="#section-2-8.6.1" class="pilcrow">¶</a></p>
+state at any later time.<a href="#section-2-12.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.7">Connection Establishment Time:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.8">
-          <p id="section-2-8.8.1">The point at which a transport
+<dt id="section-2-12.7">Connection Establishment Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.8">
+          <p id="section-2-12.8.1">The point at which a transport
 handshake completes and the session becomes usable for application
-data exchange.<a href="#section-2-8.8.1" class="pilcrow">¶</a></p>
+data exchange.<a href="#section-2-12.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.9">Lifetime of Connection:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.10">
-          <p id="section-2-8.10.1">The period from Connection Establishment
+<dt id="section-2-12.9">Lifetime of Connection:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.10">
+          <p id="section-2-12.10.1">The period from Connection Establishment
 Time until the session is torn down.  Post-handshake re-
 attestation operates during the Lifetime of Connection, allowing
 Evidence to reflect the Attester's current state rather than its
-state at Connection Establishment Time.<a href="#section-2-8.10.1" class="pilcrow">¶</a></p>
+state at Connection Establishment Time.<a href="#section-2-12.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.11">Re-attestation:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.12">
-          <p id="section-2-8.12.1">The production and appraisal of fresh Evidence during an
-established session's Lifetime of Connection.<a href="#section-2-8.12.1" class="pilcrow">¶</a></p>
+<dt id="section-2-12.11">Re-attestation:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.12">
+          <p id="section-2-12.12.1">The production and appraisal of fresh Evidence during an
+established session's Lifetime of Connection.<a href="#section-2-12.12.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.13">Intra-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.14">
-          <p id="section-2-8.14.1">The interval during transport connection
+<dt id="section-2-12.13">Intra-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.14">
+          <p id="section-2-12.14.1">The interval during transport connection
 establishment in which Evidence is conveyed within the handshake
 messages themselves, prior to the transition to application data
-exchange.<a href="#section-2-8.14.1" class="pilcrow">¶</a></p>
+exchange.<a href="#section-2-12.14.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.15">Post-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.16">
-          <p id="section-2-8.16.1">The interval following connection establishment in which Evidence
+<dt id="section-2-12.15">Post-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.16">
+          <p id="section-2-12.16.1">The interval following connection establishment in which Evidence
 is conveyed to the Relying Party using post-handshake protocol
 mechanisms (e.g., Exported Authenticators or application-layer
-exchanges).<a href="#section-2-8.16.1" class="pilcrow">¶</a></p>
+exchanges).<a href="#section-2-12.16.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.17">Session Binding Value:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.18">
-          <p id="section-2-8.18.1">A value, uniquely determined by a specific transport
+<dt id="section-2-12.17">Session Binding Value:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.18">
+          <p id="section-2-12.18.1">A value, uniquely determined by a specific transport
 session, from which Attestation Binders are derived.  A Session
 Binding Value may be public or secret depending on the topology;
 what is required is that it cannot be known before the session is
-initiated.  See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-2-8.18.1" class="pilcrow">¶</a></p>
+initiated.  See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-2-12.18.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.19">Attestation Binder:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.20">
-          <p id="section-2-8.20.1">A cryptographic value derived from a Session Binding
+<dt id="section-2-12.19">Attestation Binder:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.20">
+          <p id="section-2-12.20.1">A cryptographic value derived from a Session Binding
 Value and committed to by the Attesting Environment into its
 Evidence payload. This value binds the Evidence to a specific
-session guaranteed under typical cryptographic assumptions.<a href="#section-2-8.20.1" class="pilcrow">¶</a></p>
+session guaranteed under typical cryptographic assumptions.<a href="#section-2-12.20.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.21">Transmission Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.22">
-          <p id="section-2-8.22.1">The point in the protocol at which an
+<dt id="section-2-12.21">Transmission Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.22">
+          <p id="section-2-12.22.1">The point in the protocol at which an
 Attestation Binder is included in a protocol message.  A binder
 may be computed and transmitted before peer authentication is
-complete.<a href="#section-2-8.22.1" class="pilcrow">¶</a></p>
+complete.<a href="#section-2-12.22.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.23">Verification Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.24">
-          <p id="section-2-8.24.1">The protocol mechanism by which the integrity
+<dt id="section-2-12.23">Verification Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.24">
+          <p id="section-2-12.24.1">The protocol mechanism by which the integrity
 of a transmitted Attestation Binder is established. Depending on
 the Attestation Timing Model, this may be achieved via a MAC
 that authenticates the handshake transcript (e.g., the TLS Finished
 message), or through post-handshake cryptographic binding (e.g.,
-Exported Authenticators).<a href="#section-2-8.24.1" class="pilcrow">¶</a></p>
+Exported Authenticators).<a href="#section-2-12.24.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-8.25">Split Deployment:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-8.26">
-          <p id="section-2-8.26.1">A deployment in which the Attesting Environment
+<dt id="section-2-12.25">Split Deployment:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-12.26">
+          <p id="section-2-12.26.1">A deployment in which the Attesting Environment
 and the transport stack reside in different execution contexts.
 The transport stack is in the Target Environment; the Attesting
 Environment (e.g., a TEE) must receive the attestation binder
 input — typically a handshake transcript hash or exported key —
-from the transport stack via a trusted interface.<a href="#section-2-8.26.1" class="pilcrow">¶</a></p>
+from the transport stack via a trusted interface.<a href="#section-2-12.26.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -2096,7 +2127,7 @@ transport session already exists and application data may already
 be flowing.  <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> expects a failed Attester appraisal to
 result in reduced access or privileges rather than outright
 rejection.  In the event of failures occurring within the
-Post-Handshake Window, this behaviour is to be handled at
+Post-Handshake Window, this behaviour <span class="bcp14">MAY</span> be handled at
 the transport layer.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">As the Relying Party's enforcement point sits outside the
 transport handshake, operating on already-established
@@ -2173,6 +2204,10 @@ need requiring that the Relying Party decode the Evidence first.<a href="#sectio
         </h3>
 <p id="section-7.1-1">If the Relying Party is directly consuming Evidence (Background-Check
 model), it rejects Evidence whose binder does not match.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<p id="section-7.1-2">A Background-Check exchange <span class="bcp14">MAY</span> also be used to provision a <code>keK</code>
+for subsequent use under the Passport model, by minting a cached
+Attestation Result that binds a Trust-On-First-Use <code>keK</code> for later
+Interactive Passport challenges (see <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>).<a href="#section-7.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="passport-conveyance-model">
@@ -2185,7 +2220,12 @@ and expects per-session freshness (see <a href="#per-session-freshness" class="a
 <span class="bcp14">MUST</span> reject the Attestation Result if it cannot affirmatively evaluate
 that the Verifier explicitly tied the Attestation Result to the current
 session's Attestation Binder.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
-<p id="section-7.2-2">To fulfill these binding conditions without requiring the Attester to
+<div id="interactive-passport">
+<section id="section-7.2.1">
+          <h4 id="name-interactive-passport-convey">
+<a href="#section-7.2.1" class="section-number selfRef">7.2.1. </a><a href="#name-interactive-passport-convey" class="section-name selfRef">Interactive Passport Conveyance</a>
+          </h4>
+<p id="section-7.2.1-1">To fulfill these binding conditions without requiring the Attester to
 contact the Verifier during connection establishment, deployments
 utilizing the Passport model <span class="bcp14">MAY</span> employ an interactive challenge.
 By encapsulating a session-specific challenge to a <code>keK</code> whose public
@@ -2193,8 +2233,143 @@ component is bound within the Attestation Result, the Relying Party
 can verify the Attester's active control over the Target Environment.
 The decapsulated secret is subsequently mixed into the Session Binding
 Value, cryptographically tying the cached credential to the active
-transport session. See <a href="#interactive-passport" class="auto internal xref">Appendix A.3</a> for an illustative
-example of this pattern in TLS.<a href="#section-7.2-2" class="pilcrow">¶</a></p>
+transport session.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
+<span id="name-per-session-freshness-with-"></span><div id="fig-passport">
+<figure id="figure-3">
+            <div id="section-7.2.1-2.1">
+              <div class="alignCenter art-svg artwork" id="section-7.2.1-2.1.1">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="512" width="584" viewBox="0 0 584 512" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
+                  <path d="M 16,160 L 16,480" fill="none" stroke="black"></path>
+                  <path d="M 40,192 L 40,224" fill="none" stroke="black"></path>
+                  <path d="M 40,320 L 40,448" fill="none" stroke="black"></path>
+                  <path d="M 56,32 L 56,80" fill="none" stroke="black"></path>
+                  <path d="M 56,336 L 56,368" fill="none" stroke="black"></path>
+                  <path d="M 80,88 L 80,152" fill="none" stroke="black"></path>
+                  <path d="M 136,88 L 136,152" fill="none" stroke="black"></path>
+                  <path d="M 144,336 L 144,368" fill="none" stroke="black"></path>
+                  <path d="M 160,32 L 160,80" fill="none" stroke="black"></path>
+                  <path d="M 168,192 L 168,224" fill="none" stroke="black"></path>
+                  <path d="M 168,320 L 168,448" fill="none" stroke="black"></path>
+                  <path d="M 192,160 L 192,480" fill="none" stroke="black"></path>
+                  <path d="M 368,240 L 368,448" fill="none" stroke="black"></path>
+                  <path d="M 392,288 L 392,416" fill="none" stroke="black"></path>
+                  <path d="M 512,288 L 512,416" fill="none" stroke="black"></path>
+                  <path d="M 536,240 L 536,448" fill="none" stroke="black"></path>
+                  <path d="M 56,32 L 160,32" fill="none" stroke="black"></path>
+                  <path d="M 56,80 L 160,80" fill="none" stroke="black"></path>
+                  <path d="M 16,160 L 192,160" fill="none" stroke="black"></path>
+                  <path d="M 56,176 L 152,176" fill="none" stroke="black"></path>
+                  <path d="M 56,240 L 152,240" fill="none" stroke="black"></path>
+                  <path d="M 368,240 L 440,240" fill="none" stroke="black"></path>
+                  <path d="M 456,240 L 536,240" fill="none" stroke="black"></path>
+                  <path d="M 408,272 L 496,272" fill="none" stroke="black"></path>
+                  <path d="M 56,304 L 152,304" fill="none" stroke="black"></path>
+                  <path d="M 72,320 L 128,320" fill="none" stroke="black"></path>
+                  <path d="M 176,336 L 384,336" fill="none" stroke="black"></path>
+                  <path d="M 176,368 L 384,368" fill="none" stroke="black"></path>
+                  <path d="M 72,384 L 128,384" fill="none" stroke="black"></path>
+                  <path d="M 176,398 L 384,398" fill="none" stroke="black"></path>
+                  <path d="M 176,402 L 384,402" fill="none" stroke="black"></path>
+                  <path d="M 408,432 L 496,432" fill="none" stroke="black"></path>
+                  <path d="M 368,448 L 536,448" fill="none" stroke="black"></path>
+                  <path d="M 56,464 L 152,464" fill="none" stroke="black"></path>
+                  <path d="M 16,480 L 192,480" fill="none" stroke="black"></path>
+                  <path d="M 56,176 C 47.16936,176 40,183.16936 40,192" fill="none" stroke="black"></path>
+                  <path d="M 152,176 C 160.83064,176 168,183.16936 168,192" fill="none" stroke="black"></path>
+                  <path d="M 56,240 C 47.16936,240 40,232.83064 40,224" fill="none" stroke="black"></path>
+                  <path d="M 152,240 C 160.83064,240 168,232.83064 168,224" fill="none" stroke="black"></path>
+                  <path d="M 408,272 C 399.16936,272 392,279.16936 392,288" fill="none" stroke="black"></path>
+                  <path d="M 496,272 C 504.83064,272 512,279.16936 512,288" fill="none" stroke="black"></path>
+                  <path d="M 56,304 C 47.16936,304 40,311.16936 40,320" fill="none" stroke="black"></path>
+                  <path d="M 152,304 C 160.83064,304 168,311.16936 168,320" fill="none" stroke="black"></path>
+                  <path d="M 72,320 C 63.16936,320 56,327.16936 56,336" fill="none" stroke="black"></path>
+                  <path d="M 128,320 C 136.83064,320 144,327.16936 144,336" fill="none" stroke="black"></path>
+                  <path d="M 72,384 C 63.16936,384 56,376.83064 56,368" fill="none" stroke="black"></path>
+                  <path d="M 128,384 C 136.83064,384 144,376.83064 144,368" fill="none" stroke="black"></path>
+                  <path d="M 408,432 C 399.16936,432 392,424.83064 392,416" fill="none" stroke="black"></path>
+                  <path d="M 496,432 C 504.83064,432 512,424.83064 512,416" fill="none" stroke="black"></path>
+                  <path d="M 56,464 C 47.16936,464 40,456.83064 40,448" fill="none" stroke="black"></path>
+                  <path d="M 152,464 C 160.83064,464 168,456.83064 168,448" fill="none" stroke="black"></path>
+                  <polygon class="arrowhead" points="392,400 380,394.4 380,405.6" fill="black" transform="rotate(0,384,400)"></polygon>
+                  <polygon class="arrowhead" points="392,368 380,362.4 380,373.6" fill="black" transform="rotate(0,384,368)"></polygon>
+                  <polygon class="arrowhead" points="184,400 172,394.4 172,405.6" fill="black" transform="rotate(180,176,400)"></polygon>
+                  <polygon class="arrowhead" points="184,336 172,330.4 172,341.6" fill="black" transform="rotate(180,176,336)"></polygon>
+                  <polygon class="arrowhead" points="144,152 132,146.4 132,157.6" fill="black" transform="rotate(90,136,152)"></polygon>
+                  <polygon class="arrowhead" points="88,88 76,82.4 76,93.6" fill="black" transform="rotate(270,80,88)"></polygon>
+                  <g class="text">
+                    <text x="108" y="52">Verifier</text>
+                    <text x="104" y="68">[arK]</text>
+                    <text x="160" y="116">EAR</text>
+                    <text x="36" y="132">Evidence</text>
+                    <text x="216" y="164">EAR</text>
+                    <text x="260" y="164">keyset</text>
+                    <text x="244" y="180">containing</text>
+                    <text x="344" y="180">(RP</text>
+                    <text x="384" y="180">holds</text>
+                    <text x="428" y="180">this</text>
+                    <text x="472" y="180">ahead</text>
+                    <text x="508" y="180">of</text>
+                    <text x="536" y="180">hs)</text>
+                    <text x="104" y="196">Attesting</text>
+                    <text x="216" y="196">tbK</text>
+                    <text x="240" y="196">&amp;</text>
+                    <text x="264" y="196">keK</text>
+                    <text x="288" y="196">.</text>
+                    <text x="304" y="196">.</text>
+                    <text x="320" y="196">.</text>
+                    <text x="336" y="196">.</text>
+                    <text x="352" y="196">.</text>
+                    <text x="368" y="196">.</text>
+                    <text x="384" y="196">.</text>
+                    <text x="400" y="196">.</text>
+                    <text x="416" y="196">.</text>
+                    <text x="432" y="196">.</text>
+                    <text x="448" y="196">.</text>
+                    <text x="104" y="212">Environment</text>
+                    <text x="448" y="212">.</text>
+                    <text x="104" y="228">[aeK]</text>
+                    <text x="448" y="228">.</text>
+                    <text x="448" y="244">v</text>
+                    <text x="108" y="260">Collects</text>
+                    <text x="424" y="260">Relying</text>
+                    <text x="480" y="260">Party</text>
+                    <text x="100" y="276">Claims</text>
+                    <text x="248" y="308">Challenge</text>
+                    <text x="308" y="308">(ct)</text>
+                    <text x="432" y="308">TLS</text>
+                    <text x="468" y="308">peer</text>
+                    <text x="240" y="324">[sealed</text>
+                    <text x="284" y="324">to</text>
+                    <text x="316" y="324">keK]</text>
+                    <text x="452" y="340">Encapsulates</text>
+                    <text x="80" y="356">TLS</text>
+                    <text x="116" y="356">peer</text>
+                    <text x="244" y="356">Liveness</text>
+                    <text x="304" y="356">Proof</text>
+                    <text x="416" y="356">KEM</text>
+                    <text x="460" y="356">secret</text>
+                    <text x="412" y="372">to</text>
+                    <text x="440" y="372">keK</text>
+                    <text x="72" y="404">[tbK]</text>
+                    <text x="104" y="404">&amp;</text>
+                    <text x="136" y="404">[keK]</text>
+                    <text x="244" y="420">Secure</text>
+                    <text x="304" y="420">Channel</text>
+                    <text x="100" y="436">Target</text>
+                    <text x="240" y="436">[signed</text>
+                    <text x="284" y="436">by</text>
+                    <text x="316" y="436">tbK]</text>
+                    <text x="104" y="452">Environment</text>
+                  </g>
+                </svg><a href="#section-7.2.1-2.1.1" class="pilcrow">¶</a>
+</div>
+</div>
+<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<a href="#name-per-session-freshness-with-" class="selfRef">Per-Session Freshness with Interactive Passport Challenge</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
 </section>
 </div>
 </section>
@@ -2231,6 +2406,13 @@ Marker <span>[<a href="#I-D.ietf-rats-epoch-markers" class="cite xref">I-D.ietf-
 network freshness, the successful decapsulation of a <code>keK</code> challenge proves
 the Attesting Environment is operating within the acceptable epoch window,
 mitigating the risk of indefinitely replaying exfiltrated credentials.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
+<p id="section-8.1-3">Where the <code>keK</code> instead serves as a per-machine continuity anchor pinned
+via Trust-On-First-Use, rotation occurs at an operator-configured interval
+rather than solely in response to an Epoch Marker. In this case, each
+successive <code>keK</code> <span class="bcp14">MUST</span> be attested by the outgoing <code>keK</code> at the point of
+rotation, so that the Relying Party can verify an unbroken chain of
+succession back to the originally pinned <code>keK</code> without requiring a fresh
+Background-Check exchange at every rotation boundary.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="session-resumption">
@@ -2313,12 +2495,17 @@ protocol and is not specific to the attestation layer.<a href="#section-9.2-1" c
         <h3 id="name-attestation-key-correlation">
 <a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-attestation-key-correlation" class="section-name selfRef">Attestation Key Correlation</a>
         </h3>
-<p id="section-9.3-1">When the same attestation signing key is used across multiple
-sessions, any party with access to Evidence from more than one of
-those sessions can correlate the sessions to the same Attesting
-Environment.  This linkability consideration is particularly relevant
-for client Attesters where privacy of individual connections is a
-concern.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
+<p id="section-9.3-1">When the same Attesting Environment Key (<code>aeK</code>) is used across multiple
+transport sessions, it acts as a stable Attester Identifier. As
+defined in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>, any party with
+access to Evidence from more than one of those sessions can use this
+public key to correlate the sessions to the same Attesting
+Environment. This linkability consideration is particularly relevant
+for client Attesters where the privacy of individual connections is a
+concern. To mitigate this correlation risk, deployments <span class="bcp14">SHOULD</span>
+consider the controls described in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>,
+such as utilizing pairwise identifiers, short validity periods, or
+unlinkable presentations for the <code>aeK</code>.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="anonymous-client-attestation">
@@ -2397,50 +2584,70 @@ signed payload).<a href="#section-10-3" class="pilcrow">¶</a></p>
 <p id="section-10-4">The Relying Party then verifies that this claim matches the
 identity key presented in the transport handshake, preventing
 an untrusted host from successfully substituting the binder.<a href="#section-10-4" class="pilcrow">¶</a></p>
-<p id="section-10-5"><strong>Key Non-exportability (informative).</strong> The specific concern of
+<p id="section-10-5">Where the transport authentication key is a non-confidential <code>hbK</code>
+provisioned directly into the Target Environment rather than a
+natively generated <code>tbK</code>, binding the Attestation Credential to that
+key's public component alone does not establish that the key is
+exclusive to the attested environment.<a href="#section-10-5" class="pilcrow">¶</a></p>
+<p id="section-10-6"><strong>Compound Authentication and Key Exclusivity.</strong> A Relying Party's
+appraisal policy dictates the required security properties of the
+transport authentication key. If the policy requires Compound
+Authentication, the Attestation Credential <span class="bcp14">MUST</span> be bound to a
+Target/TEE-Bound Key (<code>tbK</code>) generated and maintained exclusively
+within the Target Environment. Conversely, if the policy accepts
+independent verification of endpoint identity and platform state,
+a Hardware-Bound Key (<code>hbK</code>) injected into the Target Environment <span class="bcp14">MAY</span>
+be used for transport authentication. However, because the injected
+<code>hbK</code> lacks native non-exportability guarantees, binding the
+Attestation Credential to that key's public component alone does
+not establish that the key is exclusive to the attested environment.
+In this case, an additional anchor, such as a KEM Encapsulation
+Key (<code>keK</code>) bound to the session per <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>, is
+<span class="bcp14">REQUIRED</span> to prevent substitution of the binder by an untrusted
+host holding the same injected key material.<a href="#section-10-6" class="pilcrow">¶</a></p>
+<p id="section-10-7"><strong>Key Non-exportability (informative).</strong> The specific concern of
 demonstrating that the Subject Key used for transport authentication
 is physically confined within the attested execution environment is
 addressed at the RATS layer by <span>[<a href="#I-D.reddy-rats-key-binding" class="cite xref">I-D.reddy-rats-key-binding</a>]</span> and is
-not re-specified here.<a href="#section-10-5" class="pilcrow">¶</a></p>
-<p id="section-10-6"><strong>Evidence Freshness.</strong> Evidence reflects the Attester's state at or
+not re-specified here.<a href="#section-10-7" class="pilcrow">¶</a></p>
+<p id="section-10-8"><strong>Evidence Freshness.</strong> Evidence reflects the Attester's state at or
 near the Evidence Generation Time for the session in which it is
 presented.  Per-session freshness ensures Evidence from a prior
 session cannot be replayed against a new one.  When re-attestation
 occurs during a session's Lifetime of Connection, the re-attestation
 Evidence reflects the Attester's state at the time of re-attestation,
-not at Connection Establishment Time.<a href="#section-10-6" class="pilcrow">¶</a></p>
-<p id="section-10-7"><strong>Evidence Confidentiality.</strong> Evidence payloads <span class="bcp14">SHOULD</span> be protected by
+not at Connection Establishment Time.<a href="#section-10-8" class="pilcrow">¶</a></p>
+<p id="section-10-9"><strong>Evidence Confidentiality.</strong> Evidence payloads <span class="bcp14">SHOULD</span> be protected by
 object-level encryption to a key held exclusively by the intended
-recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-10-7" class="pilcrow">¶</a></p>
-<p id="section-10-8"><strong>Session Resumption.</strong> When a transport session is resumed, previously
+recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-10-9" class="pilcrow">¶</a></p>
+<p id="section-10-10"><strong>Session Resumption.</strong> When a transport session is resumed, previously
 obtained Attestation Credential may no longer reflect the Attester's
-current state.  Attestation from a prior session does not carry over
-to a resumed session.<a href="#section-10-8" class="pilcrow">¶</a></p>
-<p id="section-10-9"><strong>Directional Endpoint Binding.</strong> Distinct Attestation Binders <span class="bcp14">MUST</span> be
+current state.<a href="#section-10-10" class="pilcrow">¶</a></p>
+<p id="section-10-11"><strong>Directional Endpoint Binding.</strong> Distinct Attestation Binders <span class="bcp14">MUST</span> be
 derived for the initiator and the responder from the same Session
 Binding Value using distinct inputs.  Evidence produced by one endpoint
 <span class="bcp14">MUST NOT</span> satisfy the verification requirement for the opposite endpoint.
-See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-10-9" class="pilcrow">¶</a></p>
-<p id="section-10-10"><strong>Transmission and Verification Anchor Soundness.</strong> An Attestation
+See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-10-11" class="pilcrow">¶</a></p>
+<p id="section-10-12"><strong>Transmission and Verification Anchor Soundness.</strong> An Attestation
 Binder may be included in a transport message before peer
 authentication is complete (the Transmission Anchor).
 Implementations <span class="bcp14">MUST</span> ensure the transport protocol's integrity
 guarantee covers the message carrying the Attestation Binder; for
 example, the TLS 1.3 handshake MAC (the Verification Anchor)
 retroactively guarantees the Binder's integrity at handshake
-completion.<a href="#section-10-10" class="pilcrow">¶</a></p>
-<p id="section-10-11"><strong>Downgrade Prevention.</strong> Two endpoints that both support attestation
+completion.<a href="#section-10-12" class="pilcrow">¶</a></p>
+<p id="section-10-13"><strong>Downgrade Prevention.</strong> Two endpoints that both support attestation
 cannot be caused by an active adversary to negotiate a connection
 without it.  The negotiation of attestation capabilities is protected
-against suppression.<a href="#section-10-11" class="pilcrow">¶</a></p>
-<p id="section-10-12"><strong>Dynamic Verification Code Integrity.</strong> When client-side attestation
+against suppression.<a href="#section-10-13" class="pilcrow">¶</a></p>
+<p id="section-10-14"><strong>Dynamic Verification Code Integrity.</strong> When client-side attestation
 verification logic is dynamically delivered by the endpoint under
 appraisal (such as browser-based JavaScript), a circular trust
 dependency exists.  Unless the client's execution environment
 enforces an independent, orthogonal guarantee of code integrity
 and binary transparency, Application-layer attestation cannot
 provide security assurance, as the Attester may serve malicious
-code that bypasses cryptographic validation.<a href="#section-10-12" class="pilcrow">¶</a></p>
+code that bypasses cryptographic validation.<a href="#section-10-14" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
@@ -2571,190 +2778,6 @@ be conveyed prior to the transition to application data exchange; the
 choice between them depends on the target transport protocol's
 extension model and is otherwise architecturally equivalent from an
 <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span> perspective.<a href="#appendix-A.2-3" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="interactive-passport">
-<section id="appendix-A.3">
-        <h3 id="name-interactive-passport-convey">
-<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-interactive-passport-convey" class="section-name selfRef">Interactive Passport Conveyance</a>
-        </h3>
-<p id="appendix-A.3-1">In this pattern, the Relying Party binds a cached Attestation Result
-to the current transport session without contacting the Verifier.
-The Attestation Result contains the public component of a <code>keK</code>,
-whose private component resides exclusively within the Attester's
-Target Environment. Binding is achieved by a one‑round‑trip
-cryptographic challenge.<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
-<span id="name-per-session-freshness-with-"></span><div id="fig-passport">
-<figure id="figure-3">
-          <div id="appendix-A.3-2.1">
-            <div class="alignCenter art-svg artwork" id="appendix-A.3-2.1.1">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="512" width="584" viewBox="0 0 584 512" class="diagram" text-anchor="middle" font-family="monospace" font-size="13px" stroke-linecap="round">
-                <path d="M 16,160 L 16,480" fill="none" stroke="black"></path>
-                <path d="M 40,192 L 40,224" fill="none" stroke="black"></path>
-                <path d="M 40,320 L 40,448" fill="none" stroke="black"></path>
-                <path d="M 56,32 L 56,80" fill="none" stroke="black"></path>
-                <path d="M 56,336 L 56,368" fill="none" stroke="black"></path>
-                <path d="M 80,88 L 80,152" fill="none" stroke="black"></path>
-                <path d="M 136,88 L 136,152" fill="none" stroke="black"></path>
-                <path d="M 144,336 L 144,368" fill="none" stroke="black"></path>
-                <path d="M 160,32 L 160,80" fill="none" stroke="black"></path>
-                <path d="M 168,192 L 168,224" fill="none" stroke="black"></path>
-                <path d="M 168,320 L 168,448" fill="none" stroke="black"></path>
-                <path d="M 192,160 L 192,480" fill="none" stroke="black"></path>
-                <path d="M 368,240 L 368,448" fill="none" stroke="black"></path>
-                <path d="M 392,288 L 392,416" fill="none" stroke="black"></path>
-                <path d="M 512,288 L 512,416" fill="none" stroke="black"></path>
-                <path d="M 536,240 L 536,448" fill="none" stroke="black"></path>
-                <path d="M 56,32 L 160,32" fill="none" stroke="black"></path>
-                <path d="M 56,80 L 160,80" fill="none" stroke="black"></path>
-                <path d="M 16,160 L 192,160" fill="none" stroke="black"></path>
-                <path d="M 56,176 L 152,176" fill="none" stroke="black"></path>
-                <path d="M 56,240 L 152,240" fill="none" stroke="black"></path>
-                <path d="M 368,240 L 440,240" fill="none" stroke="black"></path>
-                <path d="M 456,240 L 536,240" fill="none" stroke="black"></path>
-                <path d="M 408,272 L 496,272" fill="none" stroke="black"></path>
-                <path d="M 56,304 L 152,304" fill="none" stroke="black"></path>
-                <path d="M 72,320 L 128,320" fill="none" stroke="black"></path>
-                <path d="M 176,336 L 384,336" fill="none" stroke="black"></path>
-                <path d="M 176,368 L 384,368" fill="none" stroke="black"></path>
-                <path d="M 72,384 L 128,384" fill="none" stroke="black"></path>
-                <path d="M 176,398 L 384,398" fill="none" stroke="black"></path>
-                <path d="M 176,402 L 384,402" fill="none" stroke="black"></path>
-                <path d="M 408,432 L 496,432" fill="none" stroke="black"></path>
-                <path d="M 368,448 L 536,448" fill="none" stroke="black"></path>
-                <path d="M 56,464 L 152,464" fill="none" stroke="black"></path>
-                <path d="M 16,480 L 192,480" fill="none" stroke="black"></path>
-                <path d="M 56,176 C 47.16936,176 40,183.16936 40,192" fill="none" stroke="black"></path>
-                <path d="M 152,176 C 160.83064,176 168,183.16936 168,192" fill="none" stroke="black"></path>
-                <path d="M 56,240 C 47.16936,240 40,232.83064 40,224" fill="none" stroke="black"></path>
-                <path d="M 152,240 C 160.83064,240 168,232.83064 168,224" fill="none" stroke="black"></path>
-                <path d="M 408,272 C 399.16936,272 392,279.16936 392,288" fill="none" stroke="black"></path>
-                <path d="M 496,272 C 504.83064,272 512,279.16936 512,288" fill="none" stroke="black"></path>
-                <path d="M 56,304 C 47.16936,304 40,311.16936 40,320" fill="none" stroke="black"></path>
-                <path d="M 152,304 C 160.83064,304 168,311.16936 168,320" fill="none" stroke="black"></path>
-                <path d="M 72,320 C 63.16936,320 56,327.16936 56,336" fill="none" stroke="black"></path>
-                <path d="M 128,320 C 136.83064,320 144,327.16936 144,336" fill="none" stroke="black"></path>
-                <path d="M 72,384 C 63.16936,384 56,376.83064 56,368" fill="none" stroke="black"></path>
-                <path d="M 128,384 C 136.83064,384 144,376.83064 144,368" fill="none" stroke="black"></path>
-                <path d="M 408,432 C 399.16936,432 392,424.83064 392,416" fill="none" stroke="black"></path>
-                <path d="M 496,432 C 504.83064,432 512,424.83064 512,416" fill="none" stroke="black"></path>
-                <path d="M 56,464 C 47.16936,464 40,456.83064 40,448" fill="none" stroke="black"></path>
-                <path d="M 152,464 C 160.83064,464 168,456.83064 168,448" fill="none" stroke="black"></path>
-                <polygon class="arrowhead" points="392,400 380,394.4 380,405.6" fill="black" transform="rotate(0,384,400)"></polygon>
-                <polygon class="arrowhead" points="392,368 380,362.4 380,373.6" fill="black" transform="rotate(0,384,368)"></polygon>
-                <polygon class="arrowhead" points="184,400 172,394.4 172,405.6" fill="black" transform="rotate(180,176,400)"></polygon>
-                <polygon class="arrowhead" points="184,336 172,330.4 172,341.6" fill="black" transform="rotate(180,176,336)"></polygon>
-                <polygon class="arrowhead" points="144,152 132,146.4 132,157.6" fill="black" transform="rotate(90,136,152)"></polygon>
-                <polygon class="arrowhead" points="88,88 76,82.4 76,93.6" fill="black" transform="rotate(270,80,88)"></polygon>
-                <g class="text">
-                  <text x="108" y="52">Verifier</text>
-                  <text x="104" y="68">[arK]</text>
-                  <text x="160" y="116">EAR</text>
-                  <text x="36" y="132">Evidence</text>
-                  <text x="216" y="164">EAR</text>
-                  <text x="260" y="164">keyset</text>
-                  <text x="244" y="180">containing</text>
-                  <text x="344" y="180">(RP</text>
-                  <text x="384" y="180">holds</text>
-                  <text x="428" y="180">this</text>
-                  <text x="472" y="180">ahead</text>
-                  <text x="508" y="180">of</text>
-                  <text x="536" y="180">hs)</text>
-                  <text x="104" y="196">Attesting</text>
-                  <text x="216" y="196">tbK</text>
-                  <text x="240" y="196">&amp;</text>
-                  <text x="264" y="196">keK</text>
-                  <text x="288" y="196">.</text>
-                  <text x="304" y="196">.</text>
-                  <text x="320" y="196">.</text>
-                  <text x="336" y="196">.</text>
-                  <text x="352" y="196">.</text>
-                  <text x="368" y="196">.</text>
-                  <text x="384" y="196">.</text>
-                  <text x="400" y="196">.</text>
-                  <text x="416" y="196">.</text>
-                  <text x="432" y="196">.</text>
-                  <text x="448" y="196">.</text>
-                  <text x="104" y="212">Environment</text>
-                  <text x="448" y="212">.</text>
-                  <text x="104" y="228">[aeK]</text>
-                  <text x="448" y="228">.</text>
-                  <text x="448" y="244">v</text>
-                  <text x="108" y="260">Collects</text>
-                  <text x="424" y="260">Relying</text>
-                  <text x="480" y="260">Party</text>
-                  <text x="100" y="276">Claims</text>
-                  <text x="248" y="308">Challenge</text>
-                  <text x="308" y="308">(ct)</text>
-                  <text x="432" y="308">TLS</text>
-                  <text x="468" y="308">peer</text>
-                  <text x="240" y="324">[sealed</text>
-                  <text x="284" y="324">to</text>
-                  <text x="316" y="324">keK]</text>
-                  <text x="452" y="340">Encapsulates</text>
-                  <text x="80" y="356">TLS</text>
-                  <text x="116" y="356">peer</text>
-                  <text x="244" y="356">Liveness</text>
-                  <text x="304" y="356">Proof</text>
-                  <text x="416" y="356">KEM</text>
-                  <text x="460" y="356">secret</text>
-                  <text x="412" y="372">to</text>
-                  <text x="440" y="372">keK</text>
-                  <text x="72" y="404">[tbK]</text>
-                  <text x="104" y="404">&amp;</text>
-                  <text x="136" y="404">[keK]</text>
-                  <text x="244" y="420">Secure</text>
-                  <text x="304" y="420">Channel</text>
-                  <text x="100" y="436">Target</text>
-                  <text x="240" y="436">[signed</text>
-                  <text x="284" y="436">by</text>
-                  <text x="316" y="436">tbK]</text>
-                  <text x="104" y="452">Environment</text>
-                </g>
-              </svg><a href="#appendix-A.3-2.1.1" class="pilcrow">¶</a>
-</div>
-</div>
-<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
-<a href="#name-per-session-freshness-with-" class="selfRef">Per-Session Freshness with Interactive Passport Challenge</a>
-          </figcaption></figure>
-</div>
-<div id="example-algorithm-informational">
-<section id="appendix-A.3.1">
-          <h4 id="name-example-algorithm-informati">
-<a href="#appendix-A.3.1" class="section-number selfRef">A.3.1. </a><a href="#name-example-algorithm-informati" class="section-name selfRef">Example algorithm (informational)</a>
-          </h4>
-<ol start="1" type="1" class="normal type-1" id="appendix-A.3.1-1">
-<li id="appendix-A.3.1-1.1">
-              <p id="appendix-A.3.1-1.1.1">The Relying Party executes a KEM encapsulation operation to the
-public <code>keK</code> obtained from the Attestation Result. The Relying
-Party transmits the resulting ciphertext <code>ct</code> to the Attester.<a href="#appendix-A.3.1-1.1.1" class="pilcrow">¶</a></p>
-</li>
-            <li id="appendix-A.3.1-1.2">
-              <p id="appendix-A.3.1-1.2.1">The Attester's Target Environment decapsulates <code>ct</code> with its
-private <code>keK</code> to recover the shared secret. Both endpoints derive
-a transient symmetric MAC key via HKDF.<a href="#appendix-A.3.1-1.2.1" class="pilcrow">¶</a></p>
-</li>
-            <li id="appendix-A.3.1-1.3">
-              <p id="appendix-A.3.1-1.3.1">The Attester constructs a Session Binding Value specific to this
-proof, which <span class="bcp14">MUST</span> incorporate the transport handshake transcript
-(e.g., from ClientHello through the message carrying the challenge),
-the Attester's transport authentication public key (<code>tbK</code>), and the
-decapsulated shared secret.<a href="#appendix-A.3.1-1.3.1" class="pilcrow">¶</a></p>
-</li>
-            <li id="appendix-A.3.1-1.4">
-              <p id="appendix-A.3.1-1.4.1">The Attester computes a liveness proof (e.g., an HMAC) over the
-Session Binding Value using the derived MAC key and returns it to
-the Relying Party.<a href="#appendix-A.3.1-1.4.1" class="pilcrow">¶</a></p>
-</li>
-            <li id="appendix-A.3.1-1.5">
-              <p id="appendix-A.3.1-1.5.1">The Relying Party constructs the identical Session Binding Value
-and local MAC key to verify the returned proof, confirming the
-Attester's active control over the private <code>keK</code> bound to the
-active session transcript.<a href="#appendix-A.3.1-1.5.1" class="pilcrow">¶</a></p>
-</li>
-          </ol>
-</section>
-</div>
 </section>
 </div>
 </section>
