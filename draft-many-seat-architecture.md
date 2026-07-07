@@ -770,7 +770,16 @@ access to Evidence from more than one of those sessions can use this
 public key to correlate the sessions to the same Attesting
 Environment. This linkability consideration is particularly relevant
 for client Attesters where the privacy of individual connections is a
-concern. To mitigate this correlation risk, deployments SHOULD
+concern.
+
+This linkability risk natively extends to the public KEM Encapsulation
+Key (`keK`) when an Attestation Result is cached and reused across
+multiple sessions under the Passport conveyance model. In such deployments,
+the static public keK acts as a temporary cross-session tracking beacon,
+necessitating mitigation controls like short epoch validity periods or
+pairwise key generation to preserve client anonymity.
+
+To mitigate this correlation risk, deployments SHOULD
 consider the controls described in {{I-D.ounsworth-rats-privacy-framework}},
 such as utilizing pairwise identifiers, short validity periods, or
 unlinkable presentations for the `aeK`.
