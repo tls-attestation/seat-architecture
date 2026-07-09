@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-07T03:26:37.728812+00:00",
+  "timestamp": "2026-07-09T03:20:05.233472+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -325,9 +325,25 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "_Originally posted by @burgerdev [on the mailing list](https://mailarchive.ietf.org/arch/msg/seat/cDQRqCD63EAyR-m59W6W3bUO3F0/)_\n\n> Sec 2.\n> (tbK): An asymmetric key pair whose private key is generated and maintained exclusively within the Target Environment (e.g., a TEE).\n> [...]\n> Evidence produced by the Attesting Environment MUST include a binding to the tbK.\n> \n> \n\n- [ ] \"This reads to me as if a tbk was mandatory for all attested TLS schemes. However, I don't think a tbk is always necessary and I'd thus like to avoid setting that requirement in stone. Sufficient for me would be to condition the requirement, along the lines of \"if a tbk is used, it needs to be bound ...\". Same concern for the \"Key Non-exportability\" paragraph in section 10.\"\n\nComments: A similar question was also raised in an issue by Markus [here ](https://github.com/tls-attestation/exported-attestation/issues/58)\n\nMarkus followed-up with a concrete use-case to consider which I've added via a PR here: https://github.com/tls-attestation/use-cases-and-properties/pull/56\n\n\n> Sec 6.1\n> [RFC9334] expects a failed Attester appraisal to result in reduced access or privileges rather than outright rejection.\n> In the event of failures occurring within the Post-Handshake Window, this behaviour is to be handled at the transport layer.\n> \n> \n\n- [ ] \"This seems to be at odds with the definition of the post-handshake window in sec. 2, which explicitly allows the application layer to handle attestation, and with the guidance in the following paragraph. Is this a load-bearing requirement, or can it just be relaxed?\"\n\n\n> 9.3. Attestation Key Correlation\n> \n> \n\n- [ ] \"This seems to be a general consideration for RATS, if there is no conclusion for attested TLS I'd just remove it.\"\n\n\n> Sec 10\n> When a transport session is resumed, previously obtained Attestation Credential may no longer reflect the Attester's current state. Attestation from a prior session does not carry over to a resumed session.\n> \n> \n\n- [ ] \"This seems to be overly restrictive: even if I accept the need for periodic re-attestation (which I don't), I don't see why resumption needs to be outright forbidden. Either describe a concern which applies universally, or relax the requirement?\"\n",
+      "body": "_Originally posted by @burgerdev [on the mailing list](https://mailarchive.ietf.org/arch/msg/seat/cDQRqCD63EAyR-m59W6W3bUO3F0/)_\n\n> Sec 2.\n> (tbK): An asymmetric key pair whose private key is generated and maintained exclusively within the Target Environment (e.g., a TEE).\n> [...]\n> Evidence produced by the Attesting Environment MUST include a binding to the tbK.\n> \n> \n\n- [x] \"This reads to me as if a tbk was mandatory for all attested TLS schemes. However, I don't think a tbk is always necessary and I'd thus like to avoid setting that requirement in stone. Sufficient for me would be to condition the requirement, along the lines of \"if a tbk is used, it needs to be bound ...\". Same concern for the \"Key Non-exportability\" paragraph in section 10.\"\n\nComments: A similar question was also raised in an issue by Markus [here ](https://github.com/tls-attestation/exported-attestation/issues/58)\n\nMarkus followed-up with a concrete use-case to consider which I've added via a PR here: https://github.com/tls-attestation/use-cases-and-properties/pull/56\n\n\n> Sec 6.1\n> [RFC9334] expects a failed Attester appraisal to result in reduced access or privileges rather than outright rejection.\n> In the event of failures occurring within the Post-Handshake Window, this behaviour is to be handled at the transport layer.\n> \n> \n\n- [x] \"This seems to be at odds with the definition of the post-handshake window in sec. 2, which explicitly allows the application layer to handle attestation, and with the guidance in the following paragraph. Is this a load-bearing requirement, or can it just be relaxed?\"\n\n\n> 9.3. Attestation Key Correlation\n> \n> \n\n- [x] \"This seems to be a general consideration for RATS, if there is no conclusion for attested TLS I'd just remove it.\"\n\n\n> Sec 10\n> When a transport session is resumed, previously obtained Attestation Credential may no longer reflect the Attester's current state. Attestation from a prior session does not carry over to a resumed session.\n> \n> \n\n- [x] \"This seems to be overly restrictive: even if I accept the need for periodic re-attestation (which I don't), I don't see why resumption needs to be outright forbidden. Either describe a concern which applies universally, or relax the requirement?\"\n",
       "createdAt": "2026-07-06T16:26:41Z",
-      "updatedAt": "2026-07-06T21:55:50Z",
+      "updatedAt": "2026-07-07T03:58:05Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 28,
+      "id": "I_kwDOTCeSC88AAAABH5iozA",
+      "title": "Incomplete Per-Session Freshness Support: Cryptographic Mechanics Missing for Passport Model",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/28",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "As currently specified, no concrete TLSa proposal submitted to the SEAT WG allows for per-session freshness with the Passport conveyance model.\n\n* **[SEAT WG Charter](https://datatracker.ietf.org/doc/charter-ietf-seat/)**: Explicitly requires that the solution \"will allow per-connection freshness of Evidence and **Attestation Results**.\"\n\nThe current protocol drafts successfully achieve per-session freshness for the Background-Check model by binding live TLS session nonces to dynamically generated platform Evidence. However, the drafts are currently *incomplete* regarding the Passport model, lacking the necessary cryptographic or interactive challenge mechanics to securely tie a pre-computed Attestation Result back to a live, active TLS session. \n\n##  Undefined Mechanics in existing individual Internet-Drafts\n\n* **[Early Attestation (Section 4)](https://datatracker.ietf.org/doc/html/draft-fossati-seat-early-attestation-05#section-4)**: Explicitly bypasses the gap by stating that for the Passport model, \"freshness expectations are more relaxed and are governed by the lifetime of the signed Attestation Results.\"\n* **[Early Attestation (Section 8.2)](https://datatracker.ietf.org/doc/html/draft-fossati-seat-early-attestation-05#section-8.2)**: Flags this as an outstanding problem via an explicit inline placeholder: \n   `// TODO: Discuss freshness guarantees provided by the Attestation Binder. Differences between Background Check and Passport mode.`\n\n* **[Exported Authenticators (Section 7.4)](https://www.ietf.org/archive/id/draft-fossati-seat-expat-03.html#section-7.4)**: Asserts that freshness is completely handled by the active connection exporter. However, the section\u2019s actual language defines the mechanics **exclusively** for *Evidence* generation, completely omitting the protocol steps required to validate cached Attestation Results.\n* **[Exported Authenticators (Section 4.3)](https://www.ietf.org/archive/id/draft-fossati-seat-expat-03.html#section-4.3)**: Outlines the validation API requirements for the protocol framework, but frames them strictly around Evidence validation, mandating that the API verify that \"the Evidence in the Certificate message is cryptographically valid and correctly bound.\" No corresponding validation mechanics or requirements are defined for binding or authenticating cached Attestation Results.\n\n###  Other references\n\n* **[SEAT Use Cases (Section 3.1)](https://datatracker.ietf.org/doc/html/draft-mihalcea-seat-use-cases-03#section-3.1)**: Asks that the \"Evidence or Attestation Result is cryptographically bound to the specific secure connection.\"\n* **[SEAT Use Cases (Section 3.6)](https://datatracker.ietf.org/doc/html/draft-mihalcea-seat-use-cases-03#section-3.6)**: Suggests a need for operational flexibility and flexible freshness options for both Background-Check and Passport models.\n\n---\n\nPotential solutions:\n\n- A proposal to address this is found with this PR at an architectural level: https://github.com/tls-attestation/seat-architecture/pull/26 \n- LAKE RA [specifies a 3-party-loop ](https://www.ietf.org/archive/id/draft-ietf-lake-ra-05.html#section-5.4-3) to enable for per-session freshness with the passport model\n\n\n\n",
+      "createdAt": "2026-07-07T03:52:56Z",
+      "updatedAt": "2026-07-07T04:52:10Z",
       "closedAt": null,
       "comments": []
     }
@@ -2341,22 +2357,22 @@
     {
       "number": 26,
       "id": "PR_kwDOTCeSC87uIuwD",
-      "title": "Introduce \"Interactive Passport\" concept",
+      "title": "Formalize Liveness Mechanics for Cached Credentials and Further Specify per-role Keys",
       "url": "https://github.com/tls-attestation/seat-architecture/pull/26",
       "state": "OPEN",
       "author": "telephonicrobotics",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "- Adds new Key Encapsulation Material (KEM) \"keK\" with definition\r\n- Adds additional references to per-session freshness\r\n- Adds new appendix entry and illustration\r\n\r\n(Indirectly tested with previous formal analysis, needs a direct model)",
+      "body": "Introduces a solution for per-session freshness for the Passport conveyance model and incorporates feedback from Markus based on the following use-case (use-cases PR at tls-attestation/use-cases-and-properties#56). Defines a novel Target/TEE-bound ephemeral KEM (`keK`) to provide the ability to decouple session liveness from credential issuance and making key requirements context-dependent.\r\n\r\n## Major updates\r\n\r\n* *Introduced KEM Encapsulation Key (`keK`):* Added definitions for an optional ephemeral, per-session liveness anchor generated exclusively within the Target Environment to mitigate key exfiltration windows.\r\n\r\n* *Interactive Passport Challenge:* Established an interactive challenge-response mechanism enabling a Relying Party to verify an Attester's active control by sealing session-specific secrets to the keK.\r\n\r\n* *Epoch-Bound Lifecycles:* Tied `keK` rotation boundaries to explicit temporal signals like [Epoch Markers](https://datatracker.ietf.org/doc/draft-ietf-rats-epoch-markers/) to establish network freshness without requiring real-time Verifier connectivity.\r\n\r\n* *Conditional Key Requirements:* Updated the Target/TEE-Bound Key (`tbK`) definition so that its usage is conditional, rendering it mandatory only when a deployment's policy specifically requires **Compound Authentication**.\r\n\r\n* *Compound Authentication:* Added security considerations for compound authentication and limitations/constraints/assumptions needed to maintain it.\r\n\r\n* *Post-Handshake Failure Handling:* Updated language to specify that behaviors may be handled fluidly at the transport layer, supporting reduced access privileges over outright connection termination.\r\n\r\n### Will resolve:\r\n\r\n* #27 (Markus' Review)\r\n\r\n* #28 (Incomplete Per-Session Freshness Support: Cryptographic Mechanics Missing for Passport Model)\r\n\r\nAlso moves previously introduced appendix B to [wiki entry](https://github.com/tls-attestation/seat-architecture/wiki/Proposal:-Interactive-Passport-Challenge-for-Per%E2%80%90Session-Freshness-Binding)\r\n",
       "createdAt": "2026-07-06T00:17:12Z",
-      "updatedAt": "2026-07-06T22:03:43Z",
+      "updatedAt": "2026-07-07T17:58:11Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1",
       "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "interactive-passport",
-      "headRefOid": "02a7dd71aa7878bd17ca06024008db93d73b2199",
+      "headRefOid": "d2e0b71623289ca1a41b327fe533296e5295f7ae",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -2365,9 +2381,9 @@
         {
           "author": "telephonicrobotics",
           "authorAssociation": "COLLABORATOR",
-          "body": "@henkbirkholz WDYT?\r\n",
+          "body": "@henkbirkholz WDYT?\r\n\r\nEdit: The pattern is more concretely defined in a dedicated wiki entry here: [https://github.com/tls-attestation/seat-architecture/wiki/Interactive-Passport-Challenge](https://github.com/tls-attestation/seat-architecture/wiki/Proposal%3A-Interactive-Passport-Challenge-for-Per%E2%80%90Session-Freshness-Binding/)",
           "createdAt": "2026-07-06T00:50:26Z",
-          "updatedAt": "2026-07-06T00:50:26Z"
+          "updatedAt": "2026-07-07T04:35:18Z"
         },
         {
           "author": "ionut-arm",
@@ -2386,9 +2402,9 @@
         {
           "author": "telephonicrobotics",
           "authorAssociation": "COLLABORATOR",
-          "body": "@ionut-arm @tireddy2 @thomas-fossati \r\n\r\nRather than filling the appendix with concrete mechanisms, maybe this stuff could go into the repo's wiki when it isn't something already proposed elsewhere in a concrete draft? Until the community sort of centres or lands on a pattern that could then be codified in the draft? \r\n\r\nCause I am about to propose another mechanism to address the security concerns from this use-case where the private identity key *is not* always tied to the target environment: \r\n\r\nhttps://github.com/tls-attestation/use-cases-and-properties/pull/56 (this is the use case, not my new mechanism idea)",
+          "body": "@ionut-arm @tireddy2 @thomas-fossati \r\n\r\nRather than filling the appendix with concrete mechanisms, maybe this stuff could go into the repo's wiki when it isn't something already proposed elsewhere in a concrete draft? Until the community sort of centres or lands on a pattern that could then be codified in the draft? \r\n\r\nEDIT: [two new wiki pages!](https://github.com/tls-attestation/seat-architecture/wiki) ",
           "createdAt": "2026-07-06T22:03:43Z",
-          "updatedAt": "2026-07-06T22:03:43Z"
+          "updatedAt": "2026-07-07T04:23:57Z"
         }
       ],
       "reviews": []
