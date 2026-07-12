@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-09T03:20:05.233472+00:00",
+  "timestamp": "2026-07-12T02:48:10.419376+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -2366,7 +2366,7 @@
       "labels": [],
       "body": "Introduces a solution for per-session freshness for the Passport conveyance model and incorporates feedback from Markus based on the following use-case (use-cases PR at tls-attestation/use-cases-and-properties#56). Defines a novel Target/TEE-bound ephemeral KEM (`keK`) to provide the ability to decouple session liveness from credential issuance and making key requirements context-dependent.\r\n\r\n## Major updates\r\n\r\n* *Introduced KEM Encapsulation Key (`keK`):* Added definitions for an optional ephemeral, per-session liveness anchor generated exclusively within the Target Environment to mitigate key exfiltration windows.\r\n\r\n* *Interactive Passport Challenge:* Established an interactive challenge-response mechanism enabling a Relying Party to verify an Attester's active control by sealing session-specific secrets to the keK.\r\n\r\n* *Epoch-Bound Lifecycles:* Tied `keK` rotation boundaries to explicit temporal signals like [Epoch Markers](https://datatracker.ietf.org/doc/draft-ietf-rats-epoch-markers/) to establish network freshness without requiring real-time Verifier connectivity.\r\n\r\n* *Conditional Key Requirements:* Updated the Target/TEE-Bound Key (`tbK`) definition so that its usage is conditional, rendering it mandatory only when a deployment's policy specifically requires **Compound Authentication**.\r\n\r\n* *Compound Authentication:* Added security considerations for compound authentication and limitations/constraints/assumptions needed to maintain it.\r\n\r\n* *Post-Handshake Failure Handling:* Updated language to specify that behaviors may be handled fluidly at the transport layer, supporting reduced access privileges over outright connection termination.\r\n\r\n### Will resolve:\r\n\r\n* #27 (Markus' Review)\r\n\r\n* #28 (Incomplete Per-Session Freshness Support: Cryptographic Mechanics Missing for Passport Model)\r\n\r\nAlso moves previously introduced appendix B to [wiki entry](https://github.com/tls-attestation/seat-architecture/wiki/Proposal:-Interactive-Passport-Challenge-for-Per%E2%80%90Session-Freshness-Binding)\r\n",
       "createdAt": "2026-07-06T00:17:12Z",
-      "updatedAt": "2026-07-07T17:58:11Z",
+      "updatedAt": "2026-07-10T19:14:04Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1",
@@ -2405,9 +2405,89 @@
           "body": "@ionut-arm @tireddy2 @thomas-fossati \r\n\r\nRather than filling the appendix with concrete mechanisms, maybe this stuff could go into the repo's wiki when it isn't something already proposed elsewhere in a concrete draft? Until the community sort of centres or lands on a pattern that could then be codified in the draft? \r\n\r\nEDIT: [two new wiki pages!](https://github.com/tls-attestation/seat-architecture/wiki) ",
           "createdAt": "2026-07-06T22:03:43Z",
           "updatedAt": "2026-07-07T04:23:57Z"
+        },
+        {
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> @ionut-arm @tireddy2 @thomas-fossati\r\n> \r\n> Rather than filling the appendix with concrete mechanisms, maybe this stuff could go into the repo's wiki when it isn't something already proposed elsewhere in a concrete draft? Until the community sort of centres or lands on a pattern that could then be codified in the draft?\r\n> \r\n> EDIT: [two new wiki pages!](https://github.com/tls-attestation/seat-architecture/wiki)\r\n\r\nSeems like a very fine choice to me.",
+          "createdAt": "2026-07-10T10:44:40Z",
+          "updatedAt": "2026-07-10T10:44:40Z"
         }
       ],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABFpGYUg",
+          "commit": {
+            "abbreviatedOid": "d2e0b71"
+          },
+          "author": "burgerdev",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-10T17:28:15Z",
+          "updatedAt": "2026-07-10T17:33:36Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "Why? TLS1.3 already gives me a natively generated, unexported key: the DHE key. If I bind the TE report to the handshake secret, the session should be anchored to the TE, no?\n\nMore broadly, my remark about the required key concerned itself with all ephemeral, unexported keys, and I'd prefer if we could live without them. Not saying they are not useful for other things, the AR PoP stuff for example.",
+              "createdAt": "2026-07-10T17:28:15Z",
+              "updatedAt": "2026-07-10T17:33:36Z"
+            },
+            {
+              "originalPosition": 226,
+              "body": "This is repeated a few sentences below, probably an editing mistake?",
+              "createdAt": "2026-07-10T17:31:15Z",
+              "updatedAt": "2026-07-10T17:33:36Z"
+            },
+            {
+              "originalPosition": 243,
+              "body": "No - now you replaced one ephemeral key requirement with a different one!\n\nI believe the misconception comes from the \"bind [..] to that key's public component\". That's not how an `hbK` should be used, see my remark about DHE in the other review comment.",
+              "createdAt": "2026-07-10T17:33:22Z",
+              "updatedAt": "2026-07-10T17:33:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABFpYEuw",
+          "commit": {
+            "abbreviatedOid": "d2e0b71"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-10T18:05:20Z",
+          "updatedAt": "2026-07-10T18:05:20Z",
+          "comments": [
+            {
+              "originalPosition": 243,
+              "body": "@burgerdev Two notes here!\r\n> No - now you replaced one ephemeral key requirement with a different one!\r\n\r\nIt's true, but this new ephemeral key **does not** need, depend on or expect a CSR. It's validated purely by the Attestation Result Key. You don't need to do anything but generate it, and include it in the Claims assertions.\r\n\r\nThe second note is that the motivation here is to state a very clear **if.** IF Compound Authentication is a requirement for some RP's policy, then this is how it could be done. If there's no interest in generating an ephemeral key at all and that's just the specific policy decided upon, then this is far from a mandatory mandate.\r\n\r\nDoes that help? Could it worded to make the optionality more explicit?",
+              "createdAt": "2026-07-10T18:05:20Z",
+              "updatedAt": "2026-07-10T18:05:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABFpxYAg",
+          "commit": {
+            "abbreviatedOid": "d2e0b71"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-10T19:14:04Z",
+          "updatedAt": "2026-07-10T19:14:04Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "> Why?\r\n\r\nGood question. A blend of intuition and recollection from previous automated proofs. I'm running through a full set of fresh results for both intra- and post- in order to be precise about why it may or may not be necessary! \r\n\r\n\r\n",
+              "createdAt": "2026-07-10T19:14:04Z",
+              "updatedAt": "2026-07-10T19:14:04Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
