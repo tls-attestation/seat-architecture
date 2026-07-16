@@ -1060,7 +1060,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Ritz, et al.</td>
-<td class="center">Expires 8 January 2027</td>
+<td class="center">Expires 17 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1073,12 +1073,12 @@ svg {
 <dd class="internet-draft">draft-many-seat-architecture-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-07" class="published">7 July 2026</time>
+<time datetime="2026-07-16" class="published">16 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-08">8 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-01-17">17 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1141,7 +1141,7 @@ given transport connection.<a href="#section-abstract-1" class="pilcrow">¶</a><
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 8 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 17 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1432,29 +1432,27 @@ context.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">This document adopts terms of art such as <code>intra-</code> and <code>post-</code>
 as coined by <span>[<a href="#NIEME2021" class="cite xref">NIEME2021</a>]</span>.<a href="#section-2-3" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-2-4">
-        <dt id="section-2-4.1">Target/TEE‑Bound Key (<code>tbK</code>):</dt>
+        <dt id="section-2-4.1">Connection Signing Key (<code>CSK</code>):</dt>
         <dd style="margin-left: 1.5em" id="section-2-4.2">
-          <p id="section-2-4.2.1">An asymmetric key pair whose private key is generated
-and maintained exclusively within the Target Environment
-(e.g., a TEE). If a deployment's policy requires Compound
-Authentication (see <a href="#security-considerations" class="auto internal xref">Section 10</a>), where the
-transport authentication key itself natively proves Target
-Environment residency, a <code>tbK</code> <span class="bcp14">MUST</span> be used to authenticate
-the Attester’s transport endpoint (for example, signing the
-TLS CertificateVerify message), and Evidence produced by the
-Attesting Environment <span class="bcp14">MUST</span> include a binding to the <code>tbK</code>.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
+          <p id="section-2-4.2.1">The asymmetric identity key pair used by the endpoint to authenticate
+the transport handshake (e.g., signing the TLS CertificateVerify message).
+A <code>CSK</code> may be natively generated and maintained exclusively within the
+Target Environment (providing non-exportability guarantees), or it <span class="bcp14">MAY</span> be
+provisioned into the Target Environment from an external certificate manager
+or HSM. Evidence produced by the Attesting Environment <span class="bcp14">MUST</span> include a binding
+to the <code>CSK</code>.<a href="#section-2-4.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-4.3">KEM Encapsulation Key (<code>keK</code>):</dt>
+<dt id="section-2-4.3">Ephemeral KEM Key (<code>EKK</code>):</dt>
         <dd style="margin-left: 1.5em" id="section-2-4.4">
           <p id="section-2-4.4.1">An asymmetric Key Encapsulation Mechanism (KEM) key pair generated
 and maintained exclusively within the Target Environment. The
-Attester uses the <code>keK</code> to decapsulate session-specific challenges.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
-<p id="section-2-4.4.2">As a per-session liveness anchor, the <code>keK</code> is ephemeral and closely tied
+Attester uses the <code>EKK</code> to decapsulate session-specific challenges.<a href="#section-2-4.4.1" class="pilcrow">¶</a></p>
+<p id="section-2-4.4.2">As a per-session liveness anchor, the <code>EKK</code> is ephemeral and closely tied
 to the lifecycle of a single Attestation Result; its rotation is
 governed by freshness boundaries (e.g., temporal nonces such as Epoch
 Markers distributed by an Epoch Bell <span>[<a href="#I-D.ietf-rats-epoch-markers" class="cite xref">I-D.ietf-rats-epoch-markers</a>]</span>).
-Regularly rotating the <code>keK</code> in this role strictly bounds the
+Regularly rotating the <code>EKK</code> in this role strictly bounds the
 vulnerability window of an exfiltrated key to the current validity
 period.<a href="#section-2-4.4.2" class="pilcrow">¶</a></p>
 </dd>
@@ -1462,199 +1460,184 @@ period.<a href="#section-2-4.4.2" class="pilcrow">¶</a></p>
 </dl>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-2-5.1">
-          <p id="section-2-5.1.1">The Verifier includes the public <code>keK</code> within the Attestation Result,
+          <p id="section-2-5.1.1">The Verifier includes the public <code>EKK</code> within the Attestation Result,
 allowing the Relying Party to cryptographically bind the credential
 to the current session and enforce per-session freshness
 (see <a href="#per-session-freshness" class="auto internal xref">Section 8.1</a>).<a href="#section-2-5.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <span class="break"></span><dl class="dlParallel" id="section-2-6">
-        <dt id="section-2-6.1">Hardware‑Bound Key (<code>hbK</code>):</dt>
+        <dt id="section-2-6.1">Long-Term Key (<code>LTK</code>):</dt>
         <dd style="margin-left: 1.5em" id="section-2-6.2">
-          <p id="section-2-6.2.1">A long‑lived asymmetric key pair whose private key resides
-outside the Target Environment, typically in a Hardware Security
-Module (HSM) or similar hardened service. The <code>hbK</code>’s certificate
-provides the conventional identity (e.g., a WebPKI domain
-validation) to the Relying Party. In deployments where a
-short‑lived <code>tbK</code> is used, the <code>hbK</code> <span class="bcp14">MAY</span> authorise the <code>tbK</code>.<a href="#section-2-6.2.1" class="pilcrow">¶</a></p>
+          <p id="section-2-6.2.1">A long-lived asymmetric key pair representing the host or hardware-level
+authority, typically residing outside the Target Environment in a Hardware
+Security Module (HSM). In multi-tenant or containerized environments, an
+<code>LTK</code> <span class="bcp14">MAY</span> delegate transport signing authority to an ephemeral, per-workload
+<code>CSK</code> via a Delegated Credential.<a href="#section-2-6.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-6.3">Attesting Environment Key (<code>AEK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-6.4">
+          <p id="section-2-6.4.1">The asymmetric key used by the Attesting Environment
+to sign Evidence. The Verifier trusts the <code>AEK</code> through an
+Endorsement chain that typically roots in a hardware manufacturer
+or a device‑specific CA. The <code>AEK</code> is used solely for attestation
+and is distinct from any key used for transport authentication.<a href="#section-2-6.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-6.5">Attestation Result Key (<code>ARK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-6.6">
+          <p id="section-2-6.6.1">The asymmetric key used by a Verifier to sign
+Attestation Results. The Relying Party must possess the
+corresponding trust anchor for the <code>ARK</code> so that it can verify
+the integrity and authenticity of received Attestation Results.<a href="#section-2-6.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-6.7">Object Security Key (<code>OSK</code>):</dt>
+        <dd style="margin-left: 1.5em" id="section-2-6.8">
+          <p id="section-2-6.8.1">An asymmetric public key belonging to the Verifier, used by the
+Attesting Environment to apply object-level encryption (e.g., HPKE)
+to Evidence payloads before transport transmission.<a href="#section-2-6.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-6.9">Attestation Credential:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-6.10">
+          <p id="section-2-6.10.1">The attestation payload conveyed by the Attester to the Relying
+Party across the transport connection. Depending on the RATS
+conveyance model in use, this payload consists of either Evidence
+(Background-Check Model) or an Attestation Result (Passport Model).
+Where a statement applies specifically to one but not the other,
+this document uses the more specific term.<a href="#section-2-6.10.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-2-7.1">
-          <p id="section-2-7.1.1">Alternatively, the <code>hbK</code> <span class="bcp14">MAY</span> be provisioned directly into the
-Target Environment as the transport authentication key itself.
-This pattern can be applied for deployments such as hardened
-external Key/Secret Management Services (KSMs) or certificate
-managers. Using an injected hbK shifts the security anchor from a
-hardware-backed guarantee to the integrity of the local
-provisioning pipeline and does not carry the exclusivity or
-non-exportability guarantees of a natively generated <code>tbK</code>.<a href="#section-2-7.1.1" class="pilcrow">¶</a></p>
+          <p id="section-2-7.1.1">While Evidence is exclusively generated by the Attester and
+Attestation Results are generated by a Verifier, in the SEAT
+transport context, the Attestation Credential is always presented
+by the Attester directly to the Relying Party over the secure channel.<a href="#section-2-7.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <ul class="normal ulEmpty">
 <li class="normal ulEmpty" id="section-2-8.1">
-          <p id="section-2-8.1.1">To cryptographically anchor the session to the Target Environment,
-a deployment <span class="bcp14">MUST</span> employ at least one natively generated key
-(either a <code>tbK</code> or a <code>keK</code>).<a href="#section-2-8.1.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
-<span class="break"></span><dl class="dlParallel" id="section-2-9">
-        <dt id="section-2-9.1">Attesting Environment Key (<code>aeK</code>):</dt>
-        <dd style="margin-left: 1.5em" id="section-2-9.2">
-          <p id="section-2-9.2.1">The asymmetric key used by the Attesting Environment
-to sign Evidence. The Verifier trusts the <code>aeK</code> through an
-Endorsement chain that typically roots in a hardware manufacturer
-or a device‑specific CA. The <code>aeK</code> is used solely for attestation
-and is distinct from any key used for transport authentication.<a href="#section-2-9.2.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-9.3">Attestation Result Key (<code>arK</code>):</dt>
-        <dd style="margin-left: 1.5em" id="section-2-9.4">
-          <p id="section-2-9.4.1">The asymmetric key used by a Verifier to sign
-Attestation Results. The Relying Party must possess the
-corresponding trust anchor for the <code>arK</code> so that it can verify
-the integrity and authenticity of received Attestation Results.<a href="#section-2-9.4.1" class="pilcrow">¶</a></p>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-2-9.5">Attestation Credential:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-9.6">
-          <p id="section-2-9.6.1">The attestation payload conveyed by the Attester to the Relying
-Party across the transport connection. Depending on the RATS
-conveyance model in use, this payload consists of either Evidence
-(Background-Check Model) or an Attestation Result (Passport Model).
-Where a statement applies specifically to one but not the other,
-this document uses the more specific term.<a href="#section-2-9.6.1" class="pilcrow">¶</a></p>
-</dd>
-      <dd class="break"></dd>
-</dl>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-2-10.1">
-          <p id="section-2-10.1.1">While Evidence is exclusively generated by the Attester and
-Attestation Results are generated by a Verifier, in the SEAT
-transport context, the Attestation Credential is always presented
-by the Attester directly to the Relying Party over the secure channel.<a href="#section-2-10.1.1" class="pilcrow">¶</a></p>
-</li>
-      </ul>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-2-11.1">
-          <p id="section-2-11.1.1">An Attestation Result <span class="bcp14">MAY</span> be cached by the Attester and reused
+          <p id="section-2-8.1.1">An Attestation Result <span class="bcp14">MAY</span> be cached by the Attester and reused
 across multiple subsequent sessions rather than obtained anew for
 each session. Where per-session freshness is required for a cached
 Attestation Result, this is established separately from the
-Result's issuance; see <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>.<a href="#section-2-11.1.1" class="pilcrow">¶</a></p>
+Result's issuance; see <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>.<a href="#section-2-8.1.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<span class="break"></span><dl class="dlParallel" id="section-2-12">
-        <dt id="section-2-12.1">Attested Channel:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.2">
-          <p id="section-2-12.2.1">A transport session in which at least one endpoint
+<span class="break"></span><dl class="dlParallel" id="section-2-9">
+        <dt id="section-2-9.1">Attested Channel:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.2">
+          <p id="section-2-9.2.1">A transport session in which at least one endpoint
 has produced Evidence that has been appraised, and in which that
 Evidence is cryptographically bound to the session such that the
 appraisal cannot be replayed to a different session or transferred
-to a different endpoint.<a href="#section-2-12.2.1" class="pilcrow">¶</a></p>
+to a different endpoint.<a href="#section-2-9.2.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.3">Attestation Timing Model:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.4">
-          <p id="section-2-12.4.1">The temporal relationship between Evidence
+<dt id="section-2-9.3">Attestation Timing Model:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.4">
+          <p id="section-2-9.4.1">The temporal relationship between Evidence
 conveyance and connection establishment time.  This document
 defines two timing models: Intra-Handshake Attestation and Post-
-Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-12.4.1" class="pilcrow">¶</a></p>
+Handshake Attestation. See <a href="#timing-models" class="auto internal xref">Section 5</a>.<a href="#section-2-9.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.5">Evidence Generation Time:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.6">
-          <p id="section-2-12.6.1">The point at which an Attester's Claims
+<dt id="section-2-9.5">Evidence Generation Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.6">
+          <p id="section-2-9.6.1">The point at which an Attester's Claims
 are signed to produce Evidence. Depending on the internal workings
 of the Attester, the Evidence reflects the reported state at the
 time the underlying Claims were collected and may not represent a
 snapshot of state at the exact moment of signing the evidence.
 In all cases, it makes no representation about the Attester's
-state at any later time.<a href="#section-2-12.6.1" class="pilcrow">¶</a></p>
+state at any later time.<a href="#section-2-9.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.7">Connection Establishment Time:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.8">
-          <p id="section-2-12.8.1">The point at which a transport
+<dt id="section-2-9.7">Connection Establishment Time:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.8">
+          <p id="section-2-9.8.1">The point at which a transport
 handshake completes and the session becomes usable for application
-data exchange.<a href="#section-2-12.8.1" class="pilcrow">¶</a></p>
+data exchange.<a href="#section-2-9.8.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.9">Lifetime of Connection:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.10">
-          <p id="section-2-12.10.1">The period from Connection Establishment
+<dt id="section-2-9.9">Lifetime of Connection:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.10">
+          <p id="section-2-9.10.1">The period from Connection Establishment
 Time until the session is torn down.  Post-handshake re-
 attestation operates during the Lifetime of Connection, allowing
 Evidence to reflect the Attester's current state rather than its
-state at Connection Establishment Time.<a href="#section-2-12.10.1" class="pilcrow">¶</a></p>
+state at Connection Establishment Time.<a href="#section-2-9.10.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.11">Re-attestation:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.12">
-          <p id="section-2-12.12.1">The production and appraisal of fresh Evidence during an
-established session's Lifetime of Connection.<a href="#section-2-12.12.1" class="pilcrow">¶</a></p>
+<dt id="section-2-9.11">Re-attestation:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.12">
+          <p id="section-2-9.12.1">The production and appraisal of fresh Evidence during an
+established session's Lifetime of Connection.<a href="#section-2-9.12.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.13">Intra-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.14">
-          <p id="section-2-12.14.1">The interval during transport connection
+<dt id="section-2-9.13">Intra-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.14">
+          <p id="section-2-9.14.1">The interval during transport connection
 establishment in which Evidence is conveyed within the handshake
 messages themselves, prior to the transition to application data
-exchange.<a href="#section-2-12.14.1" class="pilcrow">¶</a></p>
+exchange.<a href="#section-2-9.14.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.15">Post-Handshake Window:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.16">
-          <p id="section-2-12.16.1">The interval following connection establishment in which Evidence
+<dt id="section-2-9.15">Post-Handshake Window:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.16">
+          <p id="section-2-9.16.1">The interval following connection establishment in which Evidence
 is conveyed to the Relying Party using post-handshake protocol
 mechanisms (e.g., Exported Authenticators or application-layer
-exchanges).<a href="#section-2-12.16.1" class="pilcrow">¶</a></p>
+exchanges).<a href="#section-2-9.16.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.17">Session Binding Value:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.18">
-          <p id="section-2-12.18.1">A value, uniquely determined by a specific transport
+<dt id="section-2-9.17">Session Binding Value:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.18">
+          <p id="section-2-9.18.1">A value, uniquely determined by a specific transport
 session, from which Attestation Binders are derived.  A Session
 Binding Value may be public or secret depending on the topology;
 what is required is that it cannot be known before the session is
-initiated.  See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-2-12.18.1" class="pilcrow">¶</a></p>
+initiated.  See <a href="#channel-binding-pattern" class="auto internal xref">Section 7</a>.<a href="#section-2-9.18.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.19">Attestation Binder:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.20">
-          <p id="section-2-12.20.1">A cryptographic value derived from a Session Binding
+<dt id="section-2-9.19">Attestation Binder:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.20">
+          <p id="section-2-9.20.1">A cryptographic value derived from a Session Binding
 Value and committed to by the Attesting Environment into its
 Evidence payload. This value binds the Evidence to a specific
-session guaranteed under typical cryptographic assumptions.<a href="#section-2-12.20.1" class="pilcrow">¶</a></p>
+session guaranteed under typical cryptographic assumptions.<a href="#section-2-9.20.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.21">Transmission Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.22">
-          <p id="section-2-12.22.1">The point in the protocol at which an
+<dt id="section-2-9.21">Transmission Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.22">
+          <p id="section-2-9.22.1">The point in the protocol at which an
 Attestation Binder is included in a protocol message.  A binder
 may be computed and transmitted before peer authentication is
-complete.<a href="#section-2-12.22.1" class="pilcrow">¶</a></p>
+complete.<a href="#section-2-9.22.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.23">Verification Anchor:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.24">
-          <p id="section-2-12.24.1">The protocol mechanism by which the integrity
+<dt id="section-2-9.23">Verification Anchor:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.24">
+          <p id="section-2-9.24.1">The protocol mechanism by which the integrity
 of a transmitted Attestation Binder is established. Depending on
 the Attestation Timing Model, this may be achieved via a MAC
 that authenticates the handshake transcript (e.g., the TLS Finished
 message), or through post-handshake cryptographic binding (e.g.,
-Exported Authenticators).<a href="#section-2-12.24.1" class="pilcrow">¶</a></p>
+Exported Authenticators).<a href="#section-2-9.24.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
-<dt id="section-2-12.25">Split Deployment:</dt>
-        <dd style="margin-left: 1.5em" id="section-2-12.26">
-          <p id="section-2-12.26.1">A deployment in which the Attesting Environment
+<dt id="section-2-9.25">Split Deployment:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-9.26">
+          <p id="section-2-9.26.1">A deployment in which the Attesting Environment
 and the transport stack reside in different execution contexts.
 The transport stack is in the Target Environment; the Attesting
 Environment (e.g., a TEE) must receive the attestation binder
 input — typically a handshake transcript hash or exported key —
-from the transport stack via a trusted interface.<a href="#section-2-12.26.1" class="pilcrow">¶</a></p>
+from the transport stack via a trusted interface.<a href="#section-2-9.26.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -2204,9 +2187,9 @@ need requiring that the Relying Party decode the Evidence first.<a href="#sectio
         </h3>
 <p id="section-7.1-1">If the Relying Party is directly consuming Evidence (Background-Check
 model), it rejects Evidence whose binder does not match.<a href="#section-7.1-1" class="pilcrow">¶</a></p>
-<p id="section-7.1-2">A Background-Check exchange <span class="bcp14">MAY</span> also be used to provision a <code>keK</code>
+<p id="section-7.1-2">A Background-Check exchange <span class="bcp14">MAY</span> also be used to provision an <code>EKK</code>
 for subsequent use under the Passport model, by minting a cached
-Attestation Result that binds a Trust-On-First-Use <code>keK</code> for later
+Attestation Result that binds a Trust-On-First-Use <code>EKK</code> for later
 Interactive Passport challenges (see <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>).<a href="#section-7.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2228,7 +2211,7 @@ session's Attestation Binder.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <p id="section-7.2.1-1">To fulfill these binding conditions without requiring the Attester to
 contact the Verifier during connection establishment, deployments
 utilizing the Passport model <span class="bcp14">MAY</span> employ an interactive challenge.
-By encapsulating a session-specific challenge to a <code>keK</code> whose public
+By encapsulating a session-specific challenge to an <code>EKK</code> whose public
 component is bound within the Attestation Result, the Relying Party
 can verify the Attester's active control over the Target Environment.
 The decapsulated secret is subsequently mixed into the Session Binding
@@ -2298,7 +2281,7 @@ transport session.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
                   <polygon class="arrowhead" points="88,88 76,82.4 76,93.6" fill="black" transform="rotate(270,80,88)"></polygon>
                   <g class="text">
                     <text x="108" y="52">Verifier</text>
-                    <text x="104" y="68">[arK]</text>
+                    <text x="104" y="68">[ARK]</text>
                     <text x="160" y="116">EAR</text>
                     <text x="36" y="132">Evidence</text>
                     <text x="216" y="164">EAR</text>
@@ -2311,9 +2294,9 @@ transport session.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
                     <text x="508" y="180">of</text>
                     <text x="536" y="180">hs)</text>
                     <text x="104" y="196">Attesting</text>
-                    <text x="216" y="196">tbK</text>
+                    <text x="216" y="196">CSK</text>
                     <text x="240" y="196">&amp;</text>
-                    <text x="264" y="196">keK</text>
+                    <text x="264" y="196">EKK</text>
                     <text x="288" y="196">.</text>
                     <text x="304" y="196">.</text>
                     <text x="320" y="196">.</text>
@@ -2327,7 +2310,7 @@ transport session.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
                     <text x="448" y="196">.</text>
                     <text x="104" y="212">Environment</text>
                     <text x="448" y="212">.</text>
-                    <text x="104" y="228">[aeK]</text>
+                    <text x="104" y="228">[AEK]</text>
                     <text x="448" y="228">.</text>
                     <text x="448" y="244">v</text>
                     <text x="108" y="260">Collects</text>
@@ -2340,7 +2323,7 @@ transport session.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
                     <text x="468" y="308">peer</text>
                     <text x="240" y="324">[sealed</text>
                     <text x="284" y="324">to</text>
-                    <text x="316" y="324">keK]</text>
+                    <text x="316" y="324">EKK]</text>
                     <text x="452" y="340">Encapsulates</text>
                     <text x="80" y="356">TLS</text>
                     <text x="116" y="356">peer</text>
@@ -2349,16 +2332,16 @@ transport session.<a href="#section-7.2.1-1" class="pilcrow">¶</a></p>
                     <text x="416" y="356">KEM</text>
                     <text x="460" y="356">secret</text>
                     <text x="412" y="372">to</text>
-                    <text x="440" y="372">keK</text>
-                    <text x="72" y="404">[tbK]</text>
+                    <text x="440" y="372">EKK</text>
+                    <text x="72" y="404">[CSK]</text>
                     <text x="104" y="404">&amp;</text>
-                    <text x="136" y="404">[keK]</text>
+                    <text x="136" y="404">[EKK]</text>
                     <text x="244" y="420">Secure</text>
                     <text x="304" y="420">Channel</text>
                     <text x="100" y="436">Target</text>
                     <text x="240" y="436">[signed</text>
                     <text x="284" y="436">by</text>
-                    <text x="316" y="436">tbK]</text>
+                    <text x="316" y="436">CSK]</text>
                     <text x="104" y="452">Environment</text>
                   </g>
                 </svg><a href="#section-7.2.1-2.1.1" class="pilcrow">¶</a>
@@ -2401,17 +2384,17 @@ will fail.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <p id="section-8.1-2">For deployments utilizing cached Attestation Results (the Passport model),
 per-session freshness of the transport connection must be decoupled from
 the generation time of the credential itself. This is achieved by binding
-the lifecycle of the keK to a strict freshness boundary, such as an Epoch
+the lifecycle of the <code>EKK</code> to a strict freshness boundary, such as an Epoch
 Marker <span>[<a href="#I-D.ietf-rats-epoch-markers" class="cite xref">I-D.ietf-rats-epoch-markers</a>]</span>. While the transport nonces provide
-network freshness, the successful decapsulation of a <code>keK</code> challenge proves
+network freshness, the successful decapsulation of an <code>EKK</code> challenge proves
 the Attesting Environment is operating within the acceptable epoch window,
 mitigating the risk of indefinitely replaying exfiltrated credentials.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
-<p id="section-8.1-3">Where the <code>keK</code> instead serves as a per-machine continuity anchor pinned
+<p id="section-8.1-3">Where the <code>EKK</code> instead serves as a per-machine continuity anchor pinned
 via Trust-On-First-Use, rotation occurs at an operator-configured interval
 rather than solely in response to an Epoch Marker. In this case, each
-successive <code>keK</code> <span class="bcp14">MUST</span> be attested by the outgoing <code>keK</code> at the point of
+successive <code>EKK</code> <span class="bcp14">MUST</span> be attested by the outgoing <code>EKK</code> at the point of
 rotation, so that the Relying Party can verify an unbroken chain of
-succession back to the originally pinned <code>keK</code> without requiring a fresh
+succession back to the originally pinned <code>EKK</code> without requiring a fresh
 Background-Check exchange at every rotation boundary.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2495,7 +2478,7 @@ protocol and is not specific to the attestation layer.<a href="#section-9.2-1" c
         <h3 id="name-attestation-key-correlation">
 <a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-attestation-key-correlation" class="section-name selfRef">Attestation Key Correlation</a>
         </h3>
-<p id="section-9.3-1">When the same Attesting Environment Key (<code>aeK</code>) is used across multiple
+<p id="section-9.3-1">When the same Attesting Environment Key (<code>AEK</code>) is used across multiple
 transport sessions, it acts as a stable Attester Identifier. As
 defined in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>, any party with
 access to Evidence from more than one of those sessions can use this
@@ -2503,16 +2486,16 @@ public key to correlate the sessions to the same Attesting
 Environment. This linkability consideration is particularly relevant
 for client Attesters where the privacy of individual connections is a
 concern.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
-<p id="section-9.3-2">This linkability risk natively extends to the public KEM Encapsulation
-Key (<code>keK</code>) when an Attestation Result is cached and reused across
+<p id="section-9.3-2">This linkability risk natively extends to the public Ephemeral KEM
+Key (<code>EKK</code>) when an Attestation Result is cached and reused across
 multiple sessions under the Passport conveyance model. In such deployments,
-the static public keK acts as a temporary cross-session tracking beacon,
+the static public <code>EKK</code> acts as a temporary cross-session tracking beacon,
 necessitating mitigation controls like short epoch validity periods or
 pairwise key generation to preserve client anonymity.<a href="#section-9.3-2" class="pilcrow">¶</a></p>
 <p id="section-9.3-3">To mitigate this correlation risk, deployments <span class="bcp14">SHOULD</span>
 consider the controls described in <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>,
 such as utilizing pairwise identifiers, short validity periods, or
-unlinkable presentations for the <code>aeK</code>.<a href="#section-9.3-3" class="pilcrow">¶</a></p>
+unlinkable presentations for the <code>AEK</code>.<a href="#section-9.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="anonymous-client-attestation">
@@ -2591,27 +2574,22 @@ signed payload).<a href="#section-10-3" class="pilcrow">¶</a></p>
 <p id="section-10-4">The Relying Party then verifies that this claim matches the
 identity key presented in the transport handshake, preventing
 an untrusted host from successfully substituting the binder.<a href="#section-10-4" class="pilcrow">¶</a></p>
-<p id="section-10-5">Where the transport authentication key is a non-confidential <code>hbK</code>
-provisioned directly into the Target Environment rather than a
-natively generated <code>tbK</code>, binding the Attestation Credential to that
+<p id="section-10-5">Where the transport authentication key is a non-confidential <code>CSK</code>
+provisioned directly into the Target Environment rather than being
+natively generated, binding the Attestation Credential to that
 key's public component alone does not establish that the key is
 exclusive to the attested environment.<a href="#section-10-5" class="pilcrow">¶</a></p>
 <p id="section-10-6"><strong>Compound Authentication and Key Exclusivity.</strong> A Relying Party's
 appraisal policy dictates the required security properties of the
-transport authentication key. If the policy requires Compound
-Authentication, the Attestation Credential <span class="bcp14">MUST</span> be bound to a
-Target/TEE-Bound Key (<code>tbK</code>) generated and maintained exclusively
-within the Target Environment. Conversely, if the policy accepts
-independent verification of endpoint identity and platform state,
-a Hardware-Bound Key (<code>hbK</code>) injected into the Target Environment <span class="bcp14">MAY</span>
-be used for transport authentication. However, because the injected
-<code>hbK</code> lacks native non-exportability guarantees, binding the
-Attestation Credential to that key's public component alone does
-not establish that the key is exclusive to the attested environment.
-In this case, an additional anchor, such as a KEM Encapsulation
-Key (<code>keK</code>) bound to the session per <a href="#interactive-passport" class="auto internal xref">Section 7.2.1</a>, is
-<span class="bcp14">REQUIRED</span> to prevent substitution of the binder by an untrusted
-host holding the same injected key material.<a href="#section-10-6" class="pilcrow">¶</a></p>
+transport authentication key. An Attester uses a Connection Signing
+Key (<code>CSK</code>) to authenticate the transport session. If a deployment
+utilizes an injected <code>CSK</code> (lacking native non-exportability guarantees)
+AND the Relying Party's appraisal policy strictly requires Compound
+Authentication, then an Ephemeral KEM Key (<code>EKK</code>) generated natively
+within the Target Environment is <span class="bcp14">REQUIRED</span> to anchor the session and
+prevent binder substitution by an untrusted host holding the same
+injected <code>CSK</code>. Otherwise, standalone transport authentication via <code>CSK</code>
+is sufficient.<a href="#section-10-6" class="pilcrow">¶</a></p>
 <p id="section-10-7"><strong>Key Non-exportability (informative).</strong> The specific concern of
 demonstrating that the Subject Key used for transport authentication
 is physically confined within the attested execution environment is
@@ -2625,8 +2603,11 @@ occurs during a session's Lifetime of Connection, the re-attestation
 Evidence reflects the Attester's state at the time of re-attestation,
 not at Connection Establishment Time.<a href="#section-10-8" class="pilcrow">¶</a></p>
 <p id="section-10-9"><strong>Evidence Confidentiality.</strong> Evidence payloads <span class="bcp14">SHOULD</span> be protected by
-object-level encryption to a key held exclusively by the intended
-recipient.  See <span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-10-9" class="pilcrow">¶</a></p>
+object-level encryption to an Object Security Key (<code>OSK</code>) held exclusively
+by the intended recipient. While <code>OSK</code> ensures privacy against passive
+observers, the cryptographic integrity and session-binding resistance
+of the attestation channel do not rely on <code>OSK</code> secrecy. See
+<span>[<a href="#I-D.ounsworth-rats-privacy-framework" class="cite xref">I-D.ounsworth-rats-privacy-framework</a>]</span>.<a href="#section-10-9" class="pilcrow">¶</a></p>
 <p id="section-10-10"><strong>Session Resumption.</strong> When a transport session is resumed, previously
 obtained Attestation Credential may no longer reflect the Attester's
 current state.<a href="#section-10-10" class="pilcrow">¶</a></p>

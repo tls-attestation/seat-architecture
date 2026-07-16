@@ -5,11 +5,11 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                                T. Fossati
 Intended status: Informational                               Independent
-Expires: 8 January 2027                                         T. Reddy
+Expires: 17 January 2027                                        T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
-                                                             7 July 2026
+                                                            16 July 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -52,7 +52,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 8 January 2027.
+   This Internet-Draft will expire on 17 January 2027.
 
 Copyright Notice
 
@@ -197,65 +197,56 @@ Table of Contents
    This document adopts terms of art such as intra- and post- as coined
    by [NIEME2021].
 
-   Target/TEE-Bound Key (tbK):  An asymmetric key pair whose private key
-      is generated and maintained exclusively within the Target
-      Environment (e.g., a TEE).  If a deployment's policy requires
-      Compound Authentication (see Section 10), where the transport
-      authentication key itself natively proves Target Environment
-      residency, a tbK MUST be used to authenticate the Attester’s
-      transport endpoint (for example, signing the TLS CertificateVerify
-      message), and Evidence produced by the Attesting Environment MUST
-      include a binding to the tbK.
+   Connection Signing Key (CSK):  The asymmetric identity key pair used
+      by the endpoint to authenticate the transport handshake (e.g.,
+      signing the TLS CertificateVerify message).  A CSK may be natively
+      generated and maintained exclusively within the Target Environment
+      (providing non-exportability guarantees), or it MAY be provisioned
+      into the Target Environment from an external certificate manager
+      or HSM.  Evidence produced by the Attesting Environment MUST
+      include a binding to the CSK.
 
-   KEM Encapsulation Key (keK):  An asymmetric Key Encapsulation
-      Mechanism (KEM) key pair generated and maintained exclusively
-      within the Target Environment.  The Attester uses the keK to
-      decapsulate session-specific challenges.
+   Ephemeral KEM Key (EKK):  An asymmetric Key Encapsulation Mechanism
+      (KEM) key pair generated and maintained exclusively within the
+      Target Environment.  The Attester uses the EKK to decapsulate
+      session-specific challenges.
 
-      As a per-session liveness anchor, the keK is ephemeral and closely
+      As a per-session liveness anchor, the EKK is ephemeral and closely
       tied to the lifecycle of a single Attestation Result; its rotation
       is governed by freshness boundaries (e.g., temporal nonces such as
       Epoch Markers distributed by an Epoch Bell
-      [I-D.ietf-rats-epoch-markers]).  Regularly rotating the keK in
+      [I-D.ietf-rats-epoch-markers]).  Regularly rotating the EKK in
       this role strictly bounds the vulnerability window of an
       exfiltrated key to the current validity period.
 
-      The Verifier includes the public keK within the Attestation
+      The Verifier includes the public EKK within the Attestation
       Result, allowing the Relying Party to cryptographically bind the
       credential to the current session and enforce per-session
       freshness (see Section 8.1).
 
-   Hardware-Bound Key (hbK):  A long-lived asymmetric key pair whose
-      private key resides outside the Target Environment, typically in a
-      Hardware Security Module (HSM) or similar hardened service.  The
-      hbK’s certificate provides the conventional identity (e.g., a
-      WebPKI domain validation) to the Relying Party.  In deployments
-      where a short-lived tbK is used, the hbK MAY authorise the tbK.
+   Long-Term Key (LTK):  A long-lived asymmetric key pair representing
+      the host or hardware-level authority, typically residing outside
+      the Target Environment in a Hardware Security Module (HSM).  In
+      multi-tenant or containerized environments, an LTK MAY delegate
+      transport signing authority to an ephemeral, per-workload CSK via
+      a Delegated Credential.
 
-      Alternatively, the hbK MAY be provisioned directly into the Target
-      Environment as the transport authentication key itself.  This
-      pattern can be applied for deployments such as hardened external
-      Key/Secret Management Services (KSMs) or certificate managers.
-      Using an injected hbK shifts the security anchor from a hardware-
-      backed guarantee to the integrity of the local provisioning
-      pipeline and does not carry the exclusivity or non-exportability
-      guarantees of a natively generated tbK.
-
-      To cryptographically anchor the session to the Target Environment,
-      a deployment MUST employ at least one natively generated key
-      (either a tbK or a keK).
-
-   Attesting Environment Key (aeK):  The asymmetric key used by the
+   Attesting Environment Key (AEK):  The asymmetric key used by the
       Attesting Environment to sign Evidence.  The Verifier trusts the
-      aeK through an Endorsement chain that typically roots in a
-      hardware manufacturer or a device-specific CA.  The aeK is used
+      AEK through an Endorsement chain that typically roots in a
+      hardware manufacturer or a device-specific CA.  The AEK is used
       solely for attestation and is distinct from any key used for
       transport authentication.
 
-   Attestation Result Key (arK):  The asymmetric key used by a Verifier
+   Attestation Result Key (ARK):  The asymmetric key used by a Verifier
       to sign Attestation Results.  The Relying Party must possess the
-      corresponding trust anchor for the arK so that it can verify the
+      corresponding trust anchor for the ARK so that it can verify the
       integrity and authenticity of received Attestation Results.
+
+   Object Security Key (OSK):  An asymmetric public key belonging to the
+      Verifier, used by the Attesting Environment to apply object-level
+      encryption (e.g., HPKE) to Evidence payloads before transport
+      transmission.
 
    Attestation Credential:  The attestation payload conveyed by the
       Attester to the Relying Party across the transport connection.
@@ -688,9 +679,9 @@ Table of Contents
    If the Relying Party is directly consuming Evidence (Background-Check
    model), it rejects Evidence whose binder does not match.
 
-   A Background-Check exchange MAY also be used to provision a keK for
+   A Background-Check exchange MAY also be used to provision an EKK for
    subsequent use under the Passport model, by minting a cached
-   Attestation Result that binds a Trust-On-First-Use keK for later
+   Attestation Result that binds a Trust-On-First-Use EKK for later
    Interactive Passport challenges (see Section 7.2.1).
 
 7.2.  Passport Conveyance Model
@@ -706,7 +697,7 @@ Table of Contents
    To fulfill these binding conditions without requiring the Attester to
    contact the Verifier during connection establishment, deployments
    utilizing the Passport model MAY employ an interactive challenge.  By
-   encapsulating a session-specific challenge to a keK whose public
+   encapsulating a session-specific challenge to an EKK whose public
    component is bound within the Attestation Result, the Relying Party
    can verify the Attester's active control over the Target Environment.
    The decapsulated secret is subsequently mixed into the Session
@@ -715,7 +706,7 @@ Table of Contents
 
           .------------.
           |  Verifier  |
-          |   [arK]    |
+          |   [ARK]    |
           '------------'
              ^      |
              |      | EAR
@@ -723,22 +714,22 @@ Table of Contents
              |      v
      .---------------------. EAR keyset
      |   .-------------.   | containing      (RP holds this ahead of hs)
-     |  |   Attesting   |  | tbK & keK . . . . . . . . . . .
+     |  |   Attesting   |  | CSK & EKK . . . . . . . . . . .
      |  |  Environment  |  |                               .
-     |  |     [aeK]     |  |                               .
+     |  |     [AEK]     |  |                               .
      |   '-------------'   |                     .---------v----------.
      |       Collects      |                     |   Relying Party    |
      |       Claims        |                     |   .------------.   |
      |                     |                     |  |              |  |
      |   .-------------.   |  Challenge (ct)     |  |   TLS peer   |  |
-     |  |  .--------.   |  |  [sealed to keK]    |  |              |  |
+     |  |  .--------.   |  |  [sealed to EKK]    |  |              |  |
      |  | |          |  |<-+---------------------+--| Encapsulates |  |
      |  | | TLS peer |  |  |  Liveness Proof     |  | KEM secret   |  |
-     |  | |          |  |--+---------------------+->| to keK       |  |
+     |  | |          |  |--+---------------------+->| to EKK       |  |
      |  |  '--------'   |  |                     |  |              |  |
-     |  | [tbK] & [keK] |<=+=====================+=>|              |  |
+     |  | [CSK] & [EKK] |<=+=====================+=>|              |  |
      |  |               |  |   Secure Channel    |  |              |  |
-     |  |    Target     |  |  [signed by tbK]    |   '------------'   |
+     |  |    Target     |  |  [signed by CSK]    |   '------------'   |
      |  |  Environment  |  |                     '--------------------'
      |   '-------------'   |
      '---------------------'
@@ -768,20 +759,20 @@ Table of Contents
    For deployments utilizing cached Attestation Results (the Passport
    model), per-session freshness of the transport connection must be
    decoupled from the generation time of the credential itself.  This is
-   achieved by binding the lifecycle of the keK to a strict freshness
+   achieved by binding the lifecycle of the EKK to a strict freshness
    boundary, such as an Epoch Marker [I-D.ietf-rats-epoch-markers].
    While the transport nonces provide network freshness, the successful
-   decapsulation of a keK challenge proves the Attesting Environment is
+   decapsulation of an EKK challenge proves the Attesting Environment is
    operating within the acceptable epoch window, mitigating the risk of
    indefinitely replaying exfiltrated credentials.
 
-   Where the keK instead serves as a per-machine continuity anchor
+   Where the EKK instead serves as a per-machine continuity anchor
    pinned via Trust-On-First-Use, rotation occurs at an operator-
    configured interval rather than solely in response to an Epoch
-   Marker.  In this case, each successive keK MUST be attested by the
-   outgoing keK at the point of rotation, so that the Relying Party can
+   Marker.  In this case, each successive EKK MUST be attested by the
+   outgoing EKK at the point of rotation, so that the Relying Party can
    verify an unbroken chain of succession back to the originally pinned
-   keK without requiring a fresh Background-Check exchange at every
+   EKK without requiring a fresh Background-Check exchange at every
    rotation boundary.
 
 8.2.  Session resumption
@@ -842,7 +833,7 @@ Table of Contents
 
 9.3.  Attestation Key Correlation
 
-   When the same Attesting Environment Key (aeK) is used across multiple
+   When the same Attesting Environment Key (AEK) is used across multiple
    transport sessions, it acts as a stable Attester Identifier.  As
    defined in [I-D.ounsworth-rats-privacy-framework], any party with
    access to Evidence from more than one of those sessions can use this
@@ -851,18 +842,18 @@ Table of Contents
    for client Attesters where the privacy of individual connections is a
    concern.
 
-   This linkability risk natively extends to the public KEM
-   Encapsulation Key (keK) when an Attestation Result is cached and
-   reused across multiple sessions under the Passport conveyance model.
-   In such deployments, the static public keK acts as a temporary cross-
-   session tracking beacon, necessitating mitigation controls like short
-   epoch validity periods or pairwise key generation to preserve client
+   This linkability risk natively extends to the public Ephemeral KEM
+   Key (EKK) when an Attestation Result is cached and reused across
+   multiple sessions under the Passport conveyance model.  In such
+   deployments, the static public EKK acts as a temporary cross-session
+   tracking beacon, necessitating mitigation controls like short epoch
+   validity periods or pairwise key generation to preserve client
    anonymity.
 
    To mitigate this correlation risk, deployments SHOULD consider the
    controls described in [I-D.ounsworth-rats-privacy-framework], such as
    utilizing pairwise identifiers, short validity periods, or unlinkable
-   presentations for the aeK.
+   presentations for the AEK.
 
 9.4.  Anonymous Client Attestation
 
@@ -931,28 +922,23 @@ Table of Contents
    key presented in the transport handshake, preventing an untrusted
    host from successfully substituting the binder.
 
-   Where the transport authentication key is a non-confidential hbK
-   provisioned directly into the Target Environment rather than a
-   natively generated tbK, binding the Attestation Credential to that
-   key's public component alone does not establish that the key is
-   exclusive to the attested environment.
+   Where the transport authentication key is a non-confidential CSK
+   provisioned directly into the Target Environment rather than being
+   natively generated, binding the Attestation Credential to that key's
+   public component alone does not establish that the key is exclusive
+   to the attested environment.
 
    *Compound Authentication and Key Exclusivity.* A Relying Party's
    appraisal policy dictates the required security properties of the
-   transport authentication key.  If the policy requires Compound
-   Authentication, the Attestation Credential MUST be bound to a Target/
-   TEE-Bound Key (tbK) generated and maintained exclusively within the
-   Target Environment.  Conversely, if the policy accepts independent
-   verification of endpoint identity and platform state, a Hardware-
-   Bound Key (hbK) injected into the Target Environment MAY be used for
-   transport authentication.  However, because the injected hbK lacks
-   native non-exportability guarantees, binding the Attestation
-   Credential to that key's public component alone does not establish
-   that the key is exclusive to the attested environment.  In this case,
-   an additional anchor, such as a KEM Encapsulation Key (keK) bound to
-   the session per Section 7.2.1, is REQUIRED to prevent substitution of
-   the binder by an untrusted host holding the same injected key
-   material.
+   transport authentication key.  An Attester uses a Connection Signing
+   Key (CSK) to authenticate the transport session.  If a deployment
+   utilizes an injected CSK (lacking native non-exportability
+   guarantees) AND the Relying Party's appraisal policy strictly
+   requires Compound Authentication, then an Ephemeral KEM Key (EKK)
+   generated natively within the Target Environment is REQUIRED to
+   anchor the session and prevent binder substitution by an untrusted
+   host holding the same injected CSK.  Otherwise, standalone transport
+   authentication via CSK is sufficient.
 
    *Key Non-exportability (informative).* The specific concern of
    demonstrating that the Subject Key used for transport authentication
@@ -969,8 +955,11 @@ Table of Contents
    not at Connection Establishment Time.
 
    *Evidence Confidentiality.* Evidence payloads SHOULD be protected by
-   object-level encryption to a key held exclusively by the intended
-   recipient.  See [I-D.ounsworth-rats-privacy-framework].
+   object-level encryption to an Object Security Key (OSK) held
+   exclusively by the intended recipient.  While OSK ensures privacy
+   against passive observers, the cryptographic integrity and session-
+   binding resistance of the attestation channel do not rely on OSK
+   secrecy.  See [I-D.ounsworth-rats-privacy-framework].
 
    *Session Resumption.* When a transport session is resumed, previously
    obtained Attestation Credential may no longer reflect the Attester's
