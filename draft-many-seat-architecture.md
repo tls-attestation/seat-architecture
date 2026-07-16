@@ -151,12 +151,12 @@ This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
 Connection Signing Key (`CSK`):
-: The asymmetric identity key pair used by the endpoint to authenticate 
-  the transport handshake (e.g., signing the TLS CertificateVerify message). 
-  A `CSK` may be natively generated and maintained exclusively within the 
-  Target Environment (providing non-exportability guarantees), or it MAY be 
-  provisioned into the Target Environment from an external certificate manager 
-  or HSM. Evidence produced by the Attesting Environment MUST include a binding 
+: The asymmetric identity key pair used by the endpoint to authenticate
+  the transport handshake (e.g., signing the TLS CertificateVerify message).
+  A `CSK` may be natively generated and maintained exclusively within the
+  Target Environment (providing non-exportability guarantees), or it MAY be
+  provisioned into the Target Environment from an external certificate manager
+  or HSM. Evidence produced by the Attesting Environment MUST include a binding
   to the `CSK`.
 
 Ephemeral KEM Key (`EKK`):
@@ -178,10 +178,10 @@ Ephemeral KEM Key (`EKK`):
 > (see {{per-session-freshness}}).
 
 Long-Term Key (`LTK`):
-: A long-lived asymmetric key pair representing the host or hardware-level 
-  authority, typically residing outside the Target Environment in a Hardware 
-  Security Module (HSM). In multi-tenant or containerized environments, an 
-  `LTK` MAY delegate transport signing authority to an ephemeral, per-workload 
+: A long-lived asymmetric key pair representing the host or hardware-level
+  authority, typically residing outside the Target Environment in a Hardware
+  Security Module (HSM). In multi-tenant or containerized environments, an
+  `LTK` MAY delegate transport signing authority to an ephemeral, per-workload
   `CSK` via a Delegated Credential.
 
 Attesting Environment Key (`AEK`):
@@ -198,8 +198,8 @@ Attestation Result Key (`ARK`):
   the integrity and authenticity of received Attestation Results.
 
 Object Security Key (`OSK`):
-: An asymmetric public key belonging to the Verifier, used by the 
-  Attesting Environment to apply object-level encryption (e.g., HPKE) 
+: An asymmetric public key belonging to the Verifier, used by the
+  Attesting Environment to apply object-level encryption (e.g., HPKE)
   to Evidence payloads before transport transmission.
 
 Attestation Credential:
@@ -849,14 +849,14 @@ exclusive to the attested environment.
 
 **Compound Authentication and Key Exclusivity.** A Relying Party's
 appraisal policy dictates the required security properties of the
-transport authentication key. An Attester uses a Connection Signing 
-Key (`CSK`) to authenticate the transport session. If a deployment 
-utilizes an injected `CSK` (lacking native non-exportability guarantees) 
-AND the Relying Party's appraisal policy strictly requires Compound 
-Authentication, then an Ephemeral KEM Key (`EKK`) generated natively 
-within the Target Environment is REQUIRED to anchor the session and 
-prevent binder substitution by an untrusted host holding the same 
-injected `CSK`. Otherwise, standalone transport authentication via `CSK` 
+transport authentication key. An Attester uses a Connection Signing
+Key (`CSK`) to authenticate the transport session. If a deployment
+utilizes an injected `CSK` (lacking native non-exportability guarantees)
+AND the Relying Party's appraisal policy strictly requires Compound
+Authentication, then an Ephemeral KEM Key (`EKK`) generated natively
+within the Target Environment is REQUIRED to anchor the session and
+prevent binder substitution by an untrusted host holding the same
+injected `CSK`. Otherwise, standalone transport authentication via `CSK`
 is sufficient.
 
 **Key Non-exportability (informative).** The specific concern of
@@ -874,10 +874,10 @@ Evidence reflects the Attester's state at the time of re-attestation,
 not at Connection Establishment Time.
 
 **Evidence Confidentiality.** Evidence payloads SHOULD be protected by
-object-level encryption to an Object Security Key (`OSK`) held exclusively 
-by the intended recipient. While `OSK` ensures privacy against passive 
-observers, the cryptographic integrity and session-binding resistance 
-of the attestation channel do not rely on `OSK` secrecy. See 
+object-level encryption to an Object Security Key (`OSK`) held exclusively
+by the intended recipient. While `OSK` ensures privacy against passive
+observers, the cryptographic integrity and session-binding resistance
+of the attestation channel do not rely on `OSK` secrecy. See
 {{I-D.ounsworth-rats-privacy-framework}}.
 
 **Session Resumption.** When a transport session is resumed, previously

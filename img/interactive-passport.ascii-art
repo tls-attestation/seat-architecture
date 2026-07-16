@@ -1,6 +1,6 @@
        .------------.
        |  Verifier  |
-       |   [arK]    |
+       |   [ARK]    |
        '------------'
           ^      | 
           |      | EAR
@@ -8,22 +8,22 @@
           |      v
   .---------------------. EAR keyset
   |   .-------------.   | containing      (RP holds this ahead of hs)
-  |  |   Attesting   |  | tbK & keK . . . . . . . . . . .
+  |  |   Attesting   |  | CSK & EKK . . . . . . . . . . .
   |  |  Environment  |  |                               .
-  |  |     [aeK]     |  |                               .
+  |  |     [AEK]     |  |                               .
   |   '-------------'   |                     .---------v----------.
   |       Collects      |                     |   Relying Party    |
   |       Claims        |                     |   .------------.   |
   |                     |                     |  |              |  |
   |   .-------------.   |  Challenge (ct)     |  |   TLS peer   |  |
-  |  |  .--------.   |  |  [sealed to keK]    |  |              |  |
+  |  |  .--------.   |  |  [sealed to EKK]    |  |              |  |
   |  | |          |  |<-+---------------------+--| Encapsulates |  |
   |  | | TLS peer |  |  |  Liveness Proof     |  | KEM secret   |  |
-  |  | |          |  |--+---------------------+->| to keK       |  |     
+  |  | |          |  |--+---------------------+->| to EKK       |  |     
   |  |  '--------'   |  |                     |  |              |  |
-  |  | [tbK] & [keK] |<=+=====================+=>|              |  |
+  |  | [CSK] & [EKK] |<=+=====================+=>|              |  |
   |  |               |  |   Secure Channel    |  |              |  |
-  |  |    Target     |  |  [signed by tbK]    |   '------------'   |
+  |  |    Target     |  |  [signed by CSK]    |   '------------'   |
   |  |  Environment  |  |                     '--------------------'
   |   '-------------'   |                    
   '---------------------'
