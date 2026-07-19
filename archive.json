@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-12T02:48:10.419376+00:00",
+  "timestamp": "2026-07-19T02:45:08.936418+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -2366,13 +2366,13 @@
       "labels": [],
       "body": "Introduces a solution for per-session freshness for the Passport conveyance model and incorporates feedback from Markus based on the following use-case (use-cases PR at tls-attestation/use-cases-and-properties#56). Defines a novel Target/TEE-bound ephemeral KEM (`keK`) to provide the ability to decouple session liveness from credential issuance and making key requirements context-dependent.\r\n\r\n## Major updates\r\n\r\n* *Introduced KEM Encapsulation Key (`keK`):* Added definitions for an optional ephemeral, per-session liveness anchor generated exclusively within the Target Environment to mitigate key exfiltration windows.\r\n\r\n* *Interactive Passport Challenge:* Established an interactive challenge-response mechanism enabling a Relying Party to verify an Attester's active control by sealing session-specific secrets to the keK.\r\n\r\n* *Epoch-Bound Lifecycles:* Tied `keK` rotation boundaries to explicit temporal signals like [Epoch Markers](https://datatracker.ietf.org/doc/draft-ietf-rats-epoch-markers/) to establish network freshness without requiring real-time Verifier connectivity.\r\n\r\n* *Conditional Key Requirements:* Updated the Target/TEE-Bound Key (`tbK`) definition so that its usage is conditional, rendering it mandatory only when a deployment's policy specifically requires **Compound Authentication**.\r\n\r\n* *Compound Authentication:* Added security considerations for compound authentication and limitations/constraints/assumptions needed to maintain it.\r\n\r\n* *Post-Handshake Failure Handling:* Updated language to specify that behaviors may be handled fluidly at the transport layer, supporting reduced access privileges over outright connection termination.\r\n\r\n### Will resolve:\r\n\r\n* #27 (Markus' Review)\r\n\r\n* #28 (Incomplete Per-Session Freshness Support: Cryptographic Mechanics Missing for Passport Model)\r\n\r\nAlso moves previously introduced appendix B to [wiki entry](https://github.com/tls-attestation/seat-architecture/wiki/Proposal:-Interactive-Passport-Challenge-for-Per%E2%80%90Session-Freshness-Binding)\r\n",
       "createdAt": "2026-07-06T00:17:12Z",
-      "updatedAt": "2026-07-10T19:14:04Z",
+      "updatedAt": "2026-07-16T22:13:15Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1",
       "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "interactive-passport",
-      "headRefOid": "d2e0b71623289ca1a41b327fe533296e5295f7ae",
+      "headRefOid": "e4709fd44fc9caf0c472168d4d9a2bed2335745b",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -2412,6 +2412,20 @@
           "body": "> @ionut-arm @tireddy2 @thomas-fossati\r\n> \r\n> Rather than filling the appendix with concrete mechanisms, maybe this stuff could go into the repo's wiki when it isn't something already proposed elsewhere in a concrete draft? Until the community sort of centres or lands on a pattern that could then be codified in the draft?\r\n> \r\n> EDIT: [two new wiki pages!](https://github.com/tls-attestation/seat-architecture/wiki)\r\n\r\nSeems like a very fine choice to me.",
           "createdAt": "2026-07-10T10:44:40Z",
           "updatedAt": "2026-07-10T10:44:40Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@burgerdev I pushed another substantial update to this PR! We have updated key names, and addressed concerns about mandatory inclusion of ephemeral keys. Thanks for the input so far! Feel free to review and offer additional feedback if anything still feels iffy.",
+          "createdAt": "2026-07-16T08:08:38Z",
+          "updatedAt": "2026-07-16T08:08:38Z"
+        },
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@tireddy2 \r\n> The proposed mechanism looks interesting, but the PR pulls too much mechanism up into the architecture layer.\r\n\r\nOn top of the fact that this PR has cycled through full rewrites of the text at least once or twice. After Vienna, we'll deconstruct this PR, find what could stay but go into a wiki page and what makes sense to go into a fresh PR without a half month of experimental renames and experiments blurring the edges. ",
+          "createdAt": "2026-07-16T14:51:12Z",
+          "updatedAt": "2026-07-16T14:51:12Z"
         }
       ],
       "reviews": [
@@ -2486,8 +2500,177 @@
               "updatedAt": "2026-07-10T19:14:04Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABGNV4-A",
+          "commit": {
+            "abbreviatedOid": "aa36fd2"
+          },
+          "author": "github-actions",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-16T07:58:27Z",
+          "updatedAt": "2026-07-16T07:58:28Z",
+          "comments": [
+            {
+              "originalPosition": 276,
+              "body": "````suggestion\nobject-level encryption to an Object Security Key (`OSK`) held exclusively\nby the intended recipient. While `OSK` ensures privacy against passive\nobservers, the cryptographic integrity and session-binding resistance\nof the attestation channel do not rely on `OSK` secrecy. See\n````",
+              "createdAt": "2026-07-16T07:58:27Z",
+              "updatedAt": "2026-07-16T07:58:28Z"
+            },
+            {
+              "originalPosition": 261,
+              "body": "````suggestion\ntransport authentication key. An Attester uses a Connection Signing\nKey (`CSK`) to authenticate the transport session. If a deployment\nutilizes an injected `CSK` (lacking native non-exportability guarantees)\nAND the Relying Party's appraisal policy strictly requires Compound\nAuthentication, then an Ephemeral KEM Key (`EKK`) generated natively\nwithin the Target Environment is REQUIRED to anchor the session and\nprevent binder substitution by an untrusted host holding the same\ninjected `CSK`. Otherwise, standalone transport authentication via `CSK`\n````",
+              "createdAt": "2026-07-16T07:58:28Z",
+              "updatedAt": "2026-07-16T07:58:28Z"
+            },
+            {
+              "originalPosition": 82,
+              "body": "````suggestion\n: An asymmetric public key belonging to the Verifier, used by the\n  Attesting Environment to apply object-level encryption (e.g., HPKE)\n````",
+              "createdAt": "2026-07-16T07:58:28Z",
+              "updatedAt": "2026-07-16T07:58:28Z"
+            },
+            {
+              "originalPosition": 60,
+              "body": "````suggestion\n: A long-lived asymmetric key pair representing the host or hardware-level\n  authority, typically residing outside the Target Environment in a Hardware\n  Security Module (HSM). In multi-tenant or containerized environments, an\n  `LTK` MAY delegate transport signing authority to an ephemeral, per-workload\n````",
+              "createdAt": "2026-07-16T07:58:28Z",
+              "updatedAt": "2026-07-16T07:58:28Z"
+            },
+            {
+              "originalPosition": 35,
+              "body": "````suggestion\n: The asymmetric identity key pair used by the endpoint to authenticate\n  the transport handshake (e.g., signing the TLS CertificateVerify message).\n  A `CSK` may be natively generated and maintained exclusively within the\n  Target Environment (providing non-exportability guarantees), or it MAY be\n  provisioned into the Target Environment from an external certificate manager\n  or HSM. Evidence produced by the Attesting Environment MUST include a binding\n````",
+              "createdAt": "2026-07-16T07:58:28Z",
+              "updatedAt": "2026-07-16T07:58:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABGNdcrQ",
+          "commit": {
+            "abbreviatedOid": "e4709fd"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-16T08:16:23Z",
+          "updatedAt": "2026-07-16T08:20:53Z",
+          "comments": [
+            {
+              "originalPosition": 69,
+              "body": "I think at this point this acronym has also been overused / diluted. \"Long term\" is also nondescript regarding its purpose. Maybe \"platform identity key\", \"platform authority key\", or something along those lines? ",
+              "createdAt": "2026-07-16T08:16:23Z",
+              "updatedAt": "2026-07-16T08:20:53Z"
+            },
+            {
+              "originalPosition": 213,
+              "body": "Not just untrusted host, btw, but if your threat model allows the attacker to (infrequently) extract stuff from attester memory, you need the EKK to mitigate that. Not sure if it's worth putting that here, I'll leave it to you.",
+              "createdAt": "2026-07-16T08:20:49Z",
+              "updatedAt": "2026-07-16T08:20:53Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABGNgMzg",
+          "commit": {
+            "abbreviatedOid": "d2e0b71"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-16T08:21:53Z",
+          "updatedAt": "2026-07-16T08:21:53Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "@burgerdev Okay so:\r\n\r\n> TLS1.3 already gives me a natively generated, unexported key: the DHE key. If I bind the TE report to the handshake secret, the session should be anchored to the TE, no?\r\n\r\nThat assumption holds perfectly if the transport stack is trusted. However, in a Split Deployment where the identity key is externally injected, the untrusted host OS also holds that key material. Because the host controls the network, it can independently negotiate the TLS session and its DHE secret. It can then use the secure enclave as a blind signing oracle, feeding it the hijacked transcript to get a valid report without the connection ever terminating inside the hardware.\r\n\r\n> More broadly, my remark about the required key concerned itself with all ephemeral, unexported keys, and I'd prefer if we could live without them. Not saying they are not useful for other things, the AR PoP stuff for example.\r\n\r\nSo, we can forgo all ephemeral, unexported keys and the updated text reflects this by making them strictly conditional. That is, if a deployment's policy accepts independent verification of endpoint identity and platform state, standard transport authentication is sufficient without any ephemeral key. However, I expect this text I've suggested could get pushback, because of the whole oracle attack risk. For example, I ran the [updated formal models ](https://github.com/nathanaelritz/dual-pop-atls-conveyance-models#results)to check on this and they indicate that session binding breaks down via network tampering under injected-key scenarios unless an internal hardware anchor is enforced. However, I've heard the IETF are not the protocol police. \r\n\r\nIn practice then, an internal ephemeral key (like the `EKK`) is REQUIRED as a normative if a deployment uses an injected key *and* the Relying Party policy explicitly demands Compound Authentication to prevent the oracle attack. Edit: and Ionut [just mentioned a note ](https://github.com/tls-attestation/seat-architecture/pull/26#discussion_r3593753115)re: the updated text, also.",
+              "createdAt": "2026-07-16T08:21:53Z",
+              "updatedAt": "2026-07-16T08:25:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABGNmt1Q",
+          "commit": {
+            "abbreviatedOid": "aa36fd2"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-16T08:33:21Z",
+          "updatedAt": "2026-07-16T08:33:21Z",
+          "comments": [
+            {
+              "originalPosition": 69,
+              "body": "The fact that you are suggesting key names that don't match with my brain intuitively imagines also suggests LTK isn't the best possible name? I think I am resisting 'platform' because that could conflate something like a k8s cluster orchestrator with the bare-metal infrastructure hosting it. What about \"Delegating Authority Key\"?",
+              "createdAt": "2026-07-16T08:33:21Z",
+              "updatedAt": "2026-07-16T08:33:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABGPrvRw",
+          "commit": {
+            "abbreviatedOid": "e4709fd"
+          },
+          "author": "tireddy2",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "The proposed mechanism looks interesting, but the PR pulls too much mechanism up into the architecture layer. ",
+          "createdAt": "2026-07-16T13:18:11Z",
+          "updatedAt": "2026-07-16T13:18:11Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABGTgw8A",
+          "commit": {
+            "abbreviatedOid": "d2e0b71"
+          },
+          "author": "burgerdev",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-16T22:13:14Z",
+          "updatedAt": "2026-07-16T22:13:15Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "> That assumption holds perfectly if the transport stack is trusted. However, in a Split Deployment where the identity key is externally injected, the untrusted host OS also holds that key material. Because the host controls the network, it can independently negotiate the TLS session and its DHE secret.\r\n\r\nIt can independently negotiate **a** TLS session. That would result in a different DHE secret.\r\n\r\n>  It can then use the secure enclave as a blind signing oracle, feeding it the hijacked transcript to get a valid report without the connection ever terminating inside the hardware.\r\n\r\nMy proposal was \"bind the TE report to the handshake secret\". The attacker would need to feed a handshake secret into the blind signing oracle (side note: I don't know what you mean by this. You can't make a TEE sign something without running inside the TEE, which is code that is verified).\r\n\r\n> if a deployment's policy accepts independent verification of endpoint identity and platform state, standard transport authentication is sufficient without any ephemeral key.\r\n\r\nI think we're misunderstanding each other: I do want the session to be bound to the TEE, which is what I belive you call \"compound authentication\". Just having the private key should not allow compromising the session. \r\n",
+              "createdAt": "2026-07-16T22:13:14Z",
+              "updatedAt": "2026-07-16T22:13:15Z"
+            }
+          ]
         }
       ]
+    },
+    {
+      "number": 29,
+      "id": "PR_kwDOTCeSC87ymzPR",
+      "title": "Update authors",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/29",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Add Yuxuan Song to authors",
+      "createdAt": "2026-07-16T16:17:16Z",
+      "updatedAt": "2026-07-16T16:17:16Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "969d25fa6ff243949f7cda10e8a0b5264903076d",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "author-update-02",
+      "headRefOid": "b5c96324f8e74ef765343a8a0370b757ff2d5169",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
