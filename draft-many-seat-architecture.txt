@@ -5,11 +5,11 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                                T. Fossati
 Intended status: Informational                               Independent
-Expires: 5 January 2027                                         T. Reddy
+Expires: 6 March 2027                                           T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
-                                                             4 July 2026
+                                                        2 September 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -52,7 +52,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 January 2027.
+   This Internet-Draft will expire on 6 March 2027.
 
 Copyright Notice
 
@@ -894,12 +894,12 @@ Table of Contents
               rats-privacy-framework-00>.
 
    [I-D.reddy-rats-key-binding]
-              Reddy.K, T., Tschofenig, H., Fossati, T., and I. Mihalcea,
-              "Key Attestation for Entity Attestation Tokens (EAT)",
-              Work in Progress, Internet-Draft, draft-reddy-rats-key-
-              binding-01, 7 June 2026,
+              Reddy.K, T., Tschofenig, H., Fossati, T., Mihalcea, I.,
+              and H. Birkholz, "Key Attestation for Entity Attestation
+              Tokens (EAT)", Work in Progress, Internet-Draft, draft-
+              reddy-rats-key-binding-02, 15 August 2026,
               <https://datatracker.ietf.org/doc/html/draft-reddy-rats-
-              key-binding-01>.
+              key-binding-02>.
 
    [IAB-Attestation-Risks]
               Internet Architecture Board (IAB), "IAB Statement on the
