@@ -10,7 +10,7 @@ The automated verification of the model demonstrates several core cryptographic 
 
 * **Cryptographic Evidence-to-Handshake Binding:** The attestation evidence (`quote`/`ev`) cannot be transplanted or replayed across sessions:
   * **Intra-handshake model:** Attestation evidence is embedded directly into the handshake transcript, establishing unconditional transcript and session correlation `(kc1, ev1) = (kc2, ev2)`.
-  * **Post-handshake model:** Evidence binding is derived from post-handshake exported key material (`ClientStateEvKc`), ensuring agreement on secrets (`gxy`, `kch`, `kc`) while session correlation `(kc1, ev1) = (kc2, ev2)` holds strictly on the condition that invalid curve points (`BadElement`) are rejected.
+  * **Post-handshake model:** Evidence binding is derived from post-handshake exported key material (`ClientStateEvKc`), ensuring agreement on secrets (`gxy`, `kch`, `kc`) while session correlation `(kc1, ev1) = (kc2, ev2)` holds strictly on the condition that degenerate key share elements (`BadElement`) are rejected.
 
 * **Orthogonal Trust-Root Redundancy:** Server authentication and remote attestation achieve independent survivability under single-root compromise:
 
@@ -26,11 +26,17 @@ The automated verification of the model demonstrates several core cryptographic 
 
 ## Enhanced Threat Modeling
 
+**Adversary-controlled handshake secrets (Unconditional Leakage).** Immediately upon handshake key derivation, the server outputs the keys directly onto the public channel:
+```proverif
+   out(io, (kch, ksh));
+   event AttackerControlsHSK(kch, ksh);
+```
+
 **Certificates as attacker-observable network data.** Servers receive their certificate over the network before validating it against internal state, rather than treating it as pre-trusted local data. This models certificates and their signatures as data the attacker can intercept, replay, or attempt to forge.
 
 **Attacker-influenced server selection.** Clients receive their target server identity (SNI) from the network rather than from a pre-validated source, modeling realistic DNS/SNI-based routing and the possibility of client misdirection.
 
-**Attacker-driven attestation measurement quotes.** Rather than binding evidence generation to a hardcoded or pre-trusted internal measurement, the server takes platform measurement claims directly from the network (`in(io, dev_status1: bitstring)`). This enables the adversary to drive quote creation with arbitrary or tampered guest VM states signed by an authentic attestation key (`privAK`). The model evaluates whether the client's endorsement verification pipeline (`dev_status1 = dev_statusRef` validated against `pubISV` signatures) successfully detects and rejects malicious or misconfigured VM launches.
+**Attacker-driven attestation measurement quotes.** Maintains existing Evidence generation process that collects platform measurement claims directly from adversary control (`in(io, dev_status1: bitstring)`). This enables the adversary to drive quote creation with arbitrary or tampered guest VM states signed by an authentic attestation key (`privAK`). The model evaluates whether the client's endorsement verification pipeline (`dev_status1 = dev_statusRef` validated against `pubISV` signatures) successfully detects and rejects malicious or misconfigured VM launches.
 
 **Selective, per-party compromise.** Each key class—TLS key (`EK`), attestation key (`AK`), CA root key, and ISV/CSP root key—has its own independent leakage process, each tagged with a distinct event (`LeakedEK`, `LeakedAK`, `CompromisedCA`, `CompromisedCSP`). This lets the model reason about partial-compromise scenarios rather than all-or-nothing trust, distinguishing two distinct trust paths:
 
@@ -45,6 +51,11 @@ The automated verification of the model demonstrates several core cryptographic 
 
 ## Additional Modeling Features
 
+**Zero Key-Schedule Modification.** The intra-handshake protocol strictly preserves the standard TLS 1.3 key schedule (RFC 8446) without introducing custom HKDF labels, modified extractors, or handshake-secret derivations:
+  - **No Secret-Binding Dependency:** Security does not rely on binding attestation evidence to ephemeral handshake traffic secrets (`htsc`, `htss`, `kch`, `ksh`) or intermediate key schedule states (`hs`).
+  - **Soundness Under Handshake Key Exposure:** Handshake write keys (`kch`, `ksh`) are modeled as fully compromised and published directly to the adversary (`out(io, (kch, ksh))`). The formal verification proves that client application traffic key confidentiality (`kc`) and mutual session binding (`ClientComp`) remain unbroken even when the adversary actively possesses the handshake traffic keys.
+  - **Transcript-Enforced Authenticity:** Handshake binding is achieved entirely through the public cryptographic transcript (`log_SH = (ch, SH)`) signed over inside attestation claims (`rdata = (log_SH, pubEK)`), demonstrating that altering the TLS 1.3 key schedule is completely unnecessary for formal session integrity.
+
 **Two independent trust roots.** A WebPKI-style Certificate Authority (CA) certifies the binding between a server's identity and its TLS key (`ID_S`, `pubEK`). A separate Independent Software Vendor / Cloud Service Provider (ISV/CSP) endorsement authority independently certifies the binding between an attestation key and its expected launch measurements (`pubAK`, `dev_statusRef`). These are modeled as distinct signers with distinct keys, reflecting that certificate issuance and attestation endorsement are handled by different real-world organizations.
 
 * **Relocation of the enforcement boundary to the client:** Prior models treated cryptographic downgrade and parameter selection as server-driven behaviors (`ServerChoosesKEX`, `ServerChoosesHash`). Because Confidential Computing assumes the server executes within an untrusted host or hypervisor that actively proposes malicious parameters, the new evaluation reframes these failure modes around client-side acceptance (`ClientAcceptsElement`, `ClientAcceptsHash`). Verification proves that the protocol remains secure across hostile server environments unless the client implementation actively fails to enforce basic parameter and subgroup validation.
@@ -55,9 +66,6 @@ The automated verification of the model demonstrates several core cryptographic 
 
 **Per-launch measurement granularity.** Each server launch generates its own fresh reference measurement value (`dev_statusRef`) rather than checking against one shared global reference. This allows the model to represent many different, independently-measured launches — correctly configured or otherwise — coexisting under the same hardware root of trust.
 
-**One attestation key per machine, many launches.** A single attestation key (`privAK`) can vouch for many distinct launches (each with its own identity and measurement value), and each launch can in turn generate multiple TLS session keys. This reflects how a hardware-provisioned attestation key is realistically reused across VM boots and redeployments over a machine's lifetime, rather than being tied to a single fixed identity.
-
-**Multi-tenant, multi-machine scale.** Server generation, client sessions, and server sessions are all modeled with replication, allowing an unbounded number of machines, tenants per machine, and concurrent sessions. Provisioned credentials and reference measurements are recorded in an `agent_keys` table; the server process queries TLS credentials and attestation keys independently, allowing the model to evaluate potential cross-tenant credential substitution and mismatched certificate-to-attestation bindings.
 
 ## Acknowledgements
 
@@ -71,8 +79,8 @@ Thank you to all involved authors and researchers!
 
 ## Copyright and License
 
-Copyright 2026 Muhammad Usama Sardar.
-
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
 Copyright 2026 Nathanael Ritz.
 
 Licensed under the Apache License, Version 2.0 (the "License");
