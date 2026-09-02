@@ -37,6 +37,10 @@ author:
   - fullname: Ionuț Mihalcea
     organization: Arm
     email: "ionut.mihalcea@arm.com"
+  - fullname: Yuxuan Song
+    ins: Y. Song
+    organization: Inria
+    email: "yuxuan.song@inria.fr"
 
 normative:
   RFC2119:
