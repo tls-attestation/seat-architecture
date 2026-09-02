@@ -1,0 +1,29 @@
+       .------------.
+       |  Verifier  |
+       |   [ARK]    |
+       '------------'
+          ^      | 
+          |      | EAR
+ Evidence |      |   
+          |      v
+  .---------------------. EAR keyset
+  |   .-------------.   | containing      (RP holds this ahead of hs)
+  |  |   Attesting   |  | CSK & EKK . . . . . . . . . . .
+  |  |  Environment  |  |                               .
+  |  |     [AEK]     |  |                               .
+  |   '-------------'   |                     .---------v----------.
+  |       Collects      |                     |   Relying Party    |
+  |       Claims        |                     |   .------------.   |
+  |                     |                     |  |              |  |
+  |   .-------------.   |  Challenge (ct)     |  |   TLS peer   |  |
+  |  |  .--------.   |  |  [sealed to EKK]    |  |              |  |
+  |  | |          |  |<-+---------------------+--| Encapsulates |  |
+  |  | | TLS peer |  |  |  Liveness Proof     |  | KEM secret   |  |
+  |  | |          |  |--+---------------------+->| to EKK       |  |     
+  |  |  '--------'   |  |                     |  |              |  |
+  |  | [CSK] & [EKK] |<=+=====================+=>|              |  |
+  |  |               |  |   Secure Channel    |  |              |  |
+  |  |    Target     |  |  [signed by CSK]    |   '------------'   |
+  |  |  Environment  |  |                     '--------------------'
+  |   '-------------'   |                    
+  '---------------------'
