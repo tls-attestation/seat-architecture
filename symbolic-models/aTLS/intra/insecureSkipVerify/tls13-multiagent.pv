@@ -1,0 +1,166 @@
+(* 
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
+Copyright 2026 Nathanael Ritz.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*)
+
+(* Run as follows with subfolder <traces>:
+proverif205 -lib tls-lib-simple.pvl -html traces tls13-multiagent.pv 2>&1 | tee log.txt
+*)
+
+(* 
+Summary: 
+  Server's identity: ID_S (* SubjectAltName of X.509 e.g., FQDN *)
+  Key associated with VM identity: pubEK (Note: initially unknown; after successful attestation)
+  General organization for modeling: (measurements,pubEK,pubAK)
+
+Details:
+  Each cVM is identified by ID_S.
+  The model allows multiple tenants (guest VM) per server machine. 
+  So multiple pubEK per server machine. 
+
+We want to model that some server machines may be compromised while others remain secure.
+The compromise of a server machine is modelled by leaking privAK or privEK.
+*)
+
+(* Generation of agents and keys *)
+(* All parameters for Server side *)
+(*    agent_keys(dev_statusRef,privEK,pubEK,privAK ,pubAK) *)
+table agent_keys(bitstring,    privkey,pubkey,privkey,pubkey).
+
+let gen_agents_data (privCA:privkey) = 
+  (* Imagine the following as generating the data of a single server machine (single agent)
+  and the replication then produces multiple server machines (multi-agent) *)
+
+  new privAK: privkey;  (* attestation key for signing evidence *)
+  let pubAK = pk(privAK) in
+  out(io,pubAK); (* public keys should be available to attacker *)
+
+	!(
+    (* This replication allows to model multiple VMs on the same physical machine
+    which is typical in cloud scenarios. *)
+
+    new dev_statusRef: bitstring;  (* represents ref. cVM launch measurements *)
+    out(io, dev_statusRef);
+
+    (* Server side *)
+    new ID_S:identity;  (* SubjectAltName of X.509 e.g., FQDN *)
+    out(io,ID_S);  (* Identity is public *)
+
+    (! 
+      new privEK: privkey;  (* Each ID can have multiple keys for TLS *)
+      let pubEK = pk(privEK) in
+      out(io,pubEK);  
+
+      (* Note: independent `LTK` not used in this model, CA signs privEK directly *)
+      (* Note: We don't necessarily trust the CA, see LCA macro *)
+      let CA_sig = sign(privCA,(ID_S,pubEK)) in   
+      let server_cert = ((ID_S,pubEK),CA_sig) in  (* PKI cert = {ID_S,pubEK_S}CA *) 
+      out(io, server_cert);
+
+      (* Record in the table *)
+      insert agent_keys(dev_statusRef,privEK,pubEK,privAK,pubAK)
+    )
+  )
+.
+
+let gen_endorsements (privISV:privkey) =
+  (* ISV reports what what the launch measurements for a cVM are 
+   and associated to what trusted pubAK key *)
+  get agent_keys(dev_statusRef,_,_,_,pubAK) in
+
+  (* Configure platform endorsements for the Client to look up later *)
+  let ISV_sig = sign(privISV,(pubAK,dev_statusRef)) in 
+  let endorsements = ((pubAK,dev_statusRef),ISV_sig) in 
+  out(io, endorsements)
+.
+
+let run_Client(pubCA,pubISV:pubkey) = 
+  (* Intuitively, the following models a single client (single agent) 
+  and the replication takes care of multiple clients (multi agent) *)
+  new ID_C:identity;  (* long-term identity of the client *)
+
+   (* Choose a server machine (potentially a compromised one) to communicate with. *)
+  !((* this allows the same client to talk to different servers *)
+
+    (* (hostname/FQDN/ID_S) may not be initially known to the client *)
+    in(io, (SNI_Target:identity)); (* adversary controls lookup *)
+
+    (* The following replication models multiple sessions of client with these parameters *)
+    !Client(ID_C,SNI_Target,pubISV,pubCA)
+  )
+.
+
+let run_Server = 
+  (* Intuitively, this models a single server and the replication takes care of multiple servers *)
+
+  in(io, (server_cert:bitstring)); (* Let adversary choose server certificate *)
+  let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
+  let (ID_S:identity,pubEK:pubkey) = id_pub_pair in (* Configure SubjectAltName/ID_S from cert *)
+
+  (* Allow combinations, but for each private key, choose the corresponding public key *)
+  get agent_keys(_,privEK,=pubEK,_,_) in 
+  get agent_keys(_,_,_,privAK,pubAK) in  (* Match private TLS key to chosen cert *)
+
+  (* The following replication models multiple sessions of server with these parameters *)
+  !Server(ID_S,privAK,privEK,server_cert)
+.
+
+(* Mark the event when the keys of a specific machine are leaked
+i.e., not all server machines are compromised at the same time *)
+let LAK =
+  get agent_keys(_,_,_,privAK,pubAK) in
+  event LeakedAK(pubAK);  (* mark the leakage of AK *)  
+  out(io, privAK)
+.
+
+let LEK =
+  get agent_keys(_,privEK,pubEK,_,_) in 
+  event LeakedEK(pubEK);  (* mark the leakage of EK *)
+  out(io, privEK)
+.
+
+let LCA(privCA:privkey) =
+  event CompromisedCA(pk(privCA));  (* mark the compromise of the CA *)  
+  out(io, privCA)
+.
+
+let LISV(privISV:privkey) =
+  event CompromisedCSP(pk(privISV));  (* mark the compromise of the CSP/ISV *)  
+  out(io, privISV)
+.
+
+(* set traceDisplay = long. Display full trace *)
+(* set verboseClauses = short. *)
+(* main system *)
+(* process 0 *)
+process
+  (* Web PKI CA *)
+  new privCA:privkey; 
+  let pubCA = pk(privCA) in 
+  out(io,pubCA);
+
+  (* CSP / Independant Software Vendor *)
+  new privISV: privkey; 
+  let pubISV = pk(privISV) in
+  out(io, pubISV);
+
+  !(gen_agents_data(privCA)) | !(gen_endorsements(privISV))
+  | !(run_Client(pubCA,pubISV)) | !(run_Server)
+  | !(LEK)
+  | !(LAK)
+  | !(LISV(privISV)) (* We don't necessarily trust the CSP/ISV *)
+  | !(LCA(privCA)) (* We don't necessarily trust the CA *)
+  | !(SendBadElement)

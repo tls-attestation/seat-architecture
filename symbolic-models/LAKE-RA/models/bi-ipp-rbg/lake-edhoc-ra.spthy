@@ -1,0 +1,872 @@
+
+/*
+ * Protocol:   LAKE
+https://www.ietf.org/archive/id/draft-ietf-lake-ra-05.html
+
+Remote attestation over EDHOC.
+
+
+# Weaker primitive modeling and compromises
+`-D=WeakestSignature` enables all weak signature models,  see StrongSignatureExamples/attackfinding.spthy. This actually enables a set of sub-flags, one for each atomic weakness.
+`-D=CollapseHash`  consider a collapsing hash function
+`-D=LeakShare` allows to leak ephemeral shares
+`-D=XorPrecise` emulates a malleable xor.
+`-D=WeakAEAD` is a malleable aead
+
+# Stronger Protocol Check
+`-D=NeutralCheck` enforces that the protocol agents verifies that the DH share they received is not the identity element such that e^x = e    
+`-D=CredCheck` enforces that the agents checks that they do not communicate with themselves.
+
+# Extra security property
+`-D=NonRepudiatonSoundness` incudes processes for non repudiation soundness
+`-D=NonRepudiationCompleteness` incudes processes for non repudiation completeness  -> implies that shares are leaked, and does not work in proverif
+
+Scenarios to check ideally:
+ - `tamarin-prover -D=NonRepudiation -D=WeakestSignature -D=LeakShare`
+ - `tamarin-prover -D=WeakestSignature -D=LeakShare`
+
+*/
+
+theory edhoc
+
+begin
+
+builtins: diffie-hellman
+
+
+functions: method_zero/0, method_one/0, method_two/0, method_three/0, length/0,
+		   hash_length/0, edhoc_mac_length/0, key_length/0, iv_length/0, plaintext_length/0,
+		   error_code_one/0, error_code_two/0,
+		   suitesIConst/0, suitesRConst/0,
+		   edhoc_kdf/4,
+		   aeadenc/4, aeaddec/3 [destructor],
+		   pk/1,  id/2, get_DH_cred/1 [destructor], get_sig_cred/1 [destructor],
+		   wrap/1,
+		   id_att/2, get_meas/1 [destructor], get_att_key/1 [destructor],
+		   hash/1,hkdfextract/2, hkdfexpand/2
+
+equations:  get_DH_cred(id(x,y))=y,
+            get_sig_cred(id(x,y))=x,
+			get_meas(id_att(x,y))=x,
+			get_att_key(id_att(x,y))=y,
+            aeaddec(aeadenc(m,r,k,ad),k,ad) = m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#define MethodZero
+#include "Headers.splib"
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifdef NonRepudiation
+
+/* I sent proof to JudgeR in order to prouve that R participate to the exchange => method_zero and method_two */
+let JudgeR =
+    new stamp;
+    in(<ID_CRED_R,TH_2,pkR,EAD_2,MAC_2,signed>);    
+    let proofnrR = <ID_CRED_R,TH_2,pkR,EAD_2,MAC_2,signed> in
+    event JudgeReceivedR(stamp,proofnrR);
+    
+
+if (verify(signed,<'Signature1',ID_CRED_R,TH_2,pkR,EAD_2,MAC_2>, pkR) = sigtrue) then
+
+
+        event WasActiveR(pkR, TH_2, proofnrR);
+        event JudgeProcessedR(proofnrR)
+    else
+        event JudgeProcessedR(proofnrR)
+
+/* R sent proof to JudgeI in order to prouve that I participate to the exchange => warning, just method_zero here */
+let JudgeI =
+    new stamp;
+    in(<ID_CRED_I,TH_3,pkI,EAD_3,MAC_3,signed>);
+    let proofnrI = <ID_CRED_I,TH_3,pkI,EAD_3,MAC_3,signed> in
+    event JudgeReceivedI(stamp,proofnrI) ;
+    
+
+if (verify(signed,<'Signature2',ID_CRED_I,TH_3,pkI,EAD_3,MAC_3>, pkI) = sigtrue) then
+
+
+        event WasActiveI(pkI, TH_3, proofnrI);
+        event JudgeProcessedI(proofnrI)
+    else
+        event JudgeProcessedI(proofnrI)
+
+#endif
+
+
+#ifdef not NonRepudiation
+
+let JudgeR = 0
+let JudgeI = 0
+
+#endif
+
+
+
+// Initiator with long term authentication key ~skI and long term DH share ~I
+// computerId is only used to keep track of the machine on which the key exists
+let I(~cid, ~skI, ~I, ID_CRED_R, ID_CRED_Att, ~value, ~akV ) =
+    in(<method,suitesI,C_I,EAD_1>); // we let the attacker fully control the parameters used2 by a session
+    event MethodOk(method);
+    new ~X; // DH share
+    // new ~EAD_3; // we model the EAD_3 as a fresh name to test later its secrecy
+    event Share(~X);
+    (
+    	// CompromiseShare(~X) |    
+    	let CRED_I = pk(~skI) in
+    	// Identity for authentication
+    	let ID_CRED_I = id(CRED_I, 'g'^~I) in   
+		// Identity for attestation
+		let ID_CRED_Att_result = id_att(~value, pk(~akV)) in 
+    
+    	let G_X =  'g'^~X  in
+    	let G_I =  'g'^~I  in    
+		
+    	let m1 = <method,suitesI,G_X,C_I,EAD_1> in
+    	out(m1);
+    
+    	in(m2);
+    	let < G_Y, CIPHERTEXT_2 > = m2 in
+    	let TH_1 = hash(<wrap(method), wrap(suitesI), wrap(G_X), wrap(C_I), EAD_1>) in
+    	let TH_2 = hash(<wrap(G_Y), wrap(TH_1)>) in   
+
+		let G_YX = G_Y^~X in
+    
+    	let PRK_2e = hkdfextract(TH_2, G_YX) in
+    	let KEYSTREAM_2 = edhoc_kdf(PRK_2e,'tzero',TH_2,plaintext_length) in 
+    	let plaintext_2 = decxor(CIPHERTEXT_2,KEYSTREAM_2) in
+    	let < C_R, =ID_CRED_R, SIGNATURE_or_MAC_2, EAD_2> = plaintext_2 in
+		let < nonce_pp_R > = EAD_2 in
+
+    	if (ID_CRED_I = check_cred(ID_CRED_R)) then ( // Not in the standard: we test if we did not receive our own cred
+    		0
+		) else (
+		if (method = method_zero) then (
+	    
+	    	let pkR = get_sig_cred(ID_CRED_R) in 
+	    	let pkI = get_sig_cred(ID_CRED_I) in  
+	    	let PRK_3e2m = PRK_2e in
+	    	event DerivedIShared(pkI, G_YX); 
+	    	let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in 
+	    
+			if (verify(SIGNATURE_or_MAC_2,<'Signature1',ID_CRED_R,TH_2,pkR,EAD_2,MAC_2>, pkR) = sigtrue) then(
+
+				new ~nonce_bg;
+				event HonestNonce(~nonce_bg);
+				let signature_pp = sign(<ID_CRED_Att_result, nonce_pp_R, ~value>, 'rep', ~akV) in
+				let EAD_3 = <~nonce_bg, ID_CRED_Att_result, nonce_pp_R, ~value, signature_pp> in
+				
+				event ResultGenerated_pp(~cid, pkI, pkR, nonce_pp_R, signature_pp, ~akV, ~X, G_YX);
+				let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+    	        event THIShared(pkI, TH_3); 		
+				let PRK_4e3m = PRK_3e2m in 
+				let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI, EAD_3>, hash_length) in
+				let SIGNATURE_or_MAC_3 = sign(<'Signature2',ID_CRED_I,TH_3,pkI,EAD_3,MAC_3>, 'rep', ~skI) in
+
+				let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+				let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in
+				let plaintext_3 = <ID_CRED_I, SIGNATURE_or_MAC_3,EAD_3> in
+				let m3 = aeadenc(plaintext_3,'rep',K_3,IV_3) in
+
+				let TH_4 = hash(<wrap(TH_3), plaintext_3, pkI>) in
+				let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+        		let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+				let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+				event AcceptI(~cid,method_zero,pkI,pkR,PRK_3e2m,PRK_4e3m,PRK_out,~X,G_Y);
+				event SecretsI(~cid,method_zero,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~X,G_Y);		
+				// event AcceptIData(PRK_out,method_zero,pkI,pkR,~X,G_Y,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+				out(m3);
+				(
+					(
+						in(m4);
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						let plaintext_4 = aeaddec(m4, K_4, ad_4) in
+						let EAD_4 = plaintext_4 in
+						// evaluate the evidence
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						let <=ID_CRED_Att, nonce_in, signature_bg_in> = EAD_4 in
+						let measurement_hash_bg = get_meas(ID_CRED_Att) in
+						let pk_attkey = get_att_key(ID_CRED_Att) in     
+						if (verify(signature_bg_in, <'Signature1',ID_CRED_Att, nonce_in, measurement_hash_bg, attestation_binder>, pk_attkey) = sigtrue) then (
+							event VerifiedSignature_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, ~X, G_YX);
+							if ~nonce_bg = nonce_in then (
+								event VerifiedNonce_bg(~cid, method_zero, pkI, pkR, signature_bg_in, nonce_in, ~X, G_YX, pk_attkey);
+								event AttestationAccepted_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, G_YX, G_X, G_Y, TH_3, pk_attkey, ID_CRED_Att);
+								event Finish_I(~cid, method_zero, pkI, pkR, G_YX, ~X, G_X, G_Y, nonce_pp_R, nonce_in, signature_bg_in, signature_pp, measurement_hash_bg, ID_CRED_Att, ID_CRED_Att_result, pk_attkey, pk(~akV));
+								0
+								) else (0)
+						) else (0)
+						
+					)
+					|
+					(
+					ContactJudgeFromI(ID_CRED_R,TH_2,pkR,EAD_2,MAC_2, SIGNATURE_or_MAC_2)
+					|
+		   			leakSKey(PRK_out)
+					)
+		 	 	)
+            )		
+		) else (
+		if (method = method_one) then (
+	    
+	    	let pkR = get_DH_cred(ID_CRED_R) in 
+	    	let pkI = get_sig_cred(ID_CRED_I) in 
+			let pkRX = pkR^~X in
+
+	    	let SALT_3e2m = edhoc_kdf(PRK_2e, 'tone', TH_2, hash_length) in
+	    	let PRK_3e2m = hkdfextract(SALT_3e2m, pkRX) in
+	    
+	    	event DerivedIShared(pkI, G_YX); 
+	    	let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in 
+	    	    
+	    	if (SIGNATURE_or_MAC_2 = MAC_2) then (
+				// Construction of EAD_3
+				new ~nonce_bg;
+				event HonestNonce(~nonce_bg);
+				let signature_pp = sign(<ID_CRED_Att_result, nonce_pp_R, ~value>, 'rep', ~akV) in
+				let EAD_3 = <~nonce_bg, ID_CRED_Att_result, nonce_pp_R, ~value, signature_pp> in
+				// let EAD_3 = <ID_CRED_Att, nonceR, signature, ~nonceI> in
+				// event AttestationGeneratedI(~cid, pkI, pkR, nonceR, signature, ~ak, ~X, G_YX);
+				event ResultGenerated_pp(~cid, pkI, pkR, nonce_pp_R, signature_pp, ~akV, ~X, G_YX);
+
+				let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+    	        event THIShared(pkI, TH_3); 		
+		
+				let PRK_4e3m = PRK_3e2m in 
+				let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in
+				let SIGNATURE_or_MAC_3 = sign(<'Signature2',ID_CRED_I,TH_3,pkI,EAD_3,MAC_3>, 'rep', ~skI) in
+
+				let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+				let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in
+				let plaintext_3 = <ID_CRED_I, SIGNATURE_or_MAC_3,EAD_3> in
+				let m3 = aeadenc(plaintext_3,'rep',K_3,IV_3) in
+				// event SentByI(~cid, pkI, pkR, nonceR, signature, G_YX, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+				let TH_4 = hash(<wrap(TH_3),  plaintext_3, pkI>) in
+				let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+        		let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+				let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+				event AcceptI(~cid,method_one,pkI,pkR,PRK_3e2m,PRK_4e3m,PRK_out,~X,G_Y);
+				event SecretsI(~cid,method_one,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~X,G_Y);		
+				// event AcceptIData(PRK_out,method_one,pkI,pkR,~X,G_Y,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+				out(m3);
+				(
+					(
+						in(m4);
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						let plaintext_4 = aeaddec(m4, K_4, ad_4) in
+						let EAD_4 = plaintext_4 in
+
+						// evaluate the evidence
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						let <=ID_CRED_Att, nonce_in, signature_bg_in> = EAD_4 in
+						let measurement_hash_bg = get_meas(ID_CRED_Att) in
+						let pk_attkey = get_att_key(ID_CRED_Att) in     
+						if (verify(signature_bg_in, <'Signature1',ID_CRED_Att, nonce_in, measurement_hash_bg, attestation_binder>, pk_attkey) = sigtrue) then (
+							event VerifiedSignature_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, ~X, G_YX);
+							if ~nonce_bg = nonce_in then (
+								event VerifiedNonce_bg(~cid, method_one, pkI, pkR, signature_bg_in, nonce_in, ~X, G_YX, pk_attkey);
+								event AttestationAccepted_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, G_YX, G_X, G_Y, TH_3, pk_attkey, ID_CRED_Att);
+								event Finish_I(~cid, method_one, pkI, pkR, G_YX, ~X, G_X, G_Y, nonce_pp_R, nonce_in, signature_bg_in, signature_pp, measurement_hash_bg, ID_CRED_Att, ID_CRED_Att_result, pk_attkey, pk(~akV));
+								0
+								) else (0)
+						) else (0)
+						
+					)
+					|
+					(
+					ContactJudgeFromI(ID_CRED_R,TH_2,pkR,EAD_2,MAC_2, SIGNATURE_or_MAC_2)
+					|
+		   			leakSKey(PRK_out)
+					)
+		 	 	)
+
+            )		
+	    ) else (
+			if (method = method_two) then (
+	    
+			let pkR = get_sig_cred(ID_CRED_R) in 
+			let pkI = get_DH_cred(ID_CRED_I) in 
+			
+			let PRK_3e2m = PRK_2e in
+			
+			event DerivedIShared(pkI, G_YX); 
+			let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in 
+			
+			if (verify(SIGNATURE_or_MAC_2,<'Signature1',ID_CRED_R,TH_2,pkR,EAD_2,MAC_2>, pkR) = sigtrue) then(
+				// Construction of EAD_3
+				new ~nonce_bg;
+				event HonestNonce(~nonce_bg);
+				let signature_pp = sign(<ID_CRED_Att_result, nonce_pp_R, ~value>, 'rep', ~akV) in
+				let EAD_3 = <~nonce_bg, ID_CRED_Att_result, nonce_pp_R, ~value, signature_pp> in
+				// let EAD_3 = <ID_CRED_Att, nonceR, signature, ~nonceI> in
+				// event AttestationGeneratedI(~cid, pkI, pkR, nonceR, signature, ~ak, ~X, G_YX);
+				event ResultGenerated_pp(~cid, pkI, pkR, nonce_pp_R, signature_pp, ~akV, ~X, G_YX);
+
+				let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+    	        event THIShared(pkI, TH_3); 		
+				let G_YI = G_Y^~I in
+				
+				let SALT_4e3m = edhoc_kdf(PRK_3e2m,'five',TH_3,hash_length) in
+				let PRK_4e3m = hkdfextract(SALT_4e3m, G_YI) in 
+		
+				let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in
+			    let SIGNATURE_or_MAC_3 = MAC_3 in // 2,3		
+	        	
+				let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+				let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in
+				let plaintext_3 = <ID_CRED_I, SIGNATURE_or_MAC_3,EAD_3> in
+				let m3 = aeadenc(plaintext_3,'rep',K_3,IV_3) in
+				// event SentByI(~cid, pkI, pkR, nonceR, signature, G_YX, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+				let TH_4 = hash(<wrap(TH_3),  plaintext_3, pkI>) in
+				let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+        		let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+				let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+				event AcceptI(~cid,method_two,pkI,pkR,PRK_3e2m,PRK_4e3m,PRK_out,~X,G_Y);
+				event SecretsI(~cid,method_two,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~X,G_Y);		
+				// event AcceptIData(PRK_out,method_two,pkI,pkR,~X,G_Y,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+				out(m3);
+				(
+					(
+						in(m4);
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						let plaintext_4 = aeaddec(m4, K_4, ad_4) in
+						let EAD_4 = plaintext_4 in
+
+						// evaluate the evidence
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						let <=ID_CRED_Att, nonce_in, signature_bg_in> = EAD_4 in
+						let measurement_hash_bg = get_meas(ID_CRED_Att) in
+						let pk_attkey = get_att_key(ID_CRED_Att) in     
+						if (verify(signature_bg_in, <'Signature1',ID_CRED_Att, nonce_in, measurement_hash_bg, attestation_binder>, pk_attkey) = sigtrue) then (
+							event VerifiedSignature_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, ~X, G_YX);
+							if ~nonce_bg = nonce_in then (
+								event VerifiedNonce_bg(~cid, method_two, pkI, pkR, signature_bg_in, nonce_in, ~X, G_YX, pk_attkey);
+								event AttestationAccepted_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, G_YX, G_X, G_Y, TH_3, pk_attkey, ID_CRED_Att);
+								event Finish_I(~cid, method_two, pkI, pkR, G_YX, ~X, G_X, G_Y, nonce_pp_R, nonce_in, signature_bg_in, signature_pp, measurement_hash_bg, ID_CRED_Att, ID_CRED_Att_result, pk_attkey, pk(~akV));
+								0
+								) else (0)
+						) else (0)
+						
+					)
+					|
+					(
+					ContactJudgeFromI(ID_CRED_R,TH_2,pkR,EAD_2,MAC_2, SIGNATURE_or_MAC_2)
+					|
+		   			leakSKey(PRK_out)
+					)
+		 	 	)
+			)		
+
+		) else (
+		if (method = method_three) then (
+	    
+	    	let pkR = get_DH_cred(ID_CRED_R) in 
+	    	let pkI = get_DH_cred(ID_CRED_I) in 
+			let pkRX = pkR^~X in
+
+	    	let SALT_3e2m = edhoc_kdf(PRK_2e, 'tone', TH_2, hash_length) in
+	    	let PRK_3e2m = hkdfextract(SALT_3e2m, pkRX) in
+	    
+	    	event DerivedIShared(pkI, G_YX); 
+	    	let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in 
+	    	    
+	    	if (SIGNATURE_or_MAC_2 = MAC_2) then (
+				// Construction of EAD_3
+				new ~nonce_bg;
+				event HonestNonce(~nonce_bg);
+				let signature_pp = sign(<ID_CRED_Att_result, nonce_pp_R, ~value>, 'rep', ~akV) in
+				let EAD_3 = <~nonce_bg, ID_CRED_Att_result, nonce_pp_R, ~value, signature_pp> in
+				// let EAD_3 = <ID_CRED_Att, nonceR, signature, ~nonceI> in
+				// event AttestationGeneratedI(~cid, pkI, pkR, nonceR, signature, ~ak, ~X, G_YX);
+				event ResultGenerated_pp(~cid, pkI, pkR, nonce_pp_R, signature_pp, ~akV, ~X, G_YX);
+
+				let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+    	        event THIShared(pkI, TH_3); 		
+				let G_YI = G_Y^~I in
+
+				let SALT_4e3m = edhoc_kdf(PRK_3e2m,'five',TH_3,hash_length) in
+				let PRK_4e3m = hkdfextract(SALT_4e3m, G_YI) in 
+		
+				let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in
+			    let SIGNATURE_or_MAC_3 = MAC_3 in // 2,3		
+	        
+				let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+				let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in
+				let plaintext_3 = <ID_CRED_I, SIGNATURE_or_MAC_3,EAD_3> in
+				let m3 = aeadenc(plaintext_3,'rep',K_3,IV_3) in
+				
+				// event SentByI(~cid, pkI, pkR, nonceR, signature, G_YX, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+				let TH_4 = hash(<wrap(TH_3), plaintext_3, pkI>) in
+				let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+        		let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+				let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+				event AcceptI(~cid,method_three,pkI,pkR,PRK_3e2m,PRK_4e3m,PRK_out,~X,G_Y);
+				event SecretsI(~cid,method_three,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~X,G_Y);		
+				// event AcceptIData(PRK_out,method_three,pkI,pkR,~X,G_Y,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+				out(m3);
+		  		(
+					(
+						in(m4);
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						let plaintext_4 = aeaddec(m4, K_4, ad_4) in
+						let EAD_4 = plaintext_4 in
+
+						// evaluate the evidence
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+
+						let <=ID_CRED_Att, nonce_in, signature_bg_in> = EAD_4 in
+						let measurement_hash_bg = get_meas(ID_CRED_Att) in
+						let pk_attkey = get_att_key(ID_CRED_Att) in     
+						if (verify(signature_bg_in, <'Signature1',ID_CRED_Att, nonce_in, measurement_hash_bg, attestation_binder>, pk_attkey) = sigtrue) then (
+							event VerifiedSignature_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, ~X, G_YX);
+							if ~nonce_bg = nonce_in then (
+								event VerifiedNonce_bg(~cid, method_three, pkI, pkR, signature_bg_in, nonce_in, ~X, G_YX, pk_attkey);
+								event AttestationAccepted_bg(~cid, pkI, pkR, nonce_in, signature_bg_in, G_YX, G_X, G_Y, TH_3, pk_attkey, ID_CRED_Att);
+								event Finish_I(~cid, method_three, pkI, pkR, G_YX, ~X, G_X, G_Y, nonce_pp_R, nonce_in, signature_bg_in, signature_pp, measurement_hash_bg, ID_CRED_Att, ID_CRED_Att_result, pk_attkey, pk(~akV));
+								0
+								) else (0)
+						) else (0)
+						
+					)
+					|
+					(
+					ContactJudgeFromI(ID_CRED_R,TH_2,pkR,EAD_2,MAC_2, SIGNATURE_or_MAC_2)
+					|
+		   			leakSKey(PRK_out)
+					)
+		 	 	)
+            )		
+	    ))
+	)
+)
+)
+)   
+
+
+// ******************************************************************
+// ************** Responder  ***********************************
+// ******************************************************************
+
+let R(~cid, ~skR, ~R, ~ak, ~measurement, ID_CRED_Att_resultR) =
+    // in(<C_R,EAD_2,suitesR>);
+    in(<C_R,suitesR>);
+    in(<method,suitesI,G_X,C_I,EAD_1>);
+    event MethodOk(method);
+	// let < =ID_CRED_Att_resultR> = EAD_1 in    
+    let m1 = <method,suitesI,G_X,C_I,EAD_1> in
+    new ~Y;
+    event Share(~Y);
+    
+    let G_R =  'g'^~R  in    
+    let G_Y =  'g'^~Y  in
+	let G_XY = G_X^~Y in 
+    CompromiseShare(~Y) |
+    (
+    let CRED_R = pk(~skR) in
+    // identity for authentication
+    let ID_CRED_R = id(CRED_R,G_R) in
+	// identity for attestation
+	let ID_CRED_Att = id_att(hash(~measurement), pk(~ak)) in
+    let TH_1 = hash(<wrap(method), wrap(suitesI), wrap(G_X), wrap(C_I), EAD_1>) in
+    let TH_2 = hash(<wrap(G_Y), wrap(TH_1)>) in    
+    let PRK_2e = hkdfextract(TH_2, G_XY) in
+
+	if (method = method_zero) then (   
+		
+		new ~nonce_pp;
+		event HonestNonce(~nonce_pp);
+		let EAD_2 = < ~nonce_pp > in
+	    let pkR = get_sig_cred(ID_CRED_R) in
+	    let PRK_3e2m = PRK_2e in
+	    let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in   
+		let SIGNATURE_or_MAC_2 = sign(<'Signature1',ID_CRED_R,TH_2,pkR,EAD_2,MAC_2>, 'rep', ~skR) in 	    
+	    
+		let plaintext_2 = <C_R, ID_CRED_R, SIGNATURE_or_MAC_2, EAD_2> in
+        let KEYSTREAM_2 = edhoc_kdf(PRK_2e,'tzero',TH_2,plaintext_length) in 	    
+	    event DerivedR(~cid,pkR,PRK_3e2m,~Y,G_X);
+	    event THRShared(pkR, TH_2); 	    
+	    event DerivedRShared(pkR, G_XY); 
+	    event DerivedIdR(ID_CRED_R,PRK_3e2m);
+	    let m2 = <G_Y,encxor(plaintext_2,KEYSTREAM_2),C_R> in
+        event SendRData(method_zero, pkR,<TH_2,suitesI, EAD_1, EAD_2, m1, plaintext_2>);							    
+	    out(m2);	    
+	    in(CIPHERTEXT_3);
+
+	    let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+        let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+	    let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in	    
+	    let plaintext_3 = aeaddec(CIPHERTEXT_3,K_3,IV_3) in
+	    let <ID_CRED_I,SIGNATURE_or_MAC_3,EAD_3> = plaintext_3 in	    
+	    let pkI = get_sig_cred(ID_CRED_I) in
+	    let TH_4 = hash(<wrap(TH_3), plaintext_3, pkI>) in	    	    
+   	    
+	    let PRK_4e3m = PRK_3e2m in 
+	    
+   	    let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in	    
+	    
+		if (verify(SIGNATURE_or_MAC_3,<'Signature2',ID_CRED_I,TH_3,pkI,EAD_3,MAC_3>, pkI) = sigtrue) then (
+			if (ID_CRED_R = check_cred(ID_CRED_I)) then ( // Not in the standard: we test if we did not receive our own cred
+		   		0
+			)
+			else (
+				let <nonce_bg_in, =ID_CRED_Att_resultR, nonce_pp_in, value_in, signature_pp_in> = EAD_3 in
+				let pk_attkey_v = get_att_key(ID_CRED_Att_resultR) in      
+			
+				if verify (signature_pp_in, <ID_CRED_Att_resultR, nonce_pp_in, value_in>, pk_attkey_v) = sigtrue then(
+					event VerifiedSignature_pp(~cid, pkI, pkR, nonce_pp_in, signature_pp_in, ~Y, G_XY);
+					if (~nonce_pp = nonce_pp_in) then (
+						event VerifiedNonce_pp(~cid, method_zero, pkI, pkR, signature_pp_in, nonce_pp_in, ~Y, G_XY, pk_attkey_v);
+						
+						let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+             			let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+						let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						// attestation_binder
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						// construction of EAD_4
+						let measurement_hash = hash(~measurement) in
+						let signature_bg = sign(<'Signature1',ID_CRED_Att, nonce_bg_in, measurement_hash, attestation_binder>,'rep', ~ak) in
+						event EvidenceGenerated_bg(~cid, pkI, pkR, nonce_bg_in, signature_bg, ~ak, ~Y, G_XY);
+						// event ResultGeneratedR(~cid, pkI, pkR, nonceI_in, signatureR, ~akV, ~Y, G_XY);
+						let EAD_4 = <ID_CRED_Att, nonce_bg_in, signature_bg> in
+						// let EAD_4 = <ID_CRED_Att_result, nonceI_in, ~value, signatureR> in
+						event SentByR(~cid, pkI, pkR, nonce_bg_in, signature_bg, G_XY, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+						let m4 = aeadenc(EAD_4, 'rep', K_4, ad_4) in
+						event AcceptR(~cid,method_zero,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X);
+						event AcceptRRA(~cid,method_zero,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X, G_XY);
+						event SecretsR(~cid,method_zero,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~Y,G_X);						    
+						event AcceptRData(PRK_out,method_zero,pkI,pkR,~Y,G_X,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+						event Finish_R(~cid, method_zero, pkI, pkR, G_XY, ~Y, G_X, G_Y, ~nonce_pp, nonce_bg_in, signature_bg, signature_pp_in, measurement_hash, ID_CRED_Att, ID_CRED_Att_resultR, pk(~ak), pk_attkey_v);
+						// event SentByR(~cid, method_zero, pkI, pkR, G_XY, ~Y, nonce_bg_in, ~nonce_pp, signature_bg, pk_attkey, ~akV, pk(~akV));
+						out(m4);
+						0
+					)
+				)
+			) 
+		)
+	) else (
+	if (method = method_one) then (
+		new ~nonce_pp;
+		event HonestNonce(~nonce_pp);
+		let EAD_2 = <~nonce_pp> in
+
+	   	let pkR = get_DH_cred(ID_CRED_R) in
+		let G_XR = G_X^~R in
+	    let SALT_3e2m = edhoc_kdf(PRK_2e, 'tone', TH_2, hash_length) in	    
+	    let PRK_3e2m = hkdfextract(SALT_3e2m, G_XR) in
+	    
+	    let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in   
+	    let SIGNATURE_or_MAC_2 = MAC_2 in	    //1,3    
+	    let plaintext_2 = <C_R, ID_CRED_R, SIGNATURE_or_MAC_2, EAD_2> in
+        let KEYSTREAM_2 = edhoc_kdf(PRK_2e,'tzero',TH_2,plaintext_length) in 	    
+	    event DerivedR(~cid,pkR,PRK_3e2m,~Y,G_X);
+	    event THRShared(pkR, TH_2); 	    
+	    event DerivedRShared(pkR, G_XY); 
+	    event DerivedIdR(ID_CRED_R,PRK_3e2m);
+	    let m2 = <G_Y,encxor(plaintext_2,KEYSTREAM_2),C_R> in
+        event SendRData(method_one, pkR,<TH_2,suitesI, EAD_1, EAD_2, m1, plaintext_2>);							    
+	    out(m2);	    
+	    in(CIPHERTEXT_3);
+	    let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+        let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+	    let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in	    
+	    let plaintext_3 = aeaddec(CIPHERTEXT_3,K_3,IV_3) in
+	    let <ID_CRED_I,SIGNATURE_or_MAC_3,EAD_3> = plaintext_3 in	    
+	    let pkI = get_sig_cred(ID_CRED_I) in
+	    let TH_4 = hash(<wrap(TH_3), plaintext_3, pkI>) in	    	    
+	    let PRK_4e3m = PRK_3e2m in 
+   	    let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in	    
+	
+		if (verify(SIGNATURE_or_MAC_3,<'Signature2',ID_CRED_I,TH_3,pkI,EAD_3,MAC_3>, pkI) = sigtrue) then (
+			if (ID_CRED_R = check_cred(ID_CRED_I)) then ( // Not in the standard: we test if we did not receive our own cred
+		   		0
+			)
+			else (
+				let <nonce_bg_in, =ID_CRED_Att_resultR, nonce_pp_in, value_in, signature_pp_in> = EAD_3 in
+				let pk_attkey_v = get_att_key(ID_CRED_Att_resultR) in      
+				
+				if verify (signature_pp_in, <ID_CRED_Att_resultR, nonce_pp_in, value_in>, pk_attkey_v) = sigtrue then(
+					event VerifiedSignature_pp(~cid, pkI, pkR, nonce_pp_in, signature_pp_in, ~Y, G_XY);
+					if (~nonce_pp = nonce_pp_in) then (
+						event VerifiedNonce_pp(~cid, method_one, pkI, pkR, signature_pp_in, nonce_pp_in, ~Y, G_XY, pk_attkey_v);
+						let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+             			let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+						let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						// attestation_binder
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						// construction of EAD_4
+						let measurement_hash = hash(~measurement) in
+						let signature_bg = sign(<'Signature1',ID_CRED_Att, nonce_bg_in, measurement_hash, attestation_binder>,'rep', ~ak) in
+						event EvidenceGenerated_bg(~cid, pkI, pkR, nonce_bg_in, signature_bg, ~ak, ~Y, G_XY);
+						// event ResultGeneratedR(~cid, pkI, pkR, nonceI_in, signatureR, ~akV, ~Y, G_XY);
+						let EAD_4 = <ID_CRED_Att, nonce_bg_in, signature_bg> in
+						// let EAD_4 = <ID_CRED_Att_result, nonceI_in, ~value, signatureR> in
+						event SentByR(~cid, pkI, pkR, nonce_bg_in, signature_bg, G_XY, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+
+						let m4 = aeadenc(EAD_4, 'rep', K_4, ad_4) in
+						event AcceptR(~cid,method_one,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X);
+						event AcceptRRA(~cid,method_one,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X, G_XY);
+						event SecretsR(~cid,method_one,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~Y,G_X);						    
+						event AcceptRData(PRK_out,method_one,pkI,pkR,~Y,G_X,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+						event Finish_R(~cid, method_one, pkI, pkR, G_XY, ~Y, G_X, G_Y, ~nonce_pp, nonce_bg_in, signature_bg, signature_pp_in, measurement_hash, ID_CRED_Att, ID_CRED_Att_resultR, pk(~ak), pk_attkey_v);
+						// event SentByR(~cid, method_one, pkI, pkR, G_XY, ~Y, nonceI_in, ~nonceR, signatureR, pk_attkey, ~akV, pk(~akV));
+						out(m4);
+						0
+					)
+				)
+			)
+		)
+	) else (
+	if (method = method_two) then (
+	   	new ~nonce_pp;
+		event HonestNonce(~nonce_pp);
+		let EAD_2 = <~nonce_pp> in
+
+	    let pkR = get_sig_cred(ID_CRED_R) in
+	    let PRK_3e2m = PRK_2e in
+	    let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in     
+		let SIGNATURE_or_MAC_2 = sign(<'Signature1',ID_CRED_R,TH_2,pkR,EAD_2,MAC_2>, 'rep', ~skR) in
+
+	    let plaintext_2 = <C_R, ID_CRED_R, SIGNATURE_or_MAC_2, EAD_2> in
+        let KEYSTREAM_2 = edhoc_kdf(PRK_2e,'tzero',TH_2,plaintext_length) in 	    
+	    event DerivedR(~cid,pkR,PRK_3e2m,~Y,G_X);
+	    event THRShared(pkR, TH_2); 	    
+	    event DerivedRShared(pkR, G_XY); 
+	    event DerivedIdR(ID_CRED_R,PRK_3e2m);
+	    let m2 = <G_Y,encxor(plaintext_2,KEYSTREAM_2),C_R> in
+        event SendRData(method_two, pkR,<TH_2,suitesI, EAD_1, EAD_2, m1, plaintext_2>);							    
+	    out(m2);	    
+	    in(CIPHERTEXT_3);
+	    let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+        let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+	    let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in	    
+	    let plaintext_3 = aeaddec(CIPHERTEXT_3,K_3,IV_3) in
+	    let <ID_CRED_I,SIGNATURE_or_MAC_3,EAD_3> = plaintext_3 in	    
+	    let pkI = get_DH_cred(ID_CRED_I) in
+	    let TH_4 = hash(<wrap(TH_3), plaintext_3, pkI>) in	    	    
+			
+		let pkIY = pkI^~Y in
+	    let SALT_4e3m = edhoc_kdf(PRK_3e2m,'five',TH_3,hash_length) in
+	    let PRK_4e3m = hkdfextract(SALT_4e3m, pkIY) in 	    
+	    
+   	    let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in	    
+	    
+	    if (SIGNATURE_or_MAC_3 = MAC_3) then (
+			if (ID_CRED_R = check_cred(ID_CRED_I)) then ( // Not in the standard: we test if we did not receive our own cred
+		   		0
+			) 
+			else (
+				let <nonce_bg_in, =ID_CRED_Att_resultR, nonce_pp_in, value_in, signature_pp_in> = EAD_3 in
+				let pk_attkey_v = get_att_key(ID_CRED_Att_resultR) in      
+				
+				if verify (signature_pp_in, <ID_CRED_Att_resultR, nonce_pp_in, value_in>, pk_attkey_v) = sigtrue then(
+					event VerifiedSignature_pp(~cid, pkI, pkR, nonce_pp_in, signature_pp_in, ~Y, G_XY);
+					if (~nonce_pp = nonce_pp_in) then (
+						event VerifiedNonce_pp(~cid, method_two, pkI, pkR, signature_pp_in, nonce_pp_in, ~Y, G_XY, pk_attkey_v);
+						let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+             			let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+						let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						// attestation_binder
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						// construction of EAD_4
+						let measurement_hash = hash(~measurement) in
+						let signature_bg = sign(<'Signature1',ID_CRED_Att, nonce_bg_in, measurement_hash, attestation_binder>,'rep', ~ak) in
+						event EvidenceGenerated_bg(~cid, pkI, pkR, nonce_bg_in, signature_bg, ~ak, ~Y, G_XY);
+						// event ResultGeneratedR(~cid, pkI, pkR, nonceI_in, signatureR, ~akV, ~Y, G_XY);
+						let EAD_4 = <ID_CRED_Att, nonce_bg_in, signature_bg> in
+						// let EAD_4 = <ID_CRED_Att_result, nonceI_in, ~value, signatureR> in
+						event SentByR(~cid, pkI, pkR, nonce_bg_in, signature_bg, G_XY, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+						
+						let m4 = aeadenc(EAD_4, 'rep', K_4, ad_4) in
+						event AcceptR(~cid,method_two,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X);
+						event AcceptRRA(~cid,method_two,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X, G_XY);
+						event SecretsR(~cid,method_two,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~Y,G_X);						    
+						event AcceptRData(PRK_out,method_two,pkI,pkR,~Y,G_X,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+						event Finish_R(~cid, method_two, pkI, pkR, G_XY, ~Y, G_X, G_Y, ~nonce_pp, nonce_bg_in, signature_bg, signature_pp_in, measurement_hash, ID_CRED_Att, ID_CRED_Att_resultR, pk(~ak), pk_attkey_v);
+						// event SentByR(~cid, method_two, pkI, pkR, G_XY, ~Y, nonceI_in, ~nonceR, signatureR, pk_attkey, ~akV, pk(~akV));
+						out(m4);
+						0
+					)
+				)
+			)
+		)
+	) else (
+	if (method = method_three) then (
+   	   new ~nonce_pp;
+		event HonestNonce(~nonce_pp);
+		let EAD_2 = <~nonce_pp> in
+
+	    let pkR = get_DH_cred(ID_CRED_R) in
+	    let G_XR = G_X^~R in
+	    let SALT_3e2m = edhoc_kdf(PRK_2e, 'tone', TH_2, hash_length) in	    
+	    let PRK_3e2m = hkdfextract(SALT_3e2m, G_XR) in
+	    
+	    let MAC_2 = edhoc_kdf(PRK_3e2m,'two', <ID_CRED_R, TH_2,  pkR, EAD_2>, hash_length) in 
+	    	    
+	    let SIGNATURE_or_MAC_2 = MAC_2 in	    //1,3
+	    	    
+	    let plaintext_2 = <C_R, ID_CRED_R, SIGNATURE_or_MAC_2, EAD_2> in
+        let KEYSTREAM_2 = edhoc_kdf(PRK_2e,'tzero',TH_2,plaintext_length) in 	    
+	    event DerivedR(~cid,pkR,PRK_3e2m,~Y,G_X);
+	    event THRShared(pkR, TH_2); 	    
+	    event DerivedRShared(pkR, G_XY); 
+	    event DerivedIdR(ID_CRED_R,PRK_3e2m);
+	    let m2 = <G_Y,encxor(plaintext_2,KEYSTREAM_2),C_R> in
+        event SendRData(method_three, pkR,<TH_2,suitesI, EAD_1, EAD_2, m1, plaintext_2>);							    
+	    out(m2);	    
+	    in(CIPHERTEXT_3);
+	    let TH_3 = hash(<wrap(TH_2), plaintext_2, pkR>) in
+        let K_3 = edhoc_kdf(PRK_3e2m,'three',TH_3, key_length) in
+	    let IV_3 = edhoc_kdf(PRK_3e2m,'four',TH_3, iv_length) in	    
+	    let plaintext_3 = aeaddec(CIPHERTEXT_3,K_3,IV_3) in
+	    let <ID_CRED_I,SIGNATURE_or_MAC_3,EAD_3> = plaintext_3 in	    
+	    let pkI = get_DH_cred(ID_CRED_I) in
+	    let TH_4 = hash(<wrap(TH_3), plaintext_3, pkI>) in	    	    
+   	    
+        let pkIY = pkI^~Y in
+	    let SALT_4e3m = edhoc_kdf(PRK_3e2m,'five',TH_3,hash_length) in
+	    let PRK_4e3m = hkdfextract(SALT_4e3m, pkIY) in 	    
+	    
+   	    let MAC_3 = edhoc_kdf(PRK_4e3m, 'six', <ID_CRED_I, TH_3, pkI,EAD_3>,hash_length) in	    
+	    
+	    if (SIGNATURE_or_MAC_3 = MAC_3) then (
+			if (ID_CRED_R = check_cred(ID_CRED_I)) then ( // Not in the standard: we test if we did not receive our own cred
+		   		0
+			) 
+			else (
+				let <nonce_bg_in, =ID_CRED_Att_resultR, nonce_pp_in, value_in, signature_pp_in> = EAD_3 in
+				let pk_attkey_v = get_att_key(ID_CRED_Att_resultR) in      
+				
+				if verify (signature_pp_in, <ID_CRED_Att_resultR, nonce_pp_in, value_in>, pk_attkey_v) = sigtrue then(
+					event VerifiedSignature_pp(~cid, pkI, pkR, nonce_pp_in, signature_pp_in, ~Y, G_XY);
+					if (~nonce_pp = nonce_pp_in) then (
+						event VerifiedNonce_pp(~cid, method_three, pkI, pkR, signature_pp_in, nonce_pp_in, ~Y, G_XY, pk_attkey_v);
+						
+						let K_4 = edhoc_kdf(PRK_4e3m,'eight', TH_4, key_length) in
+             			let IV_4 = edhoc_kdf(PRK_3e2m,'nine', TH_4, iv_length) in
+						let PRK_out = edhoc_kdf(PRK_4e3m, 'seven', TH_4, hash_length) in
+						let external_aad_4 = <TH_4> in
+						let ad_4 = <IV_4, <'Encrypt0', 'empty', external_aad_4>> in
+						
+						let PRK_exporter = edhoc_kdf(PRK_out, 'ten', 'empty', hash_length) in
+						// attestation_binder
+						let attestation_binder = edhoc_kdf(PRK_exporter, 'two', 'attestation', hash_length) in
+						
+						// construction of EAD_4
+						let measurement_hash = hash(~measurement) in
+						let signature_bg = sign(<'Signature1',ID_CRED_Att, nonce_bg_in, measurement_hash, attestation_binder>,'rep', ~ak) in
+						event EvidenceGenerated_bg(~cid, pkI, pkR, nonce_bg_in, signature_bg, ~ak, ~Y, G_XY);
+						// event ResultGeneratedR(~cid, pkI, pkR, nonceI_in, signatureR, ~akV, ~Y, G_XY);
+						let EAD_4 = <ID_CRED_Att, nonce_bg_in, signature_bg> in
+						// let EAD_4 = <ID_CRED_Att_result, nonceI_in, ~value, signatureR> in
+						event SentByR(~cid, pkI, pkR, nonce_bg_in, signature_bg, G_XY, G_X, G_Y, TH_3, ~ak, pk(~ak), ID_CRED_Att);
+						
+						let m4 = aeadenc(EAD_4, 'rep', K_4, ad_4) in
+						event AcceptR(~cid,method_three,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X);
+						event AcceptRRA(~cid,method_three,pkI,pkR,PRK_4e3m,PRK_out,~Y,G_X, G_XY);
+						event SecretsR(~cid,method_three,pkI,pkR,PRK_2e,PRK_3e2m,PRK_4e3m,PRK_out,KEYSTREAM_2,K_3,IV_3,~Y,G_X);						    
+						event AcceptRData(PRK_out,method_three,pkI,pkR,~Y,G_X,<TH_2,TH_3,TH_4,suitesI, EAD_1, EAD_2, EAD_3, m1, plaintext_2, plaintext_3>);
+						event Finish_R(~cid, method_three, pkI, pkR, G_XY, ~Y, G_X, G_Y, ~nonce_pp, nonce_bg_in, signature_bg, signature_pp_in, measurement_hash, ID_CRED_Att, ID_CRED_Att_resultR, pk(~ak), pk_attkey_v);
+						// event SentByR(~cid, method_three, pkI, pkR, G_XY, ~Y, nonceI_in, ~nonceR, signatureR, pk_attkey, ~akV, pk(~akV));
+						out(m4);
+						0
+					)
+				)
+			)
+  		)
+	)
+)
+)
+))
+	
+let compromise(sk) =
+    in('Comp'); event Compromise(pk(sk)); out(sk)
+
+let compromiseDH(k) =
+    in('Comp'); event Compromise( 'g'^k ); event Leak(k); out(k)
+
+let LeakAttKey(ak) =
+    in('Comp'); event LeakAttKey(ak); out(ak)
+
+      
+process:
+(! MakeDEO)
+|
+(!JudgeR)
+|
+(!JudgeI)
+|
+!(new ~sk; new ~ltdh; new ~computerId; new ~ak; new ~measurement; new ~akV; new ~value; 
+    let idd = id(pk(~sk), 'g'^~ltdh) in 
+    out(<idd, pk(~sk), 'g'^~ltdh>);
+	let idd_att = id_att(hash(~measurement), pk(~ak)) in
+	let idd_att_result = id_att( ~value, pk(~akV)) in
+    event ShareLT(~ltdh);
+      event Honest(pk(~sk));
+      event Honest( 'g'^~ltdh );   
+	  event Honest(pk(~ak));  
+	  event Honest(hash(~measurement));
+	  event Honest(pk(~akV));
+( (! in(cred); I(~computerId,~sk, ~ltdh, cred, idd_att, ~value, ~akV)) | (!R(~computerId,~sk,~ltdh, ~ak, ~measurement, idd_att_result )) | compromise(~sk) | compromiseDH(~ltdh) | LeakAttKey(~ak) | LeakAttKey(~akV) ) )
+
+
+
+
+#include "LakeProperties.splib"
+
+
+end
