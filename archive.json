@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-07-19T02:45:08.936418+00:00",
+  "timestamp": "2026-09-03T03:14:59.169205+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -2669,6 +2669,126 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 30,
+      "id": "PR_kwDOTCeSC88AAAABB3WnbQ",
+      "title": "Add symbolic models for aTLS (SEAT) and LAKE RA",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/30",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Added models for intra- and post- TLS handshake attestation, alongside copies of formal analysis work by Elsa Lopez and Yuxuan Song for the LAKE WG. \r\n\r\nLAKE RA models courtesy\r\nhttps://github.com/ElsaLopez133/edhoc-ra-formal-analysis/tree/bi-model-05",
+      "createdAt": "2026-09-02T08:10:01Z",
+      "updatedAt": "2026-09-02T08:13:15Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "969d25fa6ff243949f7cda10e8a0b5264903076d",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "community-models",
+      "headRefOid": "d94df88e39083df255d837e573b79f0c64b9d7da",
+      "closedAt": "2026-09-02T08:13:15Z",
+      "mergedAt": "2026-09-02T08:13:15Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "15bf807c66368402b9a49e7a0f3a4a1f0ec47df8"
+      },
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\"Lines changed: 27969 additions & 0 deletions\" \ud83d\ude01",
+          "createdAt": "2026-09-02T08:11:41Z",
+          "updatedAt": "2026-09-02T08:11:41Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 31,
+      "id": "PR_kwDOTCeSC88AAAABB3bxTA",
+      "title": "Add verification results for aTLS models",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/31",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-09-02T08:21:04Z",
+      "updatedAt": "2026-09-02T08:21:16Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "15bf807c66368402b9a49e7a0f3a4a1f0ec47df8",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "community-models",
+      "headRefOid": "441f15dc3a3de77461ee275c433d6e8f373d70c8",
+      "closedAt": "2026-09-02T08:21:16Z",
+      "mergedAt": "2026-09-02T08:21:16Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "37834052c3a53e279d0f2063c8a5ec7fc737e842"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 32,
+      "id": "PR_kwDOTCeSC88AAAABB73k6Q",
+      "title": "Update to explicitly hand control of handshake secrets to adversary",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/32",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Updated README to reflect related threat modeling.",
+      "createdAt": "2026-09-02T17:22:58Z",
+      "updatedAt": "2026-09-02T17:23:08Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "37834052c3a53e279d0f2063c8a5ec7fc737e842",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "community-models",
+      "headRefOid": "488472a9525400526e28b2dfbb032658bf81681c",
+      "closedAt": "2026-09-02T17:23:07Z",
+      "mergedAt": "2026-09-02T17:23:07Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "45ef3d4d0dd39a0d438c83f31b17e98347b46126"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 33,
+      "id": "PR_kwDOTCeSC88AAAABB79aUA",
+      "title": "Duplicated README to post and intra",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/33",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-09-02T17:34:30Z",
+      "updatedAt": "2026-09-02T17:34:40Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "45ef3d4d0dd39a0d438c83f31b17e98347b46126",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "community-models",
+      "headRefOid": "bb51e4c875cb1b395f43f83280a079dcaace8b64",
+      "closedAt": "2026-09-02T17:34:39Z",
+      "mergedAt": "2026-09-02T17:34:39Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "87e13e7c3f87c743a82106292a0d0e07896d8c60"
+      },
       "comments": [],
       "reviews": []
     }
