@@ -54,8 +54,8 @@ const G: element [data].
 
 fun dh_ideal(element,bitstring):element.
 equation forall x:bitstring, y:bitstring;
-	 dh_ideal(dh_ideal(G,x),y) =
-	 dh_ideal(dh_ideal(G,y),x).
+     dh_ideal(dh_ideal(G,x),y) =
+     dh_ideal(dh_ideal(G,y),x).
 
 (* Rewrite rules with "otherwise" are evaluated sequentially,
 i.e., first condition will be checked first and if satisfied, it returns its value.
@@ -302,6 +302,8 @@ event Conveyed(bitstring).
 event Appraised(bitstring).
 event ClientConn(bitstring).
 
+event AttackerControlsHSK(ae_key,ae_key).
+
 event ClientOffersHash(random,hash_alg).
 event ClientOffersKEX(random,kex_alg).
 event ClientOffersEvType(random,ev_typ).
@@ -378,10 +380,10 @@ event ServerChoosesATLS(random,random,tls_typ).
 (* Old: PreServerFinished(cr,sr,psk,pubLTK,offer,mode,kc,ks,ems) *)
 (* New: PreServerFinishedWithID(ID,pubLTK,pubAK,psk,cr,sr,offer,mode,kc,ks,ems) *)
 event PreServerFinished(pubkey,
-			preSharedKey,
+            preSharedKey,
       random,random,
-			params,params,
-			ae_key,ae_key,bitstring).
+            params,params,
+            ae_key,ae_key,bitstring).
 event PreServerFinishedAliveness(identity). (* ID_S *)
 (* PreServerFin1WayAgr(ID_S,pubLTK,psk,offer,mode,kc,ks,ems) *)
 event PreServerFin1WayAgr(identity,
@@ -407,16 +409,16 @@ event PreServerFinRecentAgr(identity,identity,
       ae_key,ae_key,bitstring,
       random,random).
 event PreServerFinishedWithID(identity,pubkey,pubkey,
-			preSharedKey,
+            preSharedKey,
       random,random,
-			params,params,
-			ae_key,ae_key,bitstring).
+            params,params,
+            ae_key,ae_key,bitstring).
 (* New: PreServerFinishedWithBothPub(pubAK,psk,pubEK,cr,sr,offer,mode,kc,ks,ems) *)
 event PreServerFinishedWithBothPub(pubkey,preSharedKey,
       pubkey,
       random,random,
-			params,params,
-			ae_key,ae_key,bitstring).
+            params,params,
+            ae_key,ae_key,bitstring).
 (* PreServerComp represents a composition event with parameters from both RA and TLS *)
 (* PreServerComp(ID_S,pubLTK,psk,offer,mode,kc,ks,ems,cr,sr,pubEK,dev_state) *)
 event PreServerComp(identity,
@@ -438,8 +440,8 @@ event ServerRA2(pubkey,pubkey,bitstring).
 event ServerRAWithoutAK(pubkey,bitstring,bitstring).
 event ServerFinished(random,random,
                      preSharedKey, pubkey,
-		     params,params,
-		     ae_key,ae_key,bitstring,bitstring).
+             params,params,
+             ae_key,ae_key,bitstring,bitstring).
 
 event ServerStateEv(bitstring,bitstring).  (* quote,gxy *)
 event ServerStateEvKch(bitstring,ae_key).  (* quote,kch *)
@@ -763,16 +765,16 @@ query dev_state:bitstring, cr:random, sr:random, e:element,
   inj-event(AcceptedRdata(dev_state)) ==>
   inj-event(SentRdata(dev_state)) ||
   event(LeakedAK(pubAK)) || 
-  event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-  event(ServerChoosesHash(cr,sr,WeakHash))
+  event(ClientAcceptsElement(cr, BadElement)) ||
+  event(ClientAcceptsHash(cr, WeakHash))
 ;
 
 (* Result: true (with CSP trust assumption)  *)
   inj-event(AcceptedRdata(dev_state)) ==>
   inj-event(SentRdata(dev_state)) ||
   event(LeakedAK(pubAK)) || 
-  event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-  event(ServerChoosesHash(cr,sr,WeakHash)) ||
+  event(ClientAcceptsElement(cr, BadElement)) ||
+  event(ClientAcceptsHash(cr, WeakHash)) ||
   event(CompromisedCSP(pubISV))
 ;
 
@@ -780,16 +782,16 @@ query dev_state:bitstring, cr:random, sr:random, e:element,
   inj-event(AcceptedRdata(dev_state)) ==>
   inj-event(SentRdata(dev_state)) ||
   event(LeakedEK(pubEK)) ||
-  event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-  event(ServerChoosesHash(cr,sr,WeakHash))
+  event(ClientAcceptsElement(cr, BadElement)) ||
+  event(ClientAcceptsHash(cr, WeakHash))
 ;
 
 (* Result: true (with CA trust assumption, without AK)  *)
   inj-event(AcceptedRdata(dev_state)) ==>
   inj-event(SentRdata(dev_state)) ||
   event(LeakedEK(pubEK)) ||
-  event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-  event(ServerChoosesHash(cr,sr,WeakHash)) ||
+  event(ClientAcceptsElement(cr, BadElement)) ||
+  event(ClientAcceptsHash(cr, WeakHash)) ||
   event(CompromisedCA(pubCA))
 .
 
@@ -810,16 +812,16 @@ query ev:bitstring, cr:random, sr:random, e:element,
       inj-event(ClientConn(ev)) ==>
       inj-event(Sent(ev)) ||
       event(LeakedAK(pubAK)) ||
-      event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-      event(ServerChoosesHash(cr,sr,WeakHash))
+      event(ClientAcceptsElement(cr, BadElement)) ||
+      event(ClientAcceptsHash(cr, WeakHash))
 ;
 
 (* Result: true (with CSP trust assumption)  *)
       inj-event(ClientConn(ev)) ==>
       inj-event(Sent(ev)) ||
       event(LeakedAK(pubAK)) ||
-      event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-      event(ServerChoosesHash(cr,sr,WeakHash)) ||
+      event(ClientAcceptsElement(cr, BadElement)) ||
+      event(ClientAcceptsHash(cr, WeakHash)) ||
       event(CompromisedCSP(pubISV))
 ;
 
@@ -828,16 +830,16 @@ query ev:bitstring, cr:random, sr:random, e:element,
       inj-event(ClientConn(ev)) ==>
       inj-event(Sent(ev)) ||
       event(LeakedEK(pubEK)) ||
-      event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-      event(ServerChoosesHash(cr,sr,WeakHash))
+      event(ClientAcceptsElement(cr, BadElement)) ||
+      event(ClientAcceptsHash(cr, WeakHash))
 ;
 
 (* Result: true (with CA trust assumption, without AK)  *)
       inj-event(ClientConn(ev)) ==>
       inj-event(Sent(ev)) ||
       event(LeakedEK(pubEK)) ||
-      event(ServerChoosesKEX(cr,sr,DHE_13(WeakDH,e))) ||
-      event(ServerChoosesHash(cr,sr,WeakHash)) ||
+      event(ClientAcceptsElement(cr, BadElement)) ||
+      event(ClientAcceptsHash(cr, WeakHash)) ||
       event(CompromisedCA(pubCA))
 .
 
@@ -976,7 +978,6 @@ Formalization:
   Need for "&& ClientFinished": It binds the attacker knows the specific key that the client 
   has accepted and is going to use in communication. This excludes other time points in the
   protocol when the handshake has not yet completed. 
-Result: true
 *)
 
 query pubEK:pubkey,dev_status,dev_status1,dev_status2:bitstring,quote:bitstring,
@@ -984,7 +985,36 @@ query pubEK:pubkey,dev_status,dev_status1,dev_status2:bitstring,quote:bitstring,
       ID:identity,pubLTK:pubkey,pubAK:pubkey, ev: bitstring,
       psk:preSharedKey, e:element, pubCA,pubISV:pubkey,
       offer:params, mode:params, ID_S:identity,
-      kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring;
+      kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
+
+(*************************************************)
+(* Confirm that attacker *does* have access to 
+   handshake secrets with same evidence in context *)
+(*************************************************)
+
+(* Reachability check (expect false): Server exposes HSK *)
+  event(AttackerControlsHSK(kch,ksh)) ==> false;
+
+(* Reachability check (expect false): Client accepts HSK *)
+  event(ClientStateEvKch(ev,kch)) ==> false;
+
+(* Reachability check (expect false): Confirms that a trace exists 
+   where the client and server agree on the same handshake key kch *)
+  (
+    event(AttackerControlsHSK(kch,ksh))
+    && event(ClientStateEvKch(ev,kch))
+  ) ==> false
+;
+
+(* Reachability check (expect false): Confirms that a 
+   trace exists where both parties use kch and the attacker 
+   actively possesses the same kch handshake secret *)
+  attacker(kch) &&
+  ( (* Key Secrecy *)
+    event(AttackerControlsHSK(kch,ksh))
+    && event(ClientStateEvKch(ev,kch))
+  ) ==> false
+;
 
 (* Result: false (without CSP trust assumption)  *)     
   attacker(kc) && 
@@ -1035,6 +1065,7 @@ query pubEK:pubkey,dev_status,dev_status1,dev_status2:bitstring,quote:bitstring,
       || event(ClientAcceptsHash(cr, WeakHash)) 
       || event(CompromisedCA(pubCA))
 .
+
 
 (********************************************************)
 (* Client *)
@@ -1171,6 +1202,10 @@ let Server(ID_S:identity, privAK: privkey, privEK: privkey, server_cert:bitstrin
 
   let gxy = e2b(dh_exp(g,gx,y)) in  (* represents (EC)DHE in Key Derivation [Sec. 7.1, RFC8446] *)
   let (hs:bitstring,kch:ae_key,ksh:ae_key,kcm:mac_key,ksm:mac_key) = kdf_hs(es,gxy,log_SH) in
+  
+  (* https://github.com/Inria-Prosecco/reftls/blob/a71a74538e8af80dec5f6719f9e726b8c654468a/pv/tls-lib-rfc8446.pvl#L598 *)
+  out(io,(kch,ksh)); (* explictly expose derived handshake keys, same as upstream reftls model *)
+  event AttackerControlsHSK(kch,ksh);
 
   let pubEK = pk(privEK) in
   let pubLTK =pk(privEK) in (* pubLTK is pubEK for backward compat. with legacy queries *)
@@ -1224,7 +1259,7 @@ let Server(ID_S:identity, privAK: privkey, privEK: privkey, server_cert:bitstrin
   in(io,FIN(m2));  (* Receive client Finished message *)
   if m2 = hmac(StrongHash,kcm,log_SFIN) then  (* kcm represents kcm; check mac of finished from client *)
     let log_CFIN = (log_SFIN,FIN(m2)) in  (* received ClientHello || sent ServerHello || sent Certificate || sent CertificateVerify || sent ServerFinished || received ClientFinished *)
-	let rms =  kdf_psk(ms,log_CFIN) in
+    let rms =  kdf_psk(ms,log_CFIN) in
   event ServerStateEvKc(quote,kc);
   event ServerStateEvKch(quote,kch);
   event ServerStateEv(quote,gxy);

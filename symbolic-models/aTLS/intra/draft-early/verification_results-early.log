@@ -55,21 +55,21 @@ Query inj-event(ClientRA(pubAK_6,pubEK_5,dev_state,ev)) ==> inj-event(ServerRA(I
 
 Query inj-event(ClientRA(pubAK_6,pubEK_5,dev_state,ev)) ==> inj-event(ServerRA(ID,pubLTK_2,pubAK_6,pubEK_5,dev_state,ev)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) || event(SentBadElement) || event(LeakedEK(pubEK_5)) || event(CompromisedCA(pubCA_1)) is true.
 
-Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedAK(pubAK_6)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) is false.
+Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedAK(pubAK_6)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) is false.
 
-Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedAK(pubAK_6)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) || event(CompromisedCSP(pubISV_1)) is true.
+Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedAK(pubAK_6)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) || event(CompromisedCSP(pubISV_1)) is true.
 
-Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedEK(pubEK_5)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) is false.
+Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedEK(pubEK_5)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) is false.
 
-Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedEK(pubEK_5)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) || event(CompromisedCA(pubCA_1)) is true.
+Query inj-event(AcceptedRdata(dev_state)) ==> inj-event(SentRdata(dev_state)) || event(LeakedEK(pubEK_5)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) || event(CompromisedCA(pubCA_1)) is true.
 
-Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedAK(pubAK_6)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) is false.
+Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedAK(pubAK_6)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) is false.
 
-Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedAK(pubAK_6)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) || event(CompromisedCSP(pubISV_1)) is true.
+Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedAK(pubAK_6)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) || event(CompromisedCSP(pubISV_1)) is true.
 
-Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedEK(pubEK_5)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) is false.
+Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedEK(pubEK_5)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) is false.
 
-Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedEK(pubEK_5)) || event(ServerChoosesKEX(cr_2,sr_2,DHE_13(WeakDH,e))) || event(ServerChoosesHash(cr_2,sr_2,WeakHash)) || event(CompromisedCA(pubCA_1)) is true.
+Query inj-event(ClientConn(ev)) ==> inj-event(Sent(ev)) || event(LeakedEK(pubEK_5)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) || event(CompromisedCA(pubCA_1)) is true.
 
 Query inj-event(ClientFinRecent1WayAgr(ID_S_2,pubLTK_2,psk_2,offer_2,mode_2,kc_4,ks_4,ems_4,rms_2,cr_2,sr_2)) ==> inj-event(PreServerFinRecent1WayAgr(ID_S_2,pubLTK_2,psk_2,offer_2,mode_2,kc_4,ks_4,ems_4,cr_2,sr_2)) || event(ClientAcceptsElement(cr_2,BadElement)) || event(ClientAcceptsHash(cr_2,WeakHash)) || event(SentBadElement) || event(LeakedAK(pubAK_6)) is false.
 
