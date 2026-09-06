@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-03T03:14:59.169205+00:00",
+  "timestamp": "2026-09-06T03:16:38.564904+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -2788,6 +2788,34 @@
       "mergedBy": "telephonicrobotics",
       "mergeCommit": {
         "oid": "87e13e7c3f87c743a82106292a0d0e07896d8c60"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 34,
+      "id": "PR_kwDOTCeSC88AAAABCFZHZg",
+      "title": "Applied Uniform Client-Side RHS Disjuncts to published models",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/34",
+      "state": "MERGED",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2026-09-03T16:24:43Z",
+      "updatedAt": "2026-09-03T16:24:54Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "87e13e7c3f87c743a82106292a0d0e07896d8c60",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "community-models",
+      "headRefOid": "5cb056fe405a4bba7e812fc2f3c277dfa60bc239",
+      "closedAt": "2026-09-03T16:24:54Z",
+      "mergedAt": "2026-09-03T16:24:53Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "61044c3f3251148a8448c8f8dd1411f4e404d8bf"
       },
       "comments": [],
       "reviews": []
