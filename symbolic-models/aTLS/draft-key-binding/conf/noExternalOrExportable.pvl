@@ -1,0 +1,4 @@
+restriction opt: branch_option, cr,sr:random, pubAK:pubkey,UEID:identity;
+
+(* Note: Server remains unconstrained *)
+event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) ==> false.

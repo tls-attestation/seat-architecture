@@ -1,0 +1,504 @@
+(***********************************************************************)
+(* Sanity Checks *)
+(**********************************************************************)
+(* should be false (confirms event is reachable) *)
+(* checks, for all terms ev, whether the event Accepted(ev) can occur. *)
+query cr:random, sr:random, ID_S,ID_C:identity,
+      psk:preSharedKey, pubTSK,pubAK:pubkey, e:element,
+      offer:params, mode:params, ev,log,rdata:bitstring,
+      kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
+      idS, idXS: identity, gxy:bitstring, dev_state: measurements,
+      ev_attr:attribute;
+
+(* should be false (confirms both events are reachable) 
+i.e., there exists a trace where *both* ServerID and ClientID 
+are reachable with a shared/common gxy *)
+    (event(ServerID(idS,gxy)) &&
+     event(ClientID(idXS,gxy)));
+
+    event(Accepted(ev));
+    event(Appraised(log));
+    event(ClientConn(ev));
+    event(ClientFinished(pubTSK,psk,cr,sr,offer,mode,kc,ks,ems,rms));
+    event(ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr));
+    event(ServerFinished(cr,sr,psk,pubTSK,offer,mode,kc,ks,ems,rms));
+    event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state,ev));
+    event(ClientFin1WayAgr(ID_S,pubTSK,psk,offer,mode,kc,ks,ems,rms));
+    event(ProvisionedTargetEnv(ID_S, pubAK, pubTSK, dev_state));
+    event(ClientStateEvKc(ev,kc));
+    event(AcceptedRdata(dev_state));
+    event(EvidenceOracle(pubAK, dev_state, ev));
+    event(ServerAssertsProvenance(cr,sr,ev_attr));
+    event(ClientAcceptsProvenance(cr,sr,ev_attr)) ==> false.
+
+(* should be false (confirms events are reachable) 
+Goal: Events are reachable in the absence of an attacker.
+  An honest execution path for these events exists without any weakness (e.g.,leakage). 
+  Protocol can run without any attacker interference (exclude all weaknesses).
+Formalization: ServerLastEvent && ClientLastEvent ==> All weaknesses
+*)
+
+query dev_state:measurements,quote:bitstring,
+      cr:random, sr:random, cr':random, sr':random,
+      ID:identity,pubTSK:pubkey,pubAK:pubkey,anyAK:pubkey,
+      psk:preSharedKey, pubCA,pubISV,pubOwner:pubkey,
+      offer:params, mode:params, ev:bitstring,
+      kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
+      req_ctx,app_msg:bitstring,e:element;
+
+      ( event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+        && event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+      ) && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      ==> 
+         event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) 
+      || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) 
+      || event(ClientAcceptsElement(cr, BadElement))
+      || event(ClientAcceptsHash(cr, WeakHash)) 
+      || event(SentBadElement) 
+      || event(LeakedAK(pubAK)) 
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCA(pubCA)) 
+      || event(CompromisedCSP(pubISV)) 
+      || event(UncheckedPolicies(pubOwner)) 
+      || event(EvidenceOracle(pubAK, dev_state, ev))
+;
+
+(* ClientRANew and ClientFin1WayAgr and ClientStateEvKc together alongside ProvisionedTargetEnv *)
+(* should be false (confirms events are reachable) *)
+  ( event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state,ev))
+    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientStateEvKc(ev,kc)) 
+  ) && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
+  ==>
+     event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) 
+  || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) 
+  || event(ClientAcceptsElement(cr, BadElement))
+  || event(ClientAcceptsHash(cr, WeakHash)) 
+  || event(SentBadElement) 
+  || event(LeakedAK(pubAK)) 
+  || event(LeakedTSK(pubTSK))
+  || event(CompromisedCA(pubCA)) 
+  || event(CompromisedCSP(pubISV)) 
+  || event(UncheckedPolicies(pubOwner)) 
+  || event(EvidenceOracle(pubAK, dev_state, ev))
+.
+
+
+(**********************************************************************)
+(* Binding and correlation queries *)
+(**********************************************************************)
+
+(* Reachability *)
+query ev:bitstring,gxy:bitstring;
+      event(ClientStateEv(ev,gxy)) &&
+      event(ServerStateEv(ev,gxy))
+.
+
+query ev:bitstring,kch:ae_key;
+      event(ClientStateEvKch(ev,kch)) &&
+      event(ServerStateEvKch(ev,kch))
+.
+
+query ev:bitstring,kc:ae_key;
+      event(ClientStateEvKc(ev,kc)) &&
+      event(ServerStateEvKc(ev,kc))
+.
+
+(**********************************************************************)
+(* Binding *)
+(*
+Goal G1: Binding Evidence to TLS session: Evidence should not be usable in
+  other TLS sessions, even if they are between the same endpoints.
+  (Not binding to endpoints because multiple sessions of endpoints are possible)
+3 levels of binding to TLS session: 
+  L1. gxy (gx,gy)
+  L2. kch (up to ServerHello)
+  L3. kc (up to ServerFinished): may include ID_S in Certificate message
+  L1 <= L2 <= L3
+Formalization: Same evidence is not accepted by two different TLS sessions.
+  TLS session identified by gxy. Trace should not contain:
+  Client(ev1,gxy1); Server(ev1,gxy2);
+  (* Informal: If they see the same evidence, they should be in the same session *)
+Parameters: Quote instead of dev_state
+  ds = ev, gxy
+  server identity not a part of the query because that is covered by G-C2
+Events: 
+  ServerStateEv after verifying CFin.
+  Rationale: Both endpoints have accepted the connection with the same evidence. 
+*)
+query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
+      kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
+      cr,sr,cr',sr':random,ID1,ID2,ID:identity,
+      pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:element, 
+      psk:preSharedKey,ems,rms:bitstring,
+      dev_state,dev_state1,dev_state2:measurements,
+      req_ctx,app_msg:bitstring,
+      offer:params, mode:params;
+
+      event(ClientStateEv(ev,gxy1)) &&
+      event(ServerStateEv(ev,gxy2)) ==>
+      (gxy1 = gxy2)
+;
+
+
+(*
+Goal G2: Binding to client_write_key (kch) derived from handshake traffic secret (htsc) 
+Rationale: It has log_SH in addition to gxy
+*)
+      event(ClientStateEvKch(ev,kch1)) &&
+      event(ServerStateEvKch(ev,kch2)) ==>
+      (kch1 = kch2)
+;
+
+(* 
+Goal G3: w.r.t. client_write_key (kc) for application data derived from client_application_traffic_secret_0 (atsc) 
+Rationale: It has transcript hash up to log_SF (vs. log_SH in above property).
+*)
+      event(ClientStateEvKc(ev,kc1)) &&
+      event(ServerStateEvKc(ev,kc2)) ==>
+      (kc1 = kc2) || event(ClientID(ID, e2b(BadElement)))
+;
+
+(* 
+Goal G3: w.r.t. client_write_key (kc) for application data derived from client_application_traffic_secret_0 (atsc) 
+Rationale: It has transcript hash up to log_SF (vs. log_SH in above property).
+Remove BadElement from Client gxy calculation to see counterexample for intra-
+*)
+      event(ClientStateEvKc(ev,kc1)) &&
+      event(ServerStateEvKc(ev,kc2)) ==>
+      (kc1 = kc2)
+;
+
+(* Full session with kc/ev correlated *)
+    (
+      event(ClientComp(ID1,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state1)) &&
+      event(ClientStateEvKc(ev1,kc1)) 
+    )
+        && (* Correlation *)
+    (
+      event(PreServerComp(ID2,psk,offer,mode,kc2,ks,ems,cr,sr,pubTSK,dev_state2)) &&
+      event(ServerStateEvKc(ev2,kc2))
+    )
+    ==> ((kc1,ev1) = (kc2,ev2)) || event(ClientID(ID, e2b(BadElement)))
+;
+
+(* Full session with kc/ev correlated 
+   Remove BadElement from Client gxy calculation to see counterexample for post- under option B
+*)
+    (
+      event(ClientComp(ID1,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state1)) &&
+      event(ClientStateEvKc(ev1,kc1)) 
+    )
+        && (* Correlation *)
+    (
+      event(PreServerComp(ID2,psk,offer,mode,kc2,ks,ems,cr,sr,pubTSK,dev_state2)) &&
+      event(ServerStateEvKc(ev2,kc2))
+    )
+    ==> ((kc1,ev1) = (kc2,ev2))
+.
+
+query ID1,ID2:identity, gxy,ev:bitstring, dev_state:measurements, kc1,kc2:ae_key,
+      cr:random, sr:random, pubTSK,pubAK,pubCA,pubISV,pubOwner:pubkey;
+
+  (* Evaluate query sufficient to prove Server Identity + Key Correspondence under OptionA with RPK *)
+  (event(ClientID(ID1, gxy)) && event(ClientStateEv(ev, gxy)) && event(ClientStateEvKc(ev, kc1)))
+  && (event(ServerID(ID2, gxy)) && event(ServerStateEv(ev, gxy)) && event(ServerStateEvKc(ev, kc2)))
+  ==> ((ID1, kc1) = (ID2, kc2))
+  || event(ClientAcceptsElement(cr, BadElement))
+;
+
+  (* counterexample: event(ClientAcceptsElement(cr, BadElement)) *)
+   (event(ClientID(ID1, gxy)) && event(ClientStateEv(ev, gxy)) && event(ClientStateEvKc(ev, kc1)))
+&& (event(ServerID(ID2, gxy)) && event(ServerStateEv(ev, gxy)) && event(ServerStateEvKc(ev, kc2)))
+    ==> ((ID1,kc1) = (ID2,kc2))
+  (* || event(ClientAcceptsElement(cr, BadElement)) *)
+.
+
+(**********************************************************************)
+(* Target Environment Engagement *)
+(**********************************************************************)
+
+query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
+    kc, ks: ae_key, ems, rms: bitstring, cr, sr: random, ev: bitstring, dev_state: measurements,
+    pubAK, pubCA, pubISV, pubOwner: pubkey;
+
+ (* Evaluate query sufficient to prove engagement with authorized TargetEnv 
+  under OptionA or OptionB with RPK or WebPKI *)
+  ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+    || event(LeakedAK(pubAK))
+    || event(CompromisedCSP(pubISV))
+    || event(CompromisedCA(pubCA))
+    || event(UncheckedPolicies(pubOwner))
+    || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+  ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+    || event(LeakedTSK(pubTSK))
+    || event(CompromisedCSP(pubISV))
+    || event(CompromisedCA(pubCA))
+    || event(UncheckedPolicies(pubOwner))
+    || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
+   + event(CompromisedCA(pubCA)) *)
+  ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      (* || event(LeakedAK(pubAK)) *)
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      (* || event(CompromisedCA(pubCA)) *)
+      (* || event(UncheckedPolicies(pubOwner)) 
+         || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+.
+
+(**********************************************************************)
+(* Key Secrecy Correspondence (curated: TSK-track + AK/Provenance-track) *)
+(**********************************************************************)
+
+query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
+      cr:random, sr:random, cr':random, sr':random,
+      ID:identity,pubTSK:pubkey,pubAK:pubkey, ev: bitstring,
+      psk:preSharedKey, e:element, pubOwner,pubCA,pubISV:pubkey,
+      offer:params, mode:params,
+      kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
+
+  (*************************************************)
+  (* Confirm that attacker *does* have access to 
+     handshake secrets with same evidence in context *)
+  (*************************************************)
+  
+  (* Reachability check (expect false): Server exposes HSK *)
+    event(AttackerControlsHSK(kch,ksh)) ==> false;
+  
+  (* Reachability check (expect false): Client accepts HSK *)
+    event(ClientStateEvKch(ev,kch)) ==> false;
+  
+  (* Reachability check (expect false): Confirms that a trace exists 
+     where the client and server agree on the same handshake key kch *)
+    (
+      event(AttackerControlsHSK(kch,ksh))
+      && event(ClientStateEvKch(ev,kch))
+    ) ==> false
+  ;
+
+  (* Evaluate query sufficient to prove engagement with authorized TargetEnv 
+  under OptionA or OptionB with RPK or WebPKI *)
+  attacker(kc) && 
+  (    (* Key Secrecy *)
+       event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
+    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientStateEvKc(ev,kc))
+  ) 
+   ==> 
+       event(LeakedAK(pubAK))
+    || event(CompromisedCSP(pubISV))
+    || event(CompromisedCA(pubCA))
+    || event(UncheckedPolicies(pubOwner))
+    || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+  attacker(kc) && 
+  (    (* Key Secrecy *)
+       event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
+    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientStateEvKc(ev,kc))
+  ) 
+   ==> 
+       event(LeakedTSK(pubTSK))
+    || event(CompromisedCSP(pubISV))
+    || event(CompromisedCA(pubCA))
+    || event(UncheckedPolicies(pubOwner))
+    || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
+   + event(CompromisedCA(pubCA)) *)
+  attacker(kc) && 
+  (    (* Key Secrecy *)
+       event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
+    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientStateEvKc(ev,kc))
+  ) 
+   ==> 
+      (* || event(LeakedAK(pubAK)) *)
+         event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      (* || event(CompromisedCA(pubCA)) *)
+      (* || event(UncheckedPolicies(pubOwner))
+         || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+.
+
+(**********************************************************************)
+(* Property G-TLS1: Server Identity *)
+(**********************************************************************)
+
+ query idS,idXS:identity,pubTSK:pubkey,pubAK:pubkey,
+  gxy:bitstring, ev:bitstring, dev_state:measurements,
+  cr:random, sr:random, cr':random, sr':random,
+  psk:preSharedKey, p:pubkey, e:element,
+  offer:params, mode:params, pubCA,pubISV,pubOwner:pubkey,
+  kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring;
+
+(* Evaluate query sufficient to prove engagement with authorized TargetEnv 
+  under OptionA or OptionB with RPK or WebPKI *)
+  (event(ServerID(idS,gxy)) &&
+   event(ClientID(idXS,gxy))) ==>
+   (idS = idXS)
+      || event(LeakedAK(pubAK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      || event(UncheckedPolicies(pubOwner))
+      || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+  (event(ServerID(idS,gxy)) &&
+   event(ClientID(idXS,gxy))) ==>
+   (idS = idXS)
+    (* || event(LeakedAK(pubAK)) *)
+    || event(LeakedTSK(pubTSK))
+    || event(CompromisedCSP(pubISV))
+    || event(CompromisedCA(pubCA))
+    || event(UncheckedPolicies(pubOwner))
+    || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
+   + event(CompromisedCA(pubCA)) *)
+  (event(ServerID(idS,gxy)) &&
+   event(ClientID(idXS,gxy))) ==>
+   (idS = idXS)
+      (* || event(LeakedAK(pubAK)) *)
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      (* || event(CompromisedCA(pubCA)) *)
+      (* || event(UncheckedPolicies(pubOwner)) 
+         || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+.
+
+(* ============================================================ *)
+(* Agreement of Composition TLS+RA in post-handshake app data   *)
+(* ============================================================ *)
+
+query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
+      kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
+      cr,sr,cr',sr':random,ID:identity,
+      pubTSK,pubAK,pubCA,pubOwner,pubISV:pubkey,
+      psk:preSharedKey,ems,rms:bitstring,
+      dev_state:measurements,offer,mode:params,
+      req_ctx,app_msg:bitstring,e:element;
+
+(* Evaluate query sufficient to prove engagement with authorized TargetEnv 
+  under OptionA or OptionB with RPK or WebPKI *)
+  inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+  ==> (
+       inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+       && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      ) (* RHS disjuncts *)
+      || event(LeakedAK(pubAK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      || event(UncheckedPolicies(pubOwner))
+      || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+  inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+  ==> (
+       inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+       && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      ) (* RHS disjuncts *)
+      (* || event(LeakedAK(pubAK)) *)
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      || event(UncheckedPolicies(pubOwner))
+      || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner)) *)
+  inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+  ==> (
+       inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+       && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      ) (* RHS disjuncts *)
+      (* || event(LeakedAK(pubAK)) *)
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      (* || event(UncheckedPolicies(pubOwner)) 
+      || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+.
+
+(* ============================================================ *)
+(* EvidenceOracle evaluations *)
+(* ============================================================ *)
+
+query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
+      cr:random, sr:random, cr':random, sr':random, gxy:bitstring,
+      ID,ID2,EUID:identity,pubTSK:pubkey,pubAK:pubkey,
+      psk:preSharedKey, e:element, pubOwner,pubCA,pubISV:pubkey,
+      offer:params, mode:params, ev:bitstring,
+      kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
+
+  event(EvidenceOracle(pubAK, dev_state, ev)) &&
+  (    
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) 
+  && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
+  ==> false
+;
+
+  event(EvidenceOracle(pubAK, dev_state, ev)) &&
+  (    
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) 
+  && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
+  ==> 
+  event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
+;
+
+  event(EvidenceOracle(pubAK, dev_state, ev)) &&
+  (    
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) 
+  && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
+  ==> 
+  (* event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+     event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  || event(ClientAcceptsElement(cr, BadElement))
+  || event(ClientAcceptsHash(cr, WeakHash))
+  || event(LeakedTSK(pubTSK))
+;
+
+  event(EvidenceOracle(pubAK, dev_state, ev)) &&
+  (    
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientStateEvKc(ev, kc))
+  ) 
+  && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
+  ==> 
+  (* event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+  (* event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) *)
+     event(ClientAcceptsElement(cr, BadElement))
+  || event(ClientAcceptsHash(cr, WeakHash))
+  || event(LeakedTSK(pubTSK))
+.

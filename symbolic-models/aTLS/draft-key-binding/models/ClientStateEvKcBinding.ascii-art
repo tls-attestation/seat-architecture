@@ -1,0 +1,6 @@
+               ClientRANew (Hardware / Evidence)
+                   /                       \
+        ev is bound                         pubTSK is bound
+                 /                           \
+ClientStateEvKc (Binding) --------- ClientFin1WayAgr (TLS Transport)
+                     kc is bound to the session

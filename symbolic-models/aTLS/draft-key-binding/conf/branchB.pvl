@@ -1,0 +1,11 @@
+restriction opt: branch_option, cr,sr:random, pubAK:pubkey,UEID:identity;
+  
+  (* Uncomment to activate OptionA for RPK identity *)
+  (* event(ClientIdentityOption(opt)) && (opt <> OptionA); *)
+  
+  (* Uncomment to activate OptionB for webPKI identity *)
+  event(ClientIdentityOption(opt)) && (opt <> OptionB);
+
+  (* Ensure no evaluations happen where fixed HW identity (UEID) is shared in handshakes *)
+  event(EndorsementsIssued(UEID,pubAK)) && (UEID <> NULL_ID)
+.
