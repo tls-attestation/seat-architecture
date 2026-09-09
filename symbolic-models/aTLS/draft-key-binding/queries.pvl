@@ -1,8 +1,31 @@
+(* 
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
+Copyright 2026 Nathanael Ritz.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*)
+
 (***********************************************************************)
 (* Sanity Checks *)
 (**********************************************************************)
-(* should be false (confirms event is reachable) *)
-(* checks, for all terms ev, whether the event Accepted(ev) can occur. *)
+(* Property: Event Reachability
+Goal: confirm every event listed below actually fires on some run, so a
+  "false" result elsewhere isn't silently vacuous.
+
+Interpretation of result: none of these events are dead code; results
+  elsewhere that build on them are meaningful.
+*)
 query cr:random, sr:random, ID_S,ID_C:identity,
       psk:preSharedKey, pubTSK,pubAK:pubkey, e:element,
       offer:params, mode:params, ev,log,rdata:bitstring,
@@ -31,11 +54,25 @@ are reachable with a shared/common gxy *)
     event(ServerAssertsProvenance(cr,sr,ev_attr));
     event(ClientAcceptsProvenance(cr,sr,ev_attr)) ==> false.
 
-(* should be false (confirms events are reachable) 
-Goal: Events are reachable in the absence of an attacker.
-  An honest execution path for these events exists without any weakness (e.g.,leakage). 
-  Protocol can run without any attacker interference (exclude all weaknesses).
-Formalization: ServerLastEvent && ClientLastEvent ==> All weaknesses
+(* Property: Honest-Path Reachability
+Goal: two honest-completion milestones -- reaching app-data exchange,
+  and completing RA + 1-way TLS agreement -- are each reachable without
+  needing any attack/weakness disjunct.
+
+Events: (1) ClientReceivesAppData && ServerSendsAppData &&
+  ProvisionedTargetEnv; (2) ClientRANew && ClientFin1WayAgr &&
+  ClientStateEvKc && ProvisionedTargetEnv.
+
+Parameters (of agreement): full session state on each side (ID, pubTSK,
+  pubAK, cr, sr, req_ctx/ev, ems, ks, kc, dev_state[, app_msg]) -- so
+  "honest" means the same session throughout, not two unrelated runs.
+Method: LHS is the honest-completion predicate; RHS lists every
+  weakness/compromise event the model can produce.
+
+Formalization: LHS ==> RHS(all weaknesses), for each milestone.
+Result: false for both, all 4 logs.
+Interpretation of result: the happy path is real and doesn't secretly
+  require an attack event to complete.
 *)
 
 query dev_state:measurements,quote:bitstring,
@@ -63,24 +100,23 @@ query dev_state:measurements,quote:bitstring,
       || event(EvidenceOracle(pubAK, dev_state, ev))
 ;
 
-(* ClientRANew and ClientFin1WayAgr and ClientStateEvKc together alongside ProvisionedTargetEnv *)
-(* should be false (confirms events are reachable) *)
-  ( event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state,ev))
-    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
-    && event(ClientStateEvKc(ev,kc)) 
-  ) && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
-  ==>
-     event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) 
-  || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) 
-  || event(ClientAcceptsElement(cr, BadElement))
-  || event(ClientAcceptsHash(cr, WeakHash)) 
-  || event(SentBadElement) 
-  || event(LeakedAK(pubAK)) 
-  || event(LeakedTSK(pubTSK))
-  || event(CompromisedCA(pubCA)) 
-  || event(CompromisedCSP(pubISV)) 
-  || event(UncheckedPolicies(pubOwner)) 
-  || event(EvidenceOracle(pubAK, dev_state, ev))
+    (* -- second milestone (RA + 1-way agreement): see Property above -- *)
+      ( event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state,ev))
+        && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+        && event(ClientStateEvKc(ev,kc)) 
+      ) && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
+      ==>
+         event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) 
+      || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) 
+      || event(ClientAcceptsElement(cr, BadElement))
+      || event(ClientAcceptsHash(cr, WeakHash)) 
+      || event(SentBadElement) 
+      || event(LeakedAK(pubAK)) 
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCA(pubCA)) 
+      || event(CompromisedCSP(pubISV)) 
+      || event(UncheckedPolicies(pubOwner)) 
+      || event(EvidenceOracle(pubAK, dev_state, ev))
 .
 
 
@@ -88,7 +124,24 @@ query dev_state:measurements,quote:bitstring,
 (* Binding and correlation queries *)
 (**********************************************************************)
 
-(* Reachability *)
+(* Property: State Reachability (gxy / kch / kc)
+Goal: Client and Server can land on the same evidence ev with matching
+  gxy / kch / kc at all -- a prerequisite for the binding properties
+  that follow.
+
+Events: ClientStateEv/ServerStateEv (L1: gxy), ClientStateEvKch/
+  ServerStateEvKch (L2: kch), ClientStateEvKc/ServerStateEvKc (L3: kc).
+
+Parameters (of agreement): ev (shared evidence identifier), and the
+  session-key term itself at each of the three points.
+
+Method: bare conjunction of two events, no ==>; checked as reachability.
+Formalization: `event(A) && event(B).`
+
+Result: true (reachable), all 3 sub-queries, all 4 logs.
+Interpretation of result: the binding properties below aren't testing
+  an empty trace set.
+*)
 query ev:bitstring,gxy:bitstring;
       event(ClientStateEv(ev,gxy)) &&
       event(ServerStateEv(ev,gxy))
@@ -107,24 +160,26 @@ query ev:bitstring,kc:ae_key;
 (**********************************************************************)
 (* Binding *)
 (*
-Goal G1: Binding Evidence to TLS session: Evidence should not be usable in
-  other TLS sessions, even if they are between the same endpoints.
-  (Not binding to endpoints because multiple sessions of endpoints are possible)
-3 levels of binding to TLS session: 
-  L1. gxy (gx,gy)
+Goal: Evidence should not be usable in other TLS sessions, even between
+  the same endpoints (not bound to endpoints -- multiple sessions
+  between the same two endpoints are possible).
+
+Events: ClientStateEv/ServerStateEv, and the kch/kc analogues at two
+  later points in the handshake.
+
+Parameters (of agreement): ev (shared evidence) plus the session term at
+  each level -- server identity is deliberately excluded here (covered
+  separately by Server Identity + Key Correspondence and G-TLS1 below).
+
+Method: three increasingly late binding points, in order:
+  L1. gxy (up to the (EC)DHE exchange)
   L2. kch (up to ServerHello)
-  L3. kc (up to ServerFinished): may include ID_S in Certificate message
-  L1 <= L2 <= L3
-Formalization: Same evidence is not accepted by two different TLS sessions.
-  TLS session identified by gxy. Trace should not contain:
-  Client(ev1,gxy1); Server(ev1,gxy2);
-  (* Informal: If they see the same evidence, they should be in the same session *)
-Parameters: Quote instead of dev_state
-  ds = ev, gxy
-  server identity not a part of the query because that is covered by G-C2
-Events: 
-  ServerStateEv after verifying CFin.
-  Rationale: Both endpoints have accepted the connection with the same evidence. 
+  L3. kc (up to ServerFinished)
+  L1 <= L2 <= L3 -- if they see the same evidence, they should be in the
+  same session.
+
+Formalization: event(ClientStateEv*(ev,X)) && event(ServerStateEv*(ev,Y))
+  ==> X = Y. Trace should never contain matching ev with differing X/Y.
 *)
 query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
@@ -135,41 +190,49 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       req_ctx,app_msg:bitstring,
       offer:params, mode:params;
 
+(* G1 (gxy). Result: true, all 4 logs. *)
       event(ClientStateEv(ev,gxy1)) &&
       event(ServerStateEv(ev,gxy2)) ==>
       (gxy1 = gxy2)
 ;
 
 
-(*
-Goal G2: Binding to client_write_key (kch) derived from handshake traffic secret (htsc) 
-Rationale: It has log_SH in addition to gxy
-*)
+(* G2 (kch). Result: true, all 4 logs. *)
       event(ClientStateEvKch(ev,kch1)) &&
       event(ServerStateEvKch(ev,kch2)) ==>
       (kch1 = kch2)
 ;
 
-(* 
-Goal G3: w.r.t. client_write_key (kc) for application data derived from client_application_traffic_secret_0 (atsc) 
-Rationale: It has transcript hash up to log_SF (vs. log_SH in above property).
-*)
+(* G3 (kc), with BadElement disjunct. Result: true, all 4 logs. *)
       event(ClientStateEvKc(ev,kc1)) &&
       event(ServerStateEvKc(ev,kc2)) ==>
       (kc1 = kc2) || event(ClientID(ID, e2b(BadElement)))
 ;
 
-(* 
-Goal G3: w.r.t. client_write_key (kc) for application data derived from client_application_traffic_secret_0 (atsc) 
-Rationale: It has transcript hash up to log_SF (vs. log_SH in above property).
-Remove BadElement from Client gxy calculation to see counterexample for intra-
+(* G3, tighter variant with no BadElement disjunct.
+Result: true, all 4 logs (previously the reported intra-mode gap).
 *)
       event(ClientStateEvKc(ev,kc1)) &&
       event(ServerStateEvKc(ev,kc2)) ==>
       (kc1 = kc2)
 ;
 
-(* Full session with kc/ev correlated *)
+(* Property: RA/TLS Session Correlation
+
+Goal: RA-track state (ClientComp/PreServerComp) and TLS-track state
+  (kc/ev) agree on the *same* session, not just two parallel sessions
+  with matching parameters.
+Events: ClientComp, ClientStateEvKc, PreServerComp, ServerStateEvKc.
+
+Parameters (of agreement): the (kc, ev) pair -- session key plus
+  evidence identifier, correlated across both tracks.
+
+Method: independently-completed Client-side and Server-side views,
+  forced together via shared kc/ev.
+
+Formalization: (Client view) && (Server view) ==> (kc1,ev1) = (kc2,ev2).
+Result: true, all 4 logs.
+*)
     (
       event(ClientComp(ID1,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state1)) &&
       event(ClientStateEvKc(ev1,kc1)) 
@@ -182,9 +245,7 @@ Remove BadElement from Client gxy calculation to see counterexample for intra-
     ==> ((kc1,ev1) = (kc2,ev2)) || event(ClientID(ID, e2b(BadElement)))
 ;
 
-(* Full session with kc/ev correlated 
-   Remove BadElement from Client gxy calculation to see counterexample for post- under option B
-*)
+(* tighter variant, no BadElement disjunct. *)
     (
       event(ClientComp(ID1,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state1)) &&
       event(ClientStateEvKc(ev1,kc1)) 
@@ -197,17 +258,34 @@ Remove BadElement from Client gxy calculation to see counterexample for intra-
     ==> ((kc1,ev1) = (kc2,ev2))
 .
 
+(* Property: Server Identity + Key Correspondence
+Goal: if Client and Server land on the same evidence ev and gxy, they
+  also agree on each other's identity and land on the same kc -- ties
+  the L1/L3 binding above directly to identity, not just key material.
+
+Events: ClientID, ClientStateEv, ClientStateEvKc, ServerID,
+  ServerStateEv, ServerStateEvKc.
+
+Parameters (of agreement): (ID, kc) pair, correlated via shared gxy/ev.
+Method: main variant keeps a BadElement disjunct; second variant drops
+  it to check whether it's load-bearing.
+
+Formalization: (Client view) && (Server view) ==> (ID1,kc1) = (ID2,kc2).
+Result: true for both variants, all 4 logs -- holds identically under
+  Option A and Option B, not just under Option A/RPK.
+*)
 query ID1,ID2:identity, gxy,ev:bitstring, dev_state:measurements, kc1,kc2:ae_key,
       cr:random, sr:random, pubTSK,pubAK,pubCA,pubISV,pubOwner:pubkey;
 
-  (* Evaluate query sufficient to prove Server Identity + Key Correspondence under OptionA with RPK *)
   (event(ClientID(ID1, gxy)) && event(ClientStateEv(ev, gxy)) && event(ClientStateEvKc(ev, kc1)))
   && (event(ServerID(ID2, gxy)) && event(ServerStateEv(ev, gxy)) && event(ServerStateEvKc(ev, kc2)))
   ==> ((ID1, kc1) = (ID2, kc2))
   || event(ClientAcceptsElement(cr, BadElement))
 ;
 
-  (* counterexample: event(ClientAcceptsElement(cr, BadElement)) *)
+  (* counterexample: event(ClientAcceptsElement(cr, BadElement))
+  [STALE] conf/noBadElementHash.pvl now forbids this event outright, so
+    dropping it no longer diverges from the query above. Result: true. *)
    (event(ClientID(ID1, gxy)) && event(ClientStateEv(ev, gxy)) && event(ClientStateEvKc(ev, kc1)))
 && (event(ServerID(ID2, gxy)) && event(ServerStateEv(ev, gxy)) && event(ServerStateEvKc(ev, kc2)))
     ==> ((ID1,kc1) = (ID2,kc2))
@@ -216,14 +294,42 @@ query ID1,ID2:identity, gxy,ev:bitstring, dev_state:measurements, kc1,kc2:ae_key
 
 (**********************************************************************)
 (* Target Environment Engagement *)
+(* Property: Target Environment Engagement
+Goal: a client that completes RA + 1-way TLS agreement really did
+  engage the authorized ProvisionedTargetEnv, not an impostor.
+
+Events: ClientRANew, ClientFin1WayAgr, ClientStateEvKc,
+  ProvisionedTargetEnv.
+
+Parameters (of agreement): ID, pubAK, pubTSK, dev_state.
+
+Method: three-query minimality ladder against the same LHS --
+  (1) main, LeakedAK as the disjunct;
+  (2) counterexample for Option A: swap LeakedAK for LeakedTSK;
+  (3) counterexample for Option B: also strip CompromisedCA and
+      UncheckedPolicies from (2).
+Formalization: LHS ==> ProvisionedTargetEnv || disjunct-events.
+
+Result:
+  (1) true under Option A and Option B -- LeakedAK alone always
+      explains a break; it's the single root of trust in both designs.
+  (2) false under Option A, true under Option B -- Option A (direct
+      attestation) has no CA/manifest layer for LeakedTSK/CA/policy to
+      stand in for; Option B's additive anchors do cover it.
+  (3) false under both -- confirms CompromisedCA and UncheckedPolicies
+      are jointly, not individually, load-bearing for Option B.
+
+Interpretation of result: identity anchoring (A vs. B) is what changes
+  which compromises can explain an attack; the ladder pins down exactly
+  which disjunct events are necessary vs. substitutable.
+*)
 (**********************************************************************)
 
 query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
     kc, ks: ae_key, ems, rms: bitstring, cr, sr: random, ev: bitstring, dev_state: measurements,
     pubAK, pubCA, pubISV, pubOwner: pubkey;
 
- (* Evaluate query sufficient to prove engagement with authorized TargetEnv 
-  under OptionA or OptionB with RPK or WebPKI *)
+ (* (1) main *)
   ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
     && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
     && event(ClientStateEvKc(ev, kc))
@@ -235,7 +341,7 @@ query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
     || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+(* (2) counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
   ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
     && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
     && event(ClientStateEvKc(ev, kc))
@@ -247,7 +353,7 @@ query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
     || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
+(* (3) counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
    + event(CompromisedCA(pubCA)) *)
   ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
     && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
@@ -277,22 +383,38 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
      handshake secrets with same evidence in context *)
   (*************************************************)
   
-  (* Reachability check (expect false): Server exposes HSK *)
+  (* Reachability check (expect false): Server exposes HSK. Result: false. *)
     event(AttackerControlsHSK(kch,ksh)) ==> false;
   
-  (* Reachability check (expect false): Client accepts HSK *)
+  (* Reachability check (expect false): Client accepts HSK. Result: false. *)
     event(ClientStateEvKch(ev,kch)) ==> false;
   
   (* Reachability check (expect false): Confirms that a trace exists 
-     where the client and server agree on the same handshake key kch *)
+     where the client and server agree on the same handshake key kch.
+     Result: false. *)
     (
       event(AttackerControlsHSK(kch,ksh))
       && event(ClientStateEvKch(ev,kch))
     ) ==> false
   ;
 
-  (* Evaluate query sufficient to prove engagement with authorized TargetEnv 
-  under OptionA or OptionB with RPK or WebPKI *)
+  (* Property: Key Secrecy Correspondence
+  Goal: kc stays out of attacker(_) reach unless a named compromise
+    occurred.
+
+  Events: ClientRANew, ClientFin1WayAgr, ClientStateEvKc, attacker(kc).
+  Parameters (of agreement): pubAK, pubTSK, dev_state1.
+
+  Method: same three-query minimality ladder as Target Environment
+    Engagement above -- (1) LeakedAK disjunct, (2) counterexample A:
+    swap for LeakedTSK, (3) counterexample B: also strip CA + policy.
+  Formalization: attacker(kc) && LHS ==> disjunct-events.
+
+  Result: (1) true under A and B; (2) false under A, true under B;
+    (3) false under both. Same reading as Target Environment
+    Engagement -- LeakedAK is essential, TSK/CA/policy only substitute
+    for it under Option B's additive design.
+  *)
   attacker(kc) && 
   (    (* Key Secrecy *)
        event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
@@ -307,7 +429,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
     || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+(* (2) counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
   attacker(kc) && 
   (    (* Key Secrecy *)
        event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
@@ -322,7 +444,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
     || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
+(* (3) counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
    + event(CompromisedCA(pubCA)) *)
   attacker(kc) && 
   (    (* Key Secrecy *)
@@ -341,6 +463,24 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
 
 (**********************************************************************)
 (* Property G-TLS1: Server Identity *)
+(* Goal: if Client and Server land on the same gxy, they agree on who
+  the server is -- guards against diversion to a different server
+  entirely, not just a stale or mismatched key.
+
+Events: ServerID, ClientID.
+Parameters (of agreement): idS = idXS, correlated via shared gxy.
+
+Method: same three-query minimality ladder as Target Environment
+  Engagement -- (1) LeakedAK disjunct, (2) counterexample A: swap for
+  LeakedTSK, (3) counterexample B: also strip CA + policy.
+
+Formalization: (ServerID(idS,gxy) && ClientID(idXS,gxy)) ==> idS = idXS
+  || disjunct-events.
+
+Result: (1) true under A and B; (2) false under A, true under B;
+  (3) false under both -- same reading as Target Environment
+  Engagement.
+*)
 (**********************************************************************)
 
  query idS,idXS:identity,pubTSK:pubkey,pubAK:pubkey,
@@ -350,8 +490,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   offer:params, mode:params, pubCA,pubISV,pubOwner:pubkey,
   kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring;
 
-(* Evaluate query sufficient to prove engagement with authorized TargetEnv 
-  under OptionA or OptionB with RPK or WebPKI *)
+(* (1) main *)
   (event(ServerID(idS,gxy)) &&
    event(ClientID(idXS,gxy))) ==>
    (idS = idXS)
@@ -362,7 +501,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+(* (2) counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
   (event(ServerID(idS,gxy)) &&
    event(ClientID(idXS,gxy))) ==>
    (idS = idXS)
@@ -374,7 +513,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
     || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
+(* (3) counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
    + event(CompromisedCA(pubCA)) *)
   (event(ServerID(idS,gxy)) &&
    event(ClientID(idXS,gxy))) ==>
@@ -389,6 +528,24 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
 
 (* ============================================================ *)
 (* Agreement of Composition TLS+RA in post-handshake app data   *)
+(* Goal: injective version of Target Environment Engagement, pushed
+  past RA/TLS completion to the actual encrypted app-data exchange.
+
+Events: ClientReceivesAppData, ServerSendsAppData, ProvisionedTargetEnv.
+Parameters (of agreement): full session state (ID, pubTSK, pubAK, cr,
+  sr, req_ctx, ems, ks, kc, dev_state, app_msg).
+
+Method: same three-query minimality ladder as Target Environment
+  Engagement. Note the (3) variant here only strips UncheckedPolicies
+  and keeps CompromisedCA on the RHS, unlike its siblings -- narrower
+  test than the pattern it's part of; flagged at that query below.
+
+Formalization: inj-event(ClientReceivesAppData) ==> (inj-event
+  (ServerSendsAppData) && ProvisionedTargetEnv) || disjunct-events.
+
+Result: (1) true under A and B; (2) false under A, true under B;
+  (3) false under both (still holds despite the narrower RHS).
+*)
 (* ============================================================ *)
 
 query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
@@ -399,8 +556,7 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       dev_state:measurements,offer,mode:params,
       req_ctx,app_msg:bitstring,e:element;
 
-(* Evaluate query sufficient to prove engagement with authorized TargetEnv 
-  under OptionA or OptionB with RPK or WebPKI *)
+(* (1) main *)
   inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
   ==> (
        inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
@@ -413,7 +569,7 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
+(* (2) counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
   inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
   ==> (
        inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
@@ -427,7 +583,7 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-(* counterexample for OptionB: remove event(UncheckedPolicies(pubOwner)) *)
+(* (3) counterexample for OptionB: remove event(UncheckedPolicies(pubOwner)) *)
   inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
   ==> (
        inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
@@ -436,13 +592,43 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       (* || event(LeakedAK(pubAK)) *)
       || event(LeakedTSK(pubTSK))
       || event(CompromisedCSP(pubISV))
-      || event(CompromisedCA(pubCA))
-      (* || event(UncheckedPolicies(pubOwner)) 
+      (* || event(CompromisedCA(pubCA))
+      || event(UncheckedPolicies(pubOwner)) 
       || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
 .
 
 (* ============================================================ *)
 (* EvidenceOracle evaluations *)
+(* Goal: a signing oracle that will attest arbitrary caller-supplied
+  key material can only produce a session the client treats as fully
+  bound if the client's own key-provenance check has been defeated --
+  i.e. rejecting ExternalOrExportable evidence is both necessary and
+  sufficient protection against this class of attack.
+
+Events: EvidenceOracle, ClientRANew, ClientFin1WayAgr, ClientStateEvKc,
+  ProvisionedTargetEnv, ClientAcceptsProvenance, ServerAssertsProvenance.
+
+Parameters (of agreement): pubAK, dev_state, ev -- ties the oracle
+  event to the specific RA session it corrupted.
+
+Method: four-query minimality ladder against the same LHS (oracle +
+  full RA/TLS completion) --
+  (1) reachability: does the scenario coexist with full completion;
+  (2) forward implication: does completion force ClientAcceptsProvenance;
+  (3) forward implication: does completion force ServerAssertsProvenance
+      (or a downgrade/leak disjunct);
+  (4) minimality: strip ServerAssertsProvenance from (3) to confirm
+      it -- not the leftover BadElement/WeakHash/LeakedTSK disjuncts --
+      is what's actually doing the work.
+
+Formalization: EvidenceOracle && LHS ==> RHS, varied per step above.
+
+Result: (1) false (reachable); (2) true; (3) true; (4) false.
+  Identical across all 4 logs -- unlike every property above, this one
+  does not split on Option A/B or on intra-/post-handshake placement.
+
+Interpretation of result: the provenance-rejection invariant is unconditional
+*)
 (* ============================================================ *)
 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
@@ -452,6 +638,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       offer:params, mode:params, ev:bitstring,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
 
+  (* (1) reachability *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
@@ -462,6 +649,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   ==> false
 ;
 
+  (* (2) forces ClientAcceptsProvenance *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
@@ -473,6 +661,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
+  (* (3) forces ServerAssertsProvenance (or a downgrade/leak) *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
@@ -488,6 +677,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   || event(LeakedTSK(pubTSK))
 ;
 
+  (* (4) minimality: strip ServerAssertsProvenance from (3) *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))

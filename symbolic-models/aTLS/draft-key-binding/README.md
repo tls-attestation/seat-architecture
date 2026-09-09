@@ -1,6 +1,6 @@
 # Symbolic Modeling for Identity Workload Policy and Evidence Oracle Mitigation
 
-### Threat Model: The Evidence Oracle & UCCS Proxy Forwarding
+## Threat Model: The Evidence Oracle & UCCS Proxy Forwarding
 
 In confidential computing architectures, a TEE instance uses an Attestation Key (AK) endorsed by the platform vendor or Cloud Service Provider (CSP) to sign measurements and session keys (`rdata`).
 
@@ -16,7 +16,7 @@ The **Evidence Oracle** models a signing oracle vulnerability (specifically the 
 
 ---
 
-### Baseline Client Security Invariants
+## Baseline Client Security Invariants
 
 To guarantee session integrity while the `EvidenceOracle` is active, the client appraisal engine enforces three invariants:
 
@@ -28,11 +28,11 @@ To guarantee session integrity while the `EvidenceOracle` is active, the client 
 
 ---
 
-#### Option A: Direct Attestation Anchoring
+### Option A: Direct Attestation Anchoring
 
 Attestation replaces Web PKI entirely. The client resolves the expected target identity directly to expected enclave launch measurements. The TLS handshake key (`pubTSK`) is self-signed, and the attestation quote serves as the sole proof of authentication and session binding.
 
-#### Option B: Compound Additive Authentication
+### Option B: Compound Additive Authentication
 
 Attestation composes additively with standard Web PKI. The server presents a standard CA-signed X.509 certificate matching the target domain or service identity. In parallel, it presents an attestation quote and a signed **Workload Manifest** issued by the workload policy owner.
 
@@ -78,6 +78,62 @@ proverif205 -lib models/atls-lib-<intra|post>.pvl -lib conf/noBadElementHash.pvl
 
 e.g. for intra-handshake with Option A with RPK:
 `proverif205 -lib models/atls-lib-intra.pvl -lib conf/noBadElementHash.pvl -lib queries.pvl -lib conf/branchA.pvl -html traces tls13-multiagent.pv 2>&1 | tee logs/logs-intra-a.txt`
+
+## Driver File: tls13-multiagent.pv
+
+`tls13-multiagent.pv` serves as the top-level ProVerif entry point. Protocol cryptography, equational theories, and message constructors are specified in the paired library files (`atls-lib-intra.pvl` or `atls-lib-post.pvl`). This file instantiates the system principals, defines honest protocol workflows, specifies adversarial compromise interfaces, and composes all active roles into a single top-level parallel process.
+
+---
+
+### Structural Extensions to the Baseline TLS 1.3 Model
+
+The driver extends the baseline single-path TLS 1.3 specification (Bhargavan et al.) through five architectural modifications:
+
+* **Consolidated Workload Keying**: Replaces the separate long-term identity key (`pubLTK`) and ephemeral TLS handshake key (`pubEK`) with a unified TLS Signing Key (`pubTSK`). Under Option A, `pubTSK` is self-signed; under Option B, it is certified by a CA. The legacy `LeakedLTK` event is eliminated.
+* **Additional External Trust Anchors**: Introduces Cloud Service Provider / Independent Software Vendor (`CSP / ISV`) and Workload Policy Owner (`Owner`) principals, accompanied by respective compromise events (`CompromisedCSP`, `UncheckedPolicies`) to model compound authorization architectures.
+* **Provisioning and Lifecycle Instrumentation**: Introduces setup-phase events (`CSRSigned`, `ProvisionedTargetEnv`, `EndorsementsIssued`, and `IdentityManifestIssued`). These events establish baseline reachability invariants and support correspondence lemmas verifying Target Environment Engagement.
+* **Adversarial Session Seeding**: Enables adversary-controlled inputs (certificates or target launch measurements) to initialize `run_Server` prior to internal key matching, modeling misconfigured server provisioning and malicious tenant dispatching.
+* **Hardware Identifier Anonymization**: Adds a Universal Entity ID (`UEID`) attribute to `agent_keys`, which `gen_endorsements` overwrites with `NULL_ID` to model CSP-enforced pseudonymization of physical hardware platform identifiers.
+
+---
+
+### Identity Anchoring Variants
+
+The driver parameterizes identity appraisal via `idOption: branch_option`, which is evaluated across key generation, manifest issuance, and endpoint execution:
+
+* **Option A (Direct Attestation Anchoring)**: The workload identity is derived directly from target measurements via `dev2id(dev_statusRef)`. `pubTSK` is self-signed without Web PKI certificates. Attestation evidence serves as the sole root of authentication and session binding.
+* **Option B (Compound Additive Authentication)**: Identity (`ID_S`) is bound to `pubTSK` through a CA-signed X.509 certificate, while an Owner-signed manifest binds `ID_S` to authorized launch measurements (`dev_statusRef`). Authentication requires concurrent appraisal across both Web PKI and platform endorsement chains.
+
+---
+
+### Threat Model: Evidence Oracle
+
+The `TEE_Oracle_Vuln` process models the UCCS proxy-forwarding attack (`draft-reddy-rats-key-binding` §8.3). The adversary provides arbitrary runtime data (`rdata`) and launch measurements to the attestation interface, prompting an endorsed `privAK` to sign over attacker-selected material. The resulting quote is tagged with the `ExternalOrExportable` key provenance attribute, modeling platform hardware assertions that the underlying key material originated outside the physical enclave boundary.
+
+### Compromise Events
+
+Compromise events are scoped to individual entities via `agent_keys` table lookups rather than leaking global signing material:
+
+| Event | Compromised Subject |
+| --- | --- |
+| `LeakedTSK` | TLS signing key of an individual workload instance |
+| `LeakedAK` | Attestation key of an individual cVM instance |
+| `CompromisedCA` | Web PKI certification authority private key |
+| `CompromisedCSP` | CSP / platform endorser private key |
+| `UncheckedPolicies` | Workload policy owner private signing key |
+
+These five events form the predicate base for the verification queries in `queries.pvl`, enabling evaluation of security guarantees under varying assumptions of partial infrastructure compromise.
+
+---
+
+### Principals
+
+* **CA**: Web PKI trust anchor that signs X.509 certificates binding `ID_S` to `pubTSK`.
+* **CSP / ISV**: Platform hardware endorser that certifies `pubAK` associations with platform launch measurements.
+* **Owner**: Workload policy authority (active in Option B) that signs manifests binding workload identifiers to expected runtime measurements.
+* **Client / Server**: TLS protocol endpoints. Each confidential VM (cVM) server instance hosts an attestation key (`pubAK`) and one or more workload TLS signing keys (`pubTSK`).
+* **Adversary**: Active Dolev-Yao attacker operating over the public channel `io`, capable of intercepting and injecting traffic, instantiating server processes with arbitrary parameters, and triggering selective key compromises.
+
 
 ## Acknowledgements
 
