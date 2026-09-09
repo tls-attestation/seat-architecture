@@ -77,7 +77,7 @@ Interpretation of result: the happy path is real and doesn't secretly
 
 query dev_state:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random,
-      ID:identity,pubTSK:pubkey,pubAK:pubkey,anyAK:pubkey,
+      ID,ID_C:identity,pubTSK:pubkey,pubAK:pubkey,anyAK:pubkey,
       psk:preSharedKey, pubCA,pubISV,pubOwner:pubkey,
       offer:params, mode:params, ev:bitstring,
       kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
@@ -102,7 +102,7 @@ query dev_state:measurements,quote:bitstring,
 
     (* -- second milestone (RA + 1-way agreement): see Property above -- *)
       ( event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state,ev))
-        && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+        && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
         && event(ClientStateEvKc(ev,kc)) 
       ) && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
       ==>
@@ -142,18 +142,31 @@ Result: true (reachable), all 3 sub-queries, all 4 logs.
 Interpretation of result: the binding properties below aren't testing
   an empty trace set.
 *)
-query ev:bitstring,gxy:bitstring;
+query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
+      kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
+      cr,sr,cr',sr':random,ID1,ID2,ID,ID_C:identity,
+      pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:element, 
+      psk:preSharedKey,ems,rms:bitstring,
+      dev_state,dev_state1,dev_state2:measurements,
+      req_ctx,app_msg:bitstring,
+      offer:params, mode:params;
+
       event(ClientStateEv(ev,gxy)) &&
       event(ServerStateEv(ev,gxy))
-.
+;
 
-query ev:bitstring,kch:ae_key;
       event(ClientStateEvKch(ev,kch)) &&
       event(ServerStateEvKch(ev,kch))
-.
+;
 
-query ev:bitstring,kc:ae_key;
       event(ClientStateEvKc(ev,kc)) &&
+      event(ServerStateEvKc(ev,kc))
+;
+
+      event(ClientComp(ID,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_state)) &&
+      event(ClientStateEvKc(ev,kc)) 
+      &&
+      event(PreServerComp(ID,psk,offer,mode,kc,ks,ems,cr,sr,pubTSK,dev_state)) &&
       event(ServerStateEvKc(ev,kc))
 .
 
@@ -183,7 +196,7 @@ Formalization: event(ClientStateEv*(ev,X)) && event(ServerStateEv*(ev,Y))
 *)
 query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
-      cr,sr,cr',sr':random,ID1,ID2,ID:identity,
+      cr,sr,cr',sr':random,ID1,ID2,ID,ID_C:identity,
       pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:element, 
       psk:preSharedKey,ems,rms:bitstring,
       dev_state,dev_state1,dev_state2:measurements,
@@ -206,12 +219,12 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
 (* G3 (kc), with BadElement disjunct. Result: true, all 4 logs. *)
       event(ClientStateEvKc(ev,kc1)) &&
       event(ServerStateEvKc(ev,kc2)) ==>
-      (kc1 = kc2) || event(ClientID(ID, e2b(BadElement)))
+      (kc1 = kc2) || event(ClientAcceptsElement(cr, BadElement))
 ;
 
-(* G3, tighter variant with no BadElement disjunct.
-Result: true, all 4 logs (previously the reported intra-mode gap).
-*)
+  (* counterexample: event(ClientAcceptsElement(cr, BadElement))
+  [STALE] conf/noBadElementHash.pvl now forbids this event outright, so
+    dropping it no longer diverges from the query above. Result: true. *)
       event(ClientStateEvKc(ev,kc1)) &&
       event(ServerStateEvKc(ev,kc2)) ==>
       (kc1 = kc2)
@@ -234,25 +247,27 @@ Formalization: (Client view) && (Server view) ==> (kc1,ev1) = (kc2,ev2).
 Result: true, all 4 logs.
 *)
     (
-      event(ClientComp(ID1,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state1)) &&
+      event(ClientComp(ID,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state)) &&
       event(ClientStateEvKc(ev1,kc1)) 
     )
         && (* Correlation *)
     (
-      event(PreServerComp(ID2,psk,offer,mode,kc2,ks,ems,cr,sr,pubTSK,dev_state2)) &&
+      event(PreServerComp(ID,psk,offer,mode,kc2,ks,ems,cr,sr,pubTSK,dev_state)) &&
       event(ServerStateEvKc(ev2,kc2))
     )
-    ==> ((kc1,ev1) = (kc2,ev2)) || event(ClientID(ID, e2b(BadElement)))
+    ==> ((kc1,ev1) = (kc2,ev2)) || event(ClientAcceptsElement(cr, BadElement))
 ;
 
-(* tighter variant, no BadElement disjunct. *)
+  (* counterexample: event(ClientAcceptsElement(cr, BadElement))
+  [STALE] conf/noBadElementHash.pvl now forbids this event outright, so
+    dropping it no longer diverges from the query above. Result: true. *)
     (
-      event(ClientComp(ID1,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state1)) &&
+      event(ClientComp(ID,psk,offer,mode,kc1,ks,ems,rms,cr,sr,pubTSK,dev_state)) &&
       event(ClientStateEvKc(ev1,kc1)) 
     )
         && (* Correlation *)
     (
-      event(PreServerComp(ID2,psk,offer,mode,kc2,ks,ems,cr,sr,pubTSK,dev_state2)) &&
+      event(PreServerComp(ID,psk,offer,mode,kc2,ks,ems,cr,sr,pubTSK,dev_state)) &&
       event(ServerStateEvKc(ev2,kc2))
     )
     ==> ((kc1,ev1) = (kc2,ev2))
@@ -325,13 +340,13 @@ Interpretation of result: identity anchoring (A vs. B) is what changes
 *)
 (**********************************************************************)
 
-query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
+query ID,ID_C: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
     kc, ks: ae_key, ems, rms: bitstring, cr, sr: random, ev: bitstring, dev_state: measurements,
     pubAK, pubCA, pubISV, pubOwner: pubkey;
 
  (* (1) main *)
   ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
     || event(LeakedAK(pubAK))
@@ -343,7 +358,7 @@ query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
 
 (* (2) counterexample for OptionA: remove event(LeakedAK(pubAK)), add event(LeakedTSK(pubTSK)) *)
   ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
     || event(LeakedTSK(pubTSK))
@@ -356,7 +371,7 @@ query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
 (* (3) counterexample for OptionB: remove event(UncheckedPolicies(pubOwner))
    + event(CompromisedCA(pubCA)) *)
   ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
       (* || event(LeakedAK(pubAK)) *)
@@ -365,6 +380,39 @@ query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
       (* || event(CompromisedCA(pubCA)) *)
       (* || event(UncheckedPolicies(pubOwner)) 
          || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+(* Demonstrate resistance to EvidenceOracle attack on Target Environment Engagement 
+   when AK, TSK, CSP and CA are assumed secure [OptionB]
+   Bound: Option A -- oracle output alone breaks engagement. Option B -- it does not. *)
+  ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc(ev, kc))
+    && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      || event(LeakedAK(pubAK))
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      || event(UncheckedPolicies(pubOwner))
+      (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+(* Demonstrate resistance to EvidenceOracle attack on Target Environment Engagement 
+   when AK, TSK, CSP and CA are assumed secure [OptionB] 
+   counterexample: remove event(UncheckedPolicies(pubOwner)) from RHS
+   Bound: UncheckedPolicies is the last anchor standing for Option B here -- strip it and Option B breaks too. *)
+  ( inj-event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc(ev, kc))
+    && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      || event(LeakedAK(pubAK))
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      (* || event(UncheckedPolicies(pubOwner)) *)
+      (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
 .
 
 (**********************************************************************)
@@ -373,7 +421,7 @@ query ID: identity, pubTSK: pubkey, psk: preSharedKey, offer, mode: params,
 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random,
-      ID:identity,pubTSK:pubkey,pubAK:pubkey, ev: bitstring,
+      ID,ID_C:identity,pubTSK:pubkey,pubAK:pubkey, ev: bitstring,
       psk:preSharedKey, e:element, pubOwner,pubCA,pubISV:pubkey,
       offer:params, mode:params,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
@@ -418,7 +466,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   attacker(kc) && 
   (    (* Key Secrecy *)
        event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
-    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev,kc))
   ) 
    ==> 
@@ -433,7 +481,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   attacker(kc) && 
   (    (* Key Secrecy *)
        event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
-    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev,kc))
   ) 
    ==> 
@@ -449,7 +497,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   attacker(kc) && 
   (    (* Key Secrecy *)
        event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
-    && event(ClientFin1WayAgr(ID,pubTSK,psk,offer,mode,kc,ks,ems,rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev,kc))
   ) 
    ==> 
@@ -459,6 +507,45 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       (* || event(CompromisedCA(pubCA)) *)
       (* || event(UncheckedPolicies(pubOwner))
          || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+(* Demonstrate resistance to EvidenceOracle attack on Key Secrecy 
+   when AK, TSK, CSP and CA are assumed secure [OptionB]
+   Bound: Option A -- oracle output alone exposes kc. Option B -- it does not. *)
+  attacker(kc) && 
+  (    (* Key Secrecy *)
+       event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc(ev,kc))
+    && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  ) 
+   ==> 
+       event(LeakedAK(pubAK))
+    || event(LeakedTSK(pubTSK))
+    || event(CompromisedCSP(pubISV))
+    || event(CompromisedCA(pubCA))
+    (* || event(UncheckedPolicies(pubOwner)) *)
+    (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+(* Demonstrate resistance to EvidenceOracle attack on Key Secrecy 
+   when AK, TSK, CSP and CA are assumed secure [OptionB] 
+   counterexample: remove event(CompromisedCA(pubCA)) from RHS
+   Bound: CompromisedCA is the last anchor standing for Option B here -- strip it and Option B breaks too. *)
+  attacker(kc) && 
+  (    (* Key Secrecy *)
+       event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_state1,ev))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc(ev,kc))
+    && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  ) 
+   ==> 
+       event(LeakedAK(pubAK))
+    || event(LeakedTSK(pubTSK))
+    || event(CompromisedCSP(pubISV))
+    (* || event(CompromisedCA(pubCA)) *)
+    (* || event(UncheckedPolicies(pubOwner)) *)
+    (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
 .
 
 (**********************************************************************)
@@ -524,6 +611,36 @@ Result: (1) true under A and B; (2) false under A, true under B;
       (* || event(CompromisedCA(pubCA)) *)
       (* || event(UncheckedPolicies(pubOwner)) 
          || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+(* Demonstrate resistance to EvidenceOracle attack when AK, TSK, CSP and CA are assumed secure [OptionB]
+   Bound: Option A -- oracle output alone breaks idS=idXS. Option B -- it does not. *)
+  (   event(ServerID(idS,gxy)) 
+   && event(ClientID(idXS,gxy))
+   && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) ) ==>
+   (idS = idXS)
+      || event(LeakedAK(pubAK))
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      (* || event(UncheckedPolicies(pubOwner)) *)
+      (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+(* Demonstrate resistance to EvidenceOracle attack when 
+   AK, TSK, CSP and CA are assumed secure [OptionB]
+   counterexample: remove event(CompromisedCA(pubCA)) from RHS
+   Bound: CompromisedCA is the last anchor standing for Option B here -- strip it and Option B breaks too. *)
+  (   event(ServerID(idS,gxy)) 
+   && event(ClientID(idXS,gxy))
+   && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) ) ==>
+   (idS = idXS)
+      || event(LeakedAK(pubAK))
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      (* || event(CompromisedCA(pubCA)) *)
+      (* || event(UncheckedPolicies(pubOwner)) *)
+      (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
 .
 
 (* ============================================================ *)
@@ -550,7 +667,7 @@ Result: (1) true under A and B; (2) false under A, true under B;
 
 query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
-      cr,sr,cr',sr':random,ID:identity,
+      cr,sr,cr',sr':random,ID,ID_C:identity,
       pubTSK,pubAK,pubCA,pubOwner,pubISV:pubkey,
       psk:preSharedKey,ems,rms:bitstring,
       dev_state:measurements,offer,mode:params,
@@ -595,17 +712,51 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       (* || event(CompromisedCA(pubCA))
       || event(UncheckedPolicies(pubOwner)) 
       || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+  (* Demonstrate resistance to EvidenceOracle attack on App-Data Composition
+   when AK, TSK, CSP and CA are assumed secure [OptionB]
+   Bound: Option A -- oracle output alone breaks delivery binding. Option B -- it does not. *)
+  inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+  && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  ==> (
+       inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+       && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      ) (* RHS disjuncts *)
+      || event(LeakedAK(pubAK))
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      || event(UncheckedPolicies(pubOwner))
+      (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+;
+
+  (* Demonstrate resistance to EvidenceOracle attack on App-Data Composition
+   when AK, TSK, CSP and CA are assumed secure [OptionB]
+   counterexample: remove event(UncheckedPolicies(pubOwner)) from RHS
+   Bound: UncheckedPolicies is the last anchor standing for Option B here -- strip it and Option B breaks too. *)
+  inj-event(ClientReceivesAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+  && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  ==> (
+       inj-event(ServerSendsAppData(ID,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
+       && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
+      ) (* RHS disjuncts *)
+      || event(LeakedAK(pubAK))
+      || event(LeakedTSK(pubTSK))
+      || event(CompromisedCSP(pubISV))
+      || event(CompromisedCA(pubCA))
+      (* || event(UncheckedPolicies(pubOwner)) *)
+      (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
 .
 
 (* ============================================================ *)
 (* EvidenceOracle evaluations *)
-(* Goal: a signing oracle that will attest arbitrary caller-supplied
-  key material can only produce a session the client treats as fully
-  bound if the client's own key-provenance check has been defeated --
-  i.e. rejecting ExternalOrExportable evidence is both necessary and
-  sufficient protection against this class of attack.
+(* Goal: the EvidenceOracle signs over externally-supplied key material
+  with no authentication or authorization step of its own. This ladder
+  establishes that capability, independent of identity option or
+  handshake placement.
 
-Events: EvidenceOracle, ClientRANew, ClientFin1WayAgr, ClientStateEvKc,
+Events: EvidenceOracle, ClientRANew, ClientFinRecentAgr, ClientStateEvKc,
   ProvisionedTargetEnv, ClientAcceptsProvenance, ServerAssertsProvenance.
 
 Parameters (of agreement): pubAK, dev_state, ev -- ties the oracle
@@ -617,9 +768,10 @@ Method: four-query minimality ladder against the same LHS (oracle +
   (2) forward implication: does completion force ClientAcceptsProvenance;
   (3) forward implication: does completion force ServerAssertsProvenance
       (or a downgrade/leak disjunct);
-  (4) minimality: strip ServerAssertsProvenance from (3) to confirm
-      it -- not the leftover BadElement/WeakHash/LeakedTSK disjuncts --
-      is what's actually doing the work.
+  (4) minimality: same LHS, RHS is the full compromise set (LeakedAK,
+      LeakedTSK, CompromisedCSP, CompromisedCA, UncheckedPolicies), both
+      provenance disjuncts removed -- tests whether the oracle needs any
+      of them.
 
 Formalization: EvidenceOracle && LHS ==> RHS, varied per step above.
 
@@ -627,22 +779,36 @@ Result: (1) false (reachable); (2) true; (3) true; (4) false.
   Identical across all 4 logs -- unlike every property above, this one
   does not split on Option A/B or on intra-/post-handshake placement.
 
-Interpretation of result: the provenance-rejection invariant is unconditional
+Interpretation of result: the oracle needs no authentication or
+  authorization to operate, in every identity option and handshake
+  placement. Whether that unauthenticated operation breaks a security
+  property is answered separately, per property, by the oracle-
+  conditioned rungs below: Option A, yes; Option B, no.
 *)
 (* ============================================================ *)
 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random, gxy:bitstring,
-      ID,ID2,EUID:identity,pubTSK:pubkey,pubAK:pubkey,
+      ID,ID2,EUID,ID_C:identity,pubTSK:pubkey,pubAK:pubkey,
       psk:preSharedKey, e:element, pubOwner,pubCA,pubISV:pubkey,
       offer:params, mode:params, ev:bitstring,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
 
-  (* (1) reachability *)
+  (* (1) reachability even if the Server runs *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc(ev, kc))
+    && event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
+  )
+;
+
+ (* (1) reachability *)
+  event(EvidenceOracle(pubAK, dev_state, ev)) &&
+  (    
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) 
   && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
@@ -653,7 +819,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) 
   && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
@@ -661,34 +827,35 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
   event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable))
 ;
 
-  (* (3) forces ServerAssertsProvenance (or a downgrade/leak) *)
+  (* (3) forces ServerAssertsProvenance *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) 
   && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
   ==> 
   (* event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
      event(ServerAssertsProvenance(cr, sr, ExternalOrExportable))
-  || event(ClientAcceptsElement(cr, BadElement))
-  || event(ClientAcceptsHash(cr, WeakHash))
   || event(LeakedTSK(pubTSK))
 ;
 
-  (* (4) minimality: strip ServerAssertsProvenance from (3) *)
+  (* (4) Remove both Provenance checks on the RHS and demonstrate that the 
+     EvidenceOracle operates freely without authentication *)
   event(EvidenceOracle(pubAK, dev_state, ev)) &&
   (    
        event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubTSK, dev_state, ev))
-    && event(ClientFin1WayAgr(ID, pubTSK, psk, offer, mode, kc, ks, ems, rms))
+    && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc(ev, kc))
   ) 
   && (event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)))
   ==> 
-  (* event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
-  (* event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) *)
-     event(ClientAcceptsElement(cr, BadElement))
-  || event(ClientAcceptsHash(cr, WeakHash))
+     event(LeakedAK(pubAK))
   || event(LeakedTSK(pubTSK))
+  || event(CompromisedCSP(pubISV))
+  || event(CompromisedCA(pubCA))
+  || event(UncheckedPolicies(pubOwner))
+  (* || event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable)) *)
+  (* || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) *)
 .

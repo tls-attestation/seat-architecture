@@ -10,7 +10,7 @@ The **Evidence Oracle** models a signing oracle vulnerability (specifically the 
 
 * **The Vulnerability**: An untrusted caller passes arbitrary key material into a TEE-hosted service. If the enclave blindly forwards this caller-supplied key to the local attestation runtime, the hardware generates a valid attestation quote over rogue keys. An attacker could use this oracle to masquerade an arbitrary external endpoint as a secure enclave.
 
-* **Universal Vulnerability to Proxy Forwarding**: Changing transport placement (moving from intra-handshake `log_SH` binding to post-handshake `ems` exporter binding) does not eliminate the need for provenance appraisal. In both modes, an attestation interface that quotes arbitrary input will produce a validly bound session for an attacker unless the client explicitly rejects `ExternalOrExportable` evidence.
+* **Scope of Proxy Forwarding Vulnerability**: Changing transport placement (moving from intra-handshake `log_SH` binding to post-handshake `ems` exporter binding) does not alter the underlying trust dependencies of evidence appraisal. In direct attestation architectures (Option A), an attestation interface that quotes arbitrary input produces a validly bound session unless the relying party explicitly filters out `ExternalOrExportable` evidence. Under compound additive authentication (Option B), the oracle attack is neutralized under standard trust assumptions (uncompromised AK, TSK, CSP, CA, and Owner Policy) even without evaluating key provenance attributes.
 
 * **The Defense Mechanism**: Hardware-enforced key provenance flags differentiate keys generated within the cryptographic boundary from imported keys. When the oracle signs over externally supplied data, the hardware tags the quote claims with `ExternalOrExportable` rather than `LocalNonExportable`.
 
@@ -24,7 +24,7 @@ To guarantee session integrity while the `EvidenceOracle` is active, the client 
 
 * **Rejection of Degenerate Key Shares**: The client rejects small-subgroup Diffie-Hellman parameters (`BadElement`), preventing key-exchange manipulation and forced shared-secret predictability.
 
-* **Strict Key Provenance Filtering**: The client verifies the `key-attributes` claim in the evidence quote and immediately aborts if tagged with `ExternalOrExportable`. Only keys generated strictly within the enclave (`LocalNonExportable`) are accepted.
+* **Key Provenance Filtering (Option A / Independent Mitigation)**: For direct attestation anchoring (Option A), or as an orthogonal mitigation when PKI or policy anchors are compromised, the relying party inspects the `key-attributes` claim and rejects evidence tagged with `ExternalOrExportable`. Under Option B with valid PKI and Owner policy verification, session integrity and target environment engagement hold independently of this check.
 
 ---
 
@@ -40,6 +40,7 @@ Attestation composes additively with standard Web PKI. The server presents a sta
 * **Compromise Resilience**:
   - If a Web PKI CA is compromised or untrusted DNS redirects traffic, the attacker cannot spoof the instance without presenting measurements that match the owner's signed manifest and valid hardware endorsements.
   - If an enclave host is compromised, the attacker cannot impersonate the domain without a CA-signed certificate and owner-signed manifest.
+  - If an Evidence Oracle signs arbitrary attacker key material, the attack fails under Option B without relying on key provenance claims (`ExternalOrExportable`), provided the CA, CSP, AK, TSK, and Owner Policy anchors remain sound.
 
 ---
 
@@ -108,7 +109,7 @@ The driver parameterizes identity appraisal via `idOption: branch_option`, which
 
 ### Threat Model: Evidence Oracle
 
-The `TEE_Oracle_Vuln` process models the UCCS proxy-forwarding attack (`draft-reddy-rats-key-binding` §8.3). The adversary provides arbitrary runtime data (`rdata`) and launch measurements to the attestation interface, prompting an endorsed `privAK` to sign over attacker-selected material. The resulting quote is tagged with the `ExternalOrExportable` key provenance attribute, modeling platform hardware assertions that the underlying key material originated outside the physical enclave boundary.
+The `TEE_Oracle_Vuln` process models the UCCS proxy-forwarding attack (`draft-reddy-rats-key-binding` §8.3). The adversary provides arbitrary runtime data (`rdata`) and launch measurements to the attestation interface, prompting an endorsed `privAK` to sign over attacker-selected material. The resulting quote is tagged with the `ExternalOrExportable` key provenance attribute. In Option A, client-side rejection of this attribute is strictly necessary to prevent impersonation. In Option B, compound verification across CA certificates and Owner manifests neutralizes the oracle attack without requiring relying-party inspection of provenance attributes, provided the platform, CA, and policy anchors remain sound.
 
 ### Compromise Events
 

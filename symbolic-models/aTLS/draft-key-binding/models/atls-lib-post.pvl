@@ -786,7 +786,6 @@ let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measure
   let m1 = hmac(StrongHash,ksm,log_CV) in  (* A MAC over the value Transcript-Hash(Handshake Context, Certificate, CertificateVerify) using a MAC key derived from the Base Key [Sec. 4.4, RFC8446]. Handshake Context via first row of table in Sec. 4.4 of RFC8446. log_CV contains Handshake Context, Certificate, CertificateVerify  *)
   let log_SFIN = (log_CV,FIN(m1)) in  (* received ClientHello || sent ServerHello || sent Certificate || sent CertificateVerify || sent ServerFinished *)
   let (ms:bitstring,kc:ae_key,ks:ae_key,ems:bitstring) = kdf_ms(hs,log_SFIN) in  (* Key Derivation [Sec. 7.1, RFC8446] *)
-  let ID_C = NULL_ID in (* One way auth only *)
   out(io,FIN(m1));  (* Send serverFinished message *)
 
   (* clientFinished message *)
