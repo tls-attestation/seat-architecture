@@ -81,6 +81,10 @@ e.g. for intra-handshake with Option A with RPK:
 
 ## Acknowledgements
 
+Thank you to all participants of the SEAT working group for the discussions and contributions that helped shape this project.
+
+---
+
 This work is a unique adaptation and extension incorporating input from the following prior art:
 
 * [Identity Crisis in Confidential Computing: Formal analysis of attested TLS protocols](https://github.com/CCC-Attestation/formal-spec-id-crisis/tree/main)
