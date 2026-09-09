@@ -67,13 +67,12 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
   if idOption = OptionA then (
     (* OPTION A: Attestation-Anchored Key [seat-cc-workload-identity §5] *)
     (* The workload is identified solely by its measurements and the attested key *)
-    (* This enforces a strict 1-to-1 relationship: the execution key IS the identity *)
     !( 
       (* Launch measurements of the Target Environment *)
       new dev_statusRef: measurements;  
       out(io, dev_statusRef);
 
-      (* A single identity can validly issue multiple ephemeral execution keys (TSK) *)
+      (* A single identity can validly issue multiple ephemeral TLS signing keys (TSK) *)
       !( 
         new privTSK: privkey;  
         let pubTSK = pk(privTSK) in
@@ -99,7 +98,7 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
       new dev_statusRef: measurements;  
       out(io, dev_statusRef);
 
-      (* A single identity can validly issue multiple ephemeral execution keys (TSK) *)
+      (* A single identity can validly issue multiple ephemeral TLS signing keys (TSK) *)
       !( 
         new privTSK: privkey;  
         let pubTSK = pk(privTSK) in
@@ -184,7 +183,7 @@ let run_Client(pubCA, pubISV, pubOwner: pubkey, idOption: branch_option) =
 let run_Server(idOption:branch_option) = 
 (* Intuitively, this models a single server and the replication takes care of multiple servers *)
 
-  if idOption = OptionA then ( (* In Option A, the identity is intrinsically bound to the execution key *)
+  if idOption = OptionA then ( (* In Option A, the identity is intrinsically bound to the TLS signing key *)
     
     (* model of workloadRef (measurements): input from adversary *)
     (* Lets the adversary instantiate any desired VM 
