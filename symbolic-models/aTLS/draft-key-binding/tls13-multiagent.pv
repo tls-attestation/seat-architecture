@@ -190,8 +190,8 @@ let run_Server(idOption:branch_option) =
        but only the one with correct measurements will be accepted at Verifier *)
     in(io, (workloadRef: measurements));
 
-    get agent_keys(UEID,=workloadRef,privTSK,pubTSK,_,_) in (* Match private TLS key to chosen workload type *)
-    get agent_keys(=UEID,_,_,_,privAK,pubAK) in  (* privTSK is confidential and should be matched with AK *)
+    get agent_keys(_,=workloadRef,privTSK,pubTSK,_,_) in (* Match private TLS key to chosen workload type *)
+    get agent_keys(_,_,=privTSK,_,privAK,pubAK) in  (* privTSK is confidential and should be matched with AK *)
     
     (* Option A: The identity IS the measurement [seat-cc-workload-identity §5, self-signed cert with no validated PKI identity] *)
     let ID_S = dev2id(workloadRef) in
@@ -213,7 +213,7 @@ let run_Server(idOption:branch_option) =
 
     (* Allow combinations, but for each private key, 
        choose the corresponding public key *)
-    get agent_keys(UEID,_,privTSK,=pubTSK,_,_) in (* Match private TLS key to chosen cert *)
+    get agent_keys(UEID,_,privTSK,_,_,_) in (* Pair a private key to whatever the adversary picked *)
     get agent_keys(=UEID,_,_,_,privAK,pubAK) in (* privTSK is confidential and should be matched with AK *)
 
     (* The following replication models multiple sessions of server with these parameters *)
