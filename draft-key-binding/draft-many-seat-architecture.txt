@@ -5,11 +5,11 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                                T. Fossati
 Intended status: Informational                               Independent
-Expires: 13 March 2027                                          T. Reddy
+Expires: 14 March 2027                                          T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
-                                                        9 September 2026
+                                                       10 September 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -52,7 +52,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 March 2027.
+   This Internet-Draft will expire on 14 March 2027.
 
 Copyright Notice
 
