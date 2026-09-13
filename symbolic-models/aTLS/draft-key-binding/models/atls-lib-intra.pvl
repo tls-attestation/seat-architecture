@@ -23,7 +23,9 @@ type identity.  (* long-term identity of the machine *)
 type measurements. (* Launch measurements of the Target Environment *)
 
 free io:channel.
+free state:channel. (* represents solver controllable state, vs network activity. Unconstrained. *)
 const zero: bitstring.
+const Hashed: bitstring.
 
 (********************************************************)
 (* Authenticated Encryption with Additional Data *)
@@ -168,8 +170,9 @@ event LeakedAK(pubkey).
 event LeakedTSK(pubkey).
 
 (********************************************************)
-(* LTSK *)
+(* LKAK - Key Attestation Key, Split Model [key-binding §8.3] *)
 (********************************************************)
+event LeakedKAK(pubkey).
 
 (********************************************************)
 (* LCA / LISV *)
@@ -284,8 +287,8 @@ fun nego(tls_typ,kex_alg,hash_alg,ev_typ): params [data].
 fun CH(random,params,identity):msg [data].  (* ClientHello *)
 fun SH(random,params):msg [data].  (* ServerHello *)
 (* EncryptedExtensions msg not modelled *)
-(*  CRT(quote,server_cert) *)
-fun CRT(bitstring,bitstring):msg [data].  (* Certificate message of TLS *)
+(*  CRT(crt_msg) *)
+fun CRT(bitstring):msg [data].  (* Certificate message of TLS *)
 fun CV(bitstring):msg [data].  (* CertificateVerify *)
 fun FIN(bitstring):msg [data].  (* Finished *)
 
@@ -337,12 +340,12 @@ event ClientComp(identity,
       ae_key,ae_key,bitstring,bitstring,
       random,random,
       pubkey,measurements).
-(* ClientRA is for explicit agreement of all RA parameters: (pubAK,pubTSK,dev_state,ev) *)
-event ClientRANew(identity,pubkey,pubkey,pubkey,measurements,bitstring). (* ID,pubTSK,pubAK,pubTSK,dev_state,ev *)
+(* ClientRA is for explicit agreement of all RA parameters: (pubAK,pubKAK,pubTSK,pubISV,dev_state,ev) *)
+event ClientRANew(identity,pubkey,pubkey,pubkey,pubkey,pubkey,measurements,bitstring). (* ID,pubTSK,pubAK,pubTSK,dev_state,ev *)
 
-event ClientStateEv(bitstring,bitstring).  (* quote,gxy *)
-event ClientStateEvKch(bitstring,ae_key).  (* quote,kch *)
-event ClientStateEvKc(bitstring,ae_key).  (* quote,kc *)
+event ClientStateEv(bitstring,bitstring).  (* cmw,gxy *)
+event ClientStateEvKch(bitstring,ae_key).  (* cmw,kch *)
+event ClientStateEvKc(bitstring,ae_key).  (* cmw,kc *)
 
 (* Old: PreServerFinished(cr,sr,psk,pubTSK,offer,mode,kc,ks,ems) *)
 event ServerChoosesHash(random,random,hash_alg).
@@ -370,9 +373,9 @@ event ServerFinished(random,random,
              params,params,
              ae_key,ae_key,bitstring,bitstring).
 
-event ServerStateEv(bitstring,bitstring).  (* quote,gxy *)
-event ServerStateEvKch(bitstring,ae_key).  (* quote,kch *)
-event ServerStateEvKc(bitstring,ae_key).   (* quote,kc *)
+event ServerStateEv(bitstring,bitstring).  (* cmw,gxy *)
+event ServerStateEvKch(bitstring,ae_key).  (* cmw,kch *)
+event ServerStateEvKc(bitstring,ae_key).   (* cmw,kc *)
 
 event ServerID(identity,bitstring).  (* Server's ID and session key gxy *)
 event ClientID(identity,bitstring).  (* Client's view of the Server's ID and session key gxy *)
@@ -414,13 +417,17 @@ event ServerSendsAppData(identity, pubkey, pubkey, random, random, bitstring, bi
 (* Key Provenance Attributes - I-D.reddy-rats-key-binding *)
 (**********************************************************************)
 type attribute.
-const LocalNonExportable: attribute [data].
+const LocalNonExportable: attribute [data]. (* The Good Kind (TM) *)
 const ExternalOrExportable: attribute [data].
+
+(* Structured EAT Claims Sets per draft-reddy-rats-key-binding §6 *)
+fun eat_pat_profile(pubkey (* cnf: KAK *), attribute (* claim-attributes *), measurements, bitstring (* eat_nonce *)): bitstring [data].
+fun eat_kat_profile(pubkey (* cnf: TSK *), attribute (* claim-attributes *), bitstring (* eat_nonce *)): bitstring [data].
 
 type branch_option.
 const OptionA, OptionB: branch_option [data].
 
-event ClientAcceptsProvenance(random, random, attribute).
+event ClientAcceptsProvenance(random, random, attribute, pubkey).
 event ServerAssertsProvenance(random, random, attribute).
 event ClientIdentityOption(branch_option).
 
@@ -431,15 +438,15 @@ event ClientIdentityOption(branch_option).
 e.g., SH so that these variables can then be used in logs *)
 
 let Client_CV_Fin(
-  ID_C: identity, ID_S: identity,pubTSK: pubkey, pubAK: pubkey,hash_algo: hash_alg,
-  log_SH: bitstring, log_CRT: bitstring, quote: bitstring, dev_status: measurements, dev_statusRef: measurements,
+  ID_C: identity, ID_S: identity, pubTSK, pubAK, pubKAK, pubISV: pubkey, hash_algo: hash_alg,
+  log_SH: bitstring, log_CRT: bitstring, cmw: bitstring, dev_status: measurements, dev_statusRef: measurements,
   gxy: bitstring, hs: bitstring, kch: ae_key, ksm: mac_key, kcm: mac_key, psk: preSharedKey, offer: params, 
   mode: params, cr: random, sr: random
 ) =
 (
-  in(io,CV(sg));  (* receive CertificateVerify message *)
-  if verify(pubTSK,hash(hash_algo,log_CRT),sg) = true then  (* log_CRT contains msgs up to Certificate *)
-  event Accepted(quote);
+  in(io,CV(sg));  (* receive signature (sg) from CertificateVerify message *)
+  if verify(pubTSK,hash(hash_algo,log_CRT),sg) = true then  (* PoP of pubTSK cnf. - log_CRT contains msgs up to Certificate *)
+  event Accepted(cmw);
   event Appraised(log_SH);
   event AcceptedRdata(dev_status);
   let log_CV = (log_CRT,CV(sg)) in  (* after this step, log_CV contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify *)
@@ -455,13 +462,13 @@ let Client_CV_Fin(
 
     event ClientFin1WayAgr(ID_S,pubTSK,psk,offer,mode,kc,ks,ems,rms);
     event ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr);
-    event ClientConn(quote);
+    event ClientConn(cmw);
     event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_statusRef);
-    event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_statusRef,quote);
+    event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubISV,dev_statusRef,cmw);
     event ClientID(ID_S,gxy);
-    event ClientStateEvKc(quote,kc);    
-    event ClientStateEvKch(quote,kch);
-    event ClientStateEv(quote,gxy);
+    event ClientStateEvKc(cmw,kc);    
+    event ClientStateEvKch(cmw,kch);
+    event ClientStateEv(cmw,gxy);
     event ClientFinished(pubTSK,psk,cr,sr,offer,mode,kc,ks,ems,rms);
     (* insert clientSession(cr,sr,psk,offer,mode,kc,ks,ems,rms);  kc and ks are passed to appData via this table *)
     out(io,FIN(m2));  (* send ClientFinished message *)
@@ -469,12 +476,12 @@ let Client_CV_Fin(
     in(io, (app_msg_enc:bitstring)); (* receive post-handshake encrypted application message *)
     let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in (* decrypt and verify AEAD application record using server write key ks *)
     let req_ctx = r2b(cr) in (* Backward compatible shim with EXPAT *)
-    event ClientReceivesAppData(ID_S,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_statusRef,app_msg_s)
+    event ClientReceivesAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_statusRef,app_msg_s)
 
   )
 ).
 
-let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubkey,idOption:branch_option) =
+let Client(ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,idOption:branch_option) =
 (
   in(io, (TargetHost: identity, ioffer:params));  (* io is a public channel. ioffer is obtained from adversary as input to allow adversary to generate all valid patterns *)
   let nego(=aTLS,DHE_13(g,eee),hash_algo,ev_type) = ioffer in
@@ -504,22 +511,20 @@ let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubke
 
   let gxy = e2b(dh_exp(g,gy,x)) in  (* represents (EC)DHE in Key Derivation [Sec. 7.1, RFC8446] *)
   let (hs:bitstring,kch:ae_key,ksh:ae_key,kcm:mac_key,ksm:mac_key) = kdf_hs(es,gxy,log_SH) in
-  in(io,CRT(quote,server_cert));  (* receive Certificate message *)
+  in(io,CRT(crt_msg)) [precise];  (* receive Certificate message; cmw is now signed by privKAK per-handshake [key-binding §8.8] *)
+  
+  let (cmw:bitstring, server_cert:bitstring) = crt_msg in (* Pattern match CMW [RFC 9999], server_cert (may be self-signed) *)
+  let (pat: bitstring, kat: bitstring) = cmw in (* Collect the pat and kat from the Combined Attestation Bundle inside cmw *)
+
+  let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  (* check server_cert format *)
+  let (cert_subject:identity,pubTSK:pubkey) = id_pub_pair in  (* universal parse of certificate; pubTSK is the TLS authentication key [seat-cc-workload-identity §2] *)
 
   (* Also collect signed workload manifest and endorsements from wire [seat-cc-workload-identity §6] *)
   in(io, (manifest: bitstring, endorsements: bitstring));
 
-  let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  (* check server_cert format; self-signed (A) or WIMSE cert (B) [seat-cc-workload-identity §5, §6] *)
-  let (cert_subject:identity,pubTSK:pubkey) = id_pub_pair in  (* universal parse of certificate; pubTSK is the TLS authentication key [seat-cc-workload-identity §2] *)
-
   let (platform_info:bitstring, sig2:bitstring) = endorsements in 
   let (=NULL_ID,pubAK:pubkey) = platform_info in (* Assume CSP nulls out TEE hardware IDs [seat-cc-workload-identity §4] *)
-  if verify(pubISV,platform_info,sig2) = true then  (* CSP/Endorser signs platform endorsement [seat-cc-workload-identity §3] *)
-
-  let (dataSign:bitstring, sig:bitstring) = quote in  (* check quote format *)
-  let (rdata:bitstring,evidenceAttr:attribute,dev_status:measurements) = dataSign in  (* check dataSign format; evidenceAttr is the key-attributes claim [key-binding §7.4] *)
-
-  if verify(pubAK,dataSign,sig) = true then  (* check signatures on Quote: [key-binding §5.2 step 1] *)
+  if verify(pubCSP,platform_info,sig2) = true then  (* CSP/Endorser signs platform endorsement [seat-cc-workload-identity §3] *)
 
   (* ============================================================ *)
   (* Appraisal Policy Branching *)
@@ -527,41 +532,81 @@ let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubke
   event ClientIdentityOption(idOption);
 
   if idOption = OptionA then 
-  ( (* Option A: Target identity must match the attested measurement [seat-cc-workload-identity §5] *)
-    
-    let dev_statusRef = id2dev(ID_S) in 
-    
-    if dev_status = dev_statusRef then (* Ensure signed measurements match expectations from expected device identity *)
-    if rdata = (log_SH, pubTSK) then (* log_SH contains sent ClientHello || received ServerHello *)
-    event ClientAcceptsProvenance(cr, sr, evidenceAttr);  (* key provenance attribute accepted *)
+  ( (* Option A: RPK only, no CA *)
 
-    let log_CRT = (log_SH, CRT(quote, server_cert)) in
+    let dev_status = id2dev(ID_S) in
+
+    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
+    let (WorkloadType: identity, workloadAtrr:attribute) = workload_manifest in
+    if verify(pubISV, workload_manifest, sig_manifest) = true then
+
+    (*  Verify Platform Attestation Token (PAT) *)
+    let (pat_claims: bitstring, ae_sig: bitstring) = pat in
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, 
+          dev_statusRef:measurements, eat_nonce:bitstring) = pat_claims in
+
+    let rdata = (Hashed, pat_claims) in
+    let dataSign = (dev_statusRef, rdata) in
+    if verify(pubAK, dataSign, ae_sig) = true then
+
+    (*  Verify Key Attestation Token (KAT): pubKAK signs this session's own
+    eat_nonce = (log_SH, pubTSK) directly [key-binding §8.8]. *)
+    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    if verify(pubKAK, kat_claims, kat_sig) = true then (* PoP of pubKAK cnf. *)
+
+    (* Confirm binding between attested TSK and active TLS session *)
+    if ID_S = WorkloadType then (* Ensure that the Identity of this workload matches the workload type *)
+    if evidenceAttr = workloadAtrr then (* Verifier validates known good Evidence attributes *)
+    if dev_status = dev_statusRef then (* Ensure measurements align with golden ref *)
+    if eat_nonce = (hash(StrongHash, (log_SH, pubTSK))) then (* Validate per-connection binding - legacy: 'rdata' *)
+
+    (* Mark when Client evaluates key provenance claims *)
+    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
+
+    let log_CRT = (log_SH, CRT(crt_msg)) in
     Client_CV_Fin(
-      ID_C, ID_S, pubTSK, pubAK, shash_algo, log_SH, log_CRT, quote,
-      dev_status, dev_status, gxy, hs, kch, ksm, kcm, psk, offer,
+      ID_C, ID_S, pubTSK, pubAK, pubKAK, pubISV, shash_algo, log_SH, log_CRT, cmw,
+      dev_status, dev_statusRef, gxy, hs, kch, ksm, kcm, psk, offer,
       mode, cr, sr
     )
   )
 
   else if idOption = OptionB then 
-  (  (* Option B: PKI certificate matches SNI, manifest links ID_S to measurement [seat-cc-workload-identity §6] *)
+  (  (* Option B: PKI certificate matches SNI, manifest links ID_S to measurement *)
 
     if verify(pubCA,id_pub_pair,sig1) = true then  (* check signatures on server_cert; WIMSE trust domain [seat-cc-workload-identity §6] *)
     if TargetHost = ID_S then if ID_S = cert_subject then
-
-    (* Apply appraisal policy [seat-cc-workload-identity §6] *)
+    
     let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
-    let (WID:identity, dev_statusRef:measurements) = workload_manifest in
-    if verify(pubOwner, workload_manifest, sig_manifest) = true then
+    let (WID: identity, workloadAtrr:attribute, dev_statusRef: measurements) = workload_manifest in
+    if verify(pubISV, workload_manifest, sig_manifest) = true then
 
-    if WID = ID_S then (* Apply appraisal policy for authorization; joint identity/measurement check [seat-cc-workload-identity §6, §8 "Siloed appraisal"] *)
-    if dev_status = dev_statusRef then (* Ensure the measurements match expectations from the platform endorsement *)
-    if rdata = (log_SH,pubTSK) then  (* log_SH contains sent ClientHello || received ServerHello *)
-    event ClientAcceptsProvenance(cr, sr, evidenceAttr);  (* key provenance attribute accepted [seat-cc-workload-identity §7; key-binding §7.4] *)
+    (*  Verify Platform Attestation Token (PAT) *)
+    let (pat_claims: bitstring, pat_sig: bitstring) = pat in
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, 
+          dev_status:measurements, eat_nonce:bitstring) = pat_claims in
+    let rdata = (Hashed, pat_claims) in
+    let dataSign = (dev_status, rdata) in
+    if verify(pubAK, dataSign, pat_sig) = true then
 
-    let log_CRT = (log_SH, CRT(quote, server_cert)) in
+    (*  Verify Key Attestation Token (KAT) *)
+    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    if verify(pubKAK, kat_claims, kat_sig) = true then
+
+    (* Mark when Client evaluates key provenance claims *)
+    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
+    
+    (* Confirm binding between attested TSK and active TLS session *)
+    if WID = ID_S then (* Ensure WIMSE-like Workload ID matches server Identity e.g., FQDN/SAN *)
+    if evidenceAttr = workloadAtrr then (* Verifier validates known good Evidence attributes *)
+    if dev_status = dev_statusRef then (* Ensure measurements align with golden ref *)
+    if eat_nonce = (hash(StrongHash, (log_SH, pubTSK))) then (* Validate per-connection binding - legacy: 'rdata' *)
+
+    let log_CRT = (log_SH, CRT(crt_msg)) in
     Client_CV_Fin(
-      ID_C, ID_S, pubTSK, pubAK, shash_algo, log_SH, log_CRT, quote,
+      ID_C, ID_S, pubTSK, pubAK, pubKAK, pubISV, shash_algo, log_SH, log_CRT, cmw,
       dev_status, dev_statusRef, gxy, hs, kch, ksm, kcm, psk, offer,
       mode, cr, sr
     )
@@ -572,7 +617,7 @@ let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubke
 (* Server *)
 (********************************************************)
 
-let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measurements, server_cert:bitstring) =
+let Server(ID_S:identity, dev_status1: measurements, privKAK: privkey, privTSK: privkey, server_cert:bitstring) =
 (
   in(io, ch:msg); (* Receive ClientHello message from Client and store in variable ch *)
   let CH(cr,offer,sni) = ch in (* pattern matching to ensure that received message in variable ch is in the desired format fun CH(random,params,random):msg [data]. nonce will be stored in variable cr and parameters will be stored in variable offer. Attestation nonce will be stored in ar *)
@@ -603,19 +648,38 @@ let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measure
   event AttackerControlsHSK(kch,ksh);
 
   let pubTSK = pk(privTSK) in
-  let pubAK = pk(privAK) in
+  let pubKAK = pk(privKAK) in
   event ServerID(ID_S,gxy);
 
-  (* Evidence generation *)
-  in(io, (evidenceAttr: attribute));
+(* -- *)
+  (* Evidence generation *) 
+  let eat_nonce = (hash(StrongHash, (log_SH, pubTSK))) in (* Produce per-connection binding value - legacy: 'rdata' *)
 
-  let rdata = (log_SH, pubTSK) in
-  let dataSign = (rdata, evidenceAttr, dev_status1) in
+  (* Key Attestation Token *)  (*  cnf   , key-attributes    , measurements,nonce *)
+  let pat_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_status1  ,eat_nonce) in
+  let rdata = (Hashed, pat_claims) in
+  out(io, (dev_status1, rdata)); (* Submit rdata to Attestation Environment with paired cVM measurements *)
+
+  (* Receive signed data back from Attestion Environment (could be a signing oracle) *)
+  in(io, (dataSign:bitstring));
+  let (signed_claims:bitstring, pat_sig:bitstring) = dataSign in
+
+  let eat_pat_profile(=pubKAK, evidenceAttr:attribute, =dev_status1, =eat_nonce) = signed_claims in
+  let pat = (signed_claims, pat_sig) in
+
+  (* Key Attestation Token *)   (*  cnf   , key-attributes, nonce *)
+  let kat_claims = eat_kat_profile(pubTSK, evidenceAttr  , eat_nonce) in
+  let kat = (kat_claims, sign(privKAK, kat_claims)) in
+
   event ServerAssertsProvenance(cr, sr, evidenceAttr);
-  let quote = (dataSign, sign(privAK, dataSign)) in
 
-  out(io,CRT(quote,server_cert));  (* Send Certificate message *)
-  let log_CRT = (log_SH,CRT(quote,server_cert)) in  (* received ClientHello || sent ServerHello || sent Certificate *)
+  (* Conceptual Message Wrapper, CMW [RFC 9999] *)
+  let cmw = (pat, kat) in (* Place Combined Attestation Bundle (CAB) into CMW *)
+  let crt_msg = (cmw,server_cert) in
+(* -- *)
+
+  out(io,CRT(crt_msg));  (* Send Certificate message *)
+  let log_CRT = (log_SH,CRT(crt_msg)) in  (* received ClientHello || sent ServerHello || sent Certificate *)
 
   (* CertificateVerify message *)
   let sg     = sign(privTSK ,hash(hash_algo,log_CRT)) in  (* A signature over the value Transcript-Hash(Handshake Context, Certificate) [Sec. 4.4, RFC8446] using TSK; Handshake Context via first row of table in Sec. 4.4 of RFC8446. log_CRT contains Handshake Context, Certificate. *)
@@ -634,14 +698,14 @@ let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measure
   if m2 = hmac(StrongHash,kcm,log_SFIN) then  (* kcm represents kcm; check mac of finished from client *)
     let log_CFIN = (log_SFIN,FIN(m2)) in  (* received ClientHello || sent ServerHello || sent Certificate || sent CertificateVerify || sent ServerFinished || received ClientFinished *)
     let rms =  kdf_psk(ms,log_CFIN) in
-  event ServerStateEvKc(quote,kc);
-  event ServerStateEvKch(quote,kch);
-  event ServerStateEv(quote,gxy);
+  event ServerStateEvKc(cmw,kc);
+  event ServerStateEvKch(cmw,kch);
+  event ServerStateEv(cmw,gxy);
   event ServerFinished(cr,sr,psk,pubTSK,offer,mode,kc,ks,ems,rms);
 
   new app_msg: bitstring;  (* generate fresh application payload *)
   let req_ctx = r2b(cr) in (* Backward compatible shim with EXPAT *)
-  event ServerSendsAppData(ID_S,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_status1,app_msg);
+  event ServerSendsAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_status1,app_msg);
   out(io, ph_msg(app_msg, ae2b(ks)))  (* encrypt and transmit post-handshake record with server application write key ks *)
 
 ).

@@ -10,7 +10,7 @@ The **Evidence Oracle** models a signing oracle vulnerability (specifically the 
 
 * **The Vulnerability**: An untrusted caller passes arbitrary key material into a TEE-hosted service. If the enclave blindly forwards this caller-supplied key to the local attestation runtime, the hardware generates a valid attestation quote over rogue keys. An attacker could use this oracle to masquerade an arbitrary external endpoint as a secure enclave.
 
-* **Scope of Proxy Forwarding Vulnerability**: Changing transport placement (moving from intra-handshake `log_SH` binding to post-handshake `ems` exporter binding) does not alter the underlying trust dependencies of evidence appraisal. In direct attestation architectures (Option A), an attestation interface that quotes arbitrary input produces a validly bound session unless the relying party explicitly filters out `ExternalOrExportable` evidence. Under compound additive authentication (Option B), the oracle attack is neutralized under standard trust assumptions (uncompromised AK, TSK, CSP, CA, and Owner Policy) even without evaluating key provenance attributes.
+* **Scope of Proxy Forwarding Vulnerability**: Changing transport placement (moving from intra-handshake `log_SH` binding to post-handshake `ems` exporter binding) does not alter the underlying trust dependencies of evidence appraisal. In direct attestation architectures (Option A), an attestation interface that quotes arbitrary input produces a validly bound session unless the relying party explicitly filters out `ExternalOrExportable` evidence. Under compound additive authentication (Option B), the oracle attack is neutralized under standard trust assumptions (uncompromised AK, TSK, CSP, CA, and ISV Policy) even without evaluating key provenance attributes.
 
 * **The Defense Mechanism**: Hardware-enforced key provenance flags differentiate keys generated within the cryptographic boundary from imported keys. When the oracle signs over externally supplied data, the hardware tags the quote claims with `ExternalOrExportable` rather than `LocalNonExportable`.
 
@@ -24,7 +24,7 @@ To guarantee session integrity while the `EvidenceOracle` is active, the client 
 
 * **Rejection of Degenerate Key Shares**: The client rejects small-subgroup Diffie-Hellman parameters (`BadElement`), preventing key-exchange manipulation and forced shared-secret predictability.
 
-* **Key Provenance Filtering (Option A / Independent Mitigation)**: For direct attestation anchoring (Option A), or as an orthogonal mitigation when PKI or policy anchors are compromised, the relying party inspects the `key-attributes` claim and rejects evidence tagged with `ExternalOrExportable`. Under Option B with valid PKI and Owner policy verification, session integrity and target environment engagement hold independently of this check.
+* **Key Provenance Filtering (Option A / Independent Mitigation)**: For direct attestation anchoring (Option A), or as an orthogonal mitigation when PKI or policy anchors are compromised, the relying party inspects the `key-attributes` claim and rejects evidence tagged with `ExternalOrExportable`. Under Option B with valid PKI and ISV policy verification, session integrity and target environment engagement hold independently of this check.
 
 ---
 
@@ -34,13 +34,13 @@ Attestation replaces Web PKI entirely. The client resolves the expected target i
 
 ### Option B: Compound Additive Authentication
 
-Attestation composes additively with standard Web PKI. The server presents a standard CA-signed X.509 certificate matching the target domain or service identity. In parallel, it presents an attestation quote and a signed **Workload Manifest** issued by the workload policy owner.
+Attestation composes additively with standard Web PKI. The server presents a standard CA-signed X.509 certificate matching the target domain or service identity. In parallel, it presents an attestation quote and a signed **Workload Manifest** issued by the software vendor / policy issuer (ISV).
 
 * **Additive Trust Anchor**: The manifest cryptographically links the X.509 identity (`WID / ID_S`) to the allowed runtime measurements (`dev_statusRef`).
 * **Compromise Resilience**:
-  - If a Web PKI CA is compromised or untrusted DNS redirects traffic, the attacker cannot spoof the instance without presenting measurements that match the owner's signed manifest and valid hardware endorsements.
-  - If an enclave host is compromised, the attacker cannot impersonate the domain without a CA-signed certificate and owner-signed manifest.
-  - If an Evidence Oracle signs arbitrary attacker key material, the attack fails under Option B without relying on key provenance claims (`ExternalOrExportable`), provided the CA, CSP, AK, TSK, and Owner Policy anchors remain sound.
+  - If a Web PKI CA is compromised or untrusted DNS redirects traffic, the attacker cannot spoof the instance without presenting measurements that match the ISV's signed manifest and valid hardware endorsements.
+  - If an enclave host is compromised, the attacker cannot impersonate the domain without a CA-signed certificate and ISV-signed manifest.
+  - If an Evidence Oracle signs arbitrary attacker key material, the attack fails under Option B without relying on key provenance claims (`ExternalOrExportable`), provided the CA, CSP, AK, TSK, and ISV Policy anchors remain sound.
 
 ---
 
@@ -91,7 +91,7 @@ e.g. for intra-handshake with Option A with RPK:
 The driver extends the baseline single-path TLS 1.3 specification (Bhargavan et al.) through five architectural modifications:
 
 * **Consolidated Workload Keying**: Replaces the separate long-term identity key (`pubLTK`) and ephemeral TLS handshake key (`pubEK`) with a unified TLS Signing Key (`pubTSK`). Under Option A, `pubTSK` is self-signed; under Option B, it is certified by a CA. The legacy `LeakedLTK` event is eliminated.
-* **Additional External Trust Anchors**: Introduces Cloud Service Provider / Independent Software Vendor (`CSP / ISV`) and Workload Policy Owner (`Owner`) principals, accompanied by respective compromise events (`CompromisedCSP`, `UncheckedPolicies`) to model compound authorization architectures.
+* **Additional External Trust Anchors**: Introduces a Cloud Service Provider (`CSP`, hardware/platform endorser, keys `pubCSP`/`privCSP`) and an Independent Software Vendor / Policy Issuer (`ISV`, workload manifest signer, keys `pubISV`/`privISV`) as separate principals, accompanied by respective compromise events (`CompromisedCSP`, `UncheckedPolicies`) to model compound authorization architectures.
 * **Provisioning and Lifecycle Instrumentation**: Introduces setup-phase events (`CSRSigned`, `ProvisionedTargetEnv`, `EndorsementsIssued`, and `IdentityManifestIssued`). These events establish baseline reachability invariants and support correspondence lemmas verifying Target Environment Engagement.
 * **Adversarial Session Seeding**: Enables adversary-controlled inputs (certificates or target launch measurements) to initialize `run_Server` prior to internal key matching, modeling misconfigured server provisioning and malicious tenant dispatching.
 * **Hardware Identifier Anonymization**: Adds a Universal Entity ID (`UEID`) attribute to `agent_keys`, which `gen_endorsements` overwrites with `NULL_ID` to model CSP-enforced pseudonymization of physical hardware platform identifiers.
@@ -103,13 +103,13 @@ The driver extends the baseline single-path TLS 1.3 specification (Bhargavan et 
 The driver parameterizes identity appraisal via `idOption: branch_option`, which is evaluated across key generation, manifest issuance, and endpoint execution:
 
 * **Option A (Direct Attestation Anchoring)**: The workload identity is derived directly from target measurements via `dev2id(dev_statusRef)`. `pubTSK` is self-signed without Web PKI certificates. Attestation evidence serves as the sole root of authentication and session binding.
-* **Option B (Compound Additive Authentication)**: Identity (`ID_S`) is bound to `pubTSK` through a CA-signed X.509 certificate, while an Owner-signed manifest binds `ID_S` to authorized launch measurements (`dev_statusRef`). Authentication requires concurrent appraisal across both Web PKI and platform endorsement chains.
+* **Option B (Compound Additive Authentication)**: Identity (`ID_S`) is bound to `pubTSK` through a CA-signed X.509 certificate, while an ISV-signed manifest binds `ID_S` to authorized launch measurements (`dev_statusRef`). Authentication requires concurrent appraisal across both Web PKI and platform endorsement chains.
 
 ---
 
 ### Threat Model: Evidence Oracle
 
-The `TEE_Oracle_Vuln` process models the UCCS proxy-forwarding attack (`draft-reddy-rats-key-binding` §8.3). The adversary provides arbitrary runtime data (`rdata`) and launch measurements to the attestation interface, prompting an endorsed `privAK` to sign over attacker-selected material. The resulting quote is tagged with the `ExternalOrExportable` key provenance attribute. In Option A, client-side rejection of this attribute is strictly necessary to prevent impersonation. In Option B, compound verification across CA certificates and Owner manifests neutralizes the oracle attack without requiring relying-party inspection of provenance attributes, provided the platform, CA, and policy anchors remain sound.
+The `TEE_Oracle_Vuln` process models the UCCS proxy-forwarding attack (`draft-reddy-rats-key-binding` §8.3). The adversary provides arbitrary runtime data (`rdata`) and launch measurements to the attestation interface, prompting an endorsed `privAK` to sign over attacker-selected material. The resulting quote is tagged with the `ExternalOrExportable` key provenance attribute. In Option A, client-side rejection of this attribute is strictly necessary to prevent impersonation. In Option B, compound verification across CA certificates and ISV manifests neutralizes the oracle attack without requiring relying-party inspection of provenance attributes, provided the platform, CA, and policy anchors remain sound.
 
 ### Compromise Events
 
@@ -119,19 +119,21 @@ Compromise events are scoped to individual entities via `agent_keys` table looku
 | --- | --- |
 | `LeakedTSK` | TLS signing key of an individual workload instance |
 | `LeakedAK` | Attestation key of an individual cVM instance |
-| `CompromisedCA` | Web PKI certification authority private key |
-| `CompromisedCSP` | CSP / platform endorser private key |
-| `UncheckedPolicies` | Workload policy owner private signing key |
+| `CompromisedCA` | Web PKI certification authority private key (`privCA`) |
+| `CompromisedCSP` | CSP / platform endorser private key (`privCSP`) |
+| `UncheckedPolicies` | ISV / workload policy issuer private signing key (`privISV`) |
 
 These five events form the predicate base for the verification queries in `queries.pvl`, enabling evaluation of security guarantees under varying assumptions of partial infrastructure compromise.
+
+Each compromise event is triggered by a matching adversarial leak process in `tls13-multiagent.pv`: `LCA` leaks `privCA`, `LCSP` leaks `privCSP` (firing `CompromisedCSP`), and `LISV` leaks `privISV` (firing `UncheckedPolicies`).
 
 ---
 
 ### Principals
 
 * **CA**: Web PKI trust anchor that signs X.509 certificates binding `ID_S` to `pubTSK`.
-* **CSP / ISV**: Platform hardware endorser that certifies `pubAK` associations with platform launch measurements.
-* **Owner**: Workload policy authority (active in Option B) that signs manifests binding workload identifiers to expected runtime measurements.
+* **CSP**: Cloud Service Provider / infrastructure endorser (keys `pubCSP`/`privCSP`) that certifies `pubAK` associations with platform launch measurements via `gen_endorsements`.
+* **ISV**: Independent Software Vendor / workload policy issuer (keys `pubISV`/`privISV`, active in Option B) that signs the workload manifest and baseline measurements (`dev_statusRef`) via `gen_identity_document`, binding workload identifiers to expected runtime measurements.
 * **Client / Server**: TLS protocol endpoints. Each confidential VM (cVM) server instance hosts an attestation key (`pubAK`) and one or more workload TLS signing keys (`pubTSK`).
 * **Adversary**: Active Dolev-Yao attacker operating over the public channel `io`, capable of intercepting and injecting traffic, instantiating server processes with arbitrary parameters, and triggering selective key compromises.
 

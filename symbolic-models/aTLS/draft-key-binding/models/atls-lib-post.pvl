@@ -24,6 +24,7 @@ type measurements. (* Launch measurements of the Target Environment *)
 
 free io:channel.
 const zero: bitstring.
+const Hashed: bitstring.
 
 (********************************************************)
 (* Authenticated Encryption with Additional Data *)
@@ -166,6 +167,7 @@ event LeakedAK(pubkey).
 (* LTSK *)
 (********************************************************)
 event LeakedTSK(pubkey).
+event LeakedKAK(pubkey).
 
 (********************************************************)
 (* LTSK *)
@@ -338,7 +340,7 @@ event ClientComp(identity,
       random,random,
       pubkey,measurements).
 (* ClientRA is for explicit agreement of all RA parameters: (pubAK,pubTSK,dev_state,ev) *)
-event ClientRANew(identity,pubkey,pubkey,pubkey,measurements,bitstring). (* ID,pubTSK,pubAK,pubTSK,dev_state,ev *)
+event ClientRANew(identity,pubkey,pubkey,pubkey,pubkey,pubkey,measurements,bitstring). (* ID,pubAK,pubKAK,pubTSK,pubISV,dev_state,ev *)
 
 event ClientStateEv(bitstring,bitstring).  (* quote,gxy *)
 event ClientStateEvKch(bitstring,ae_key).  (* quote,kch *)
@@ -470,13 +472,17 @@ fun AuthenticatorResponse(msg, msg, msg):msg [data].
 (* Key Provenance Attributes - I-D.reddy-rats-key-binding *)
 (**********************************************************************)
 type attribute.
-const LocalNonExportable: attribute [data].
+const LocalNonExportable: attribute [data]. (* The Good Kind (TM) *)
 const ExternalOrExportable: attribute [data].
+
+(* Structured EAT Claims Sets per draft-reddy-rats-key-binding §6 *)
+fun eat_pat_profile(pubkey (* cnf: KAK *), attribute (* claim-attributes *), measurements, bitstring (* eat_nonce *)): bitstring [data].
+fun eat_kat_profile(pubkey (* cnf: TSK *), attribute (* claim-attributes *), bitstring (* eat_nonce *)): bitstring [data].
 
 type branch_option.
 const OptionA, OptionB: branch_option [data].
 
-event ClientAcceptsProvenance(random, random, attribute).
+event ClientAcceptsProvenance(random, random, attribute, pubkey).
 event ServerAssertsProvenance(random, random, attribute).
 event ClientIdentityOption(branch_option).
 
@@ -484,12 +490,46 @@ event ClientIdentityOption(branch_option).
 (* Client Authenticator                                 *)
 (********************************************************)
 (* Runs after the vanilla handshake's Finished. Owns everything that used to be the
-   idOption = OptionA/OptionB appraisal branch in Client, now rebound to the Authenticator's
-   own exporter-derived evidence (exported_val) instead of the handshake transcript (log_SH). *)
+   idOption = OptionA/OptionB appraisal branch in Client. *)
+
+let Client_EA_CV_fin(
+  ID_S: identity, pubTSK: pubkey, pubAK: pubkey, pubKAK: pubkey, pubISV: pubkey, shash_algo: hash_alg,
+  ea_hs_ctx: bitstring, req_msg: msg, ea_cert: bitstring, ea_sg: bitstring, ea_mac: bitstring,
+  ems: bitstring, dev_status: measurements, cmw: bitstring, gxy: bitstring,
+  kch: ae_key, ks: ae_key, kc: ae_key, rms: bitstring, psk: preSharedKey,
+  offer: params, mode: params, cr: random, sr: random, req_ctx: bitstring
+) =
+(
+  let log_EA_CRT = (ea_hs_ctx, req_msg, CRT(ea_cert)) in  (* after this step, log_EA_CRT contains ea_hs_ctx || Authenticator Request || Certificate [Sec. 5.2.2, RFC9261] *)
+
+  if verify(pubTSK, hash(shash_algo, (ea_cv_context, log_EA_CRT)), ea_sg) = true then  (* verify CertificateVerify signature over Authenticator transcript hash using pubTSK [Sec. 5.2.2, RFC9261] *)
+  (
+    event Accepted(cmw);
+    event Appraised(log_EA_CRT);
+    event AcceptedRdata(dev_status);
+    let log_EA_CV = (log_EA_CRT, CV(ea_sg)) in  (* after this step, log_EA_CV contains ea_hs_ctx || Authenticator Request || Certificate || CertificateVerify *)
+
+    let ea_fin = ea_derive_fin_key(ems) in  (* derive Authenticator Finished Key using label "EXPORTER-server authenticator finished key" [Sec. 5.1, RFC9261] *)
+    if ea_mac = hmac(StrongHash, b2mk(ea_fin), log_EA_CV) then  (* verify Authenticator Finished HMAC over log_EA_CV using key derived from ea_fin [Sec. 5.2.3, RFC9261] *)
+    (
+      event ClientConn(cmw);
+      event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_status);
+      event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubISV,dev_status,cmw);
+      event ClientID(ID_S,gxy);
+      event ClientStateEvKc(cmw,kc);
+      event ClientStateEvKch(cmw,kch);
+      event ClientStateEv(cmw,gxy);
+
+      in(io, (app_msg_enc:bitstring));  (* receive post-handshake encrypted application message *)
+      let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in  (* decrypt and verify AEAD application record using server write key ks *)
+      event ClientReceivesAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s)
+    )
+  )
+).
 
 let Client_EA(
   ID_C: identity, ID_S: identity, TargetHost: identity, pubTSK: pubkey, server_cert: bitstring,
-  pubOwner: pubkey, pubISV: pubkey, pubCA: pubkey, idOption: branch_option,
+  pubISV: pubkey, pubCSP: pubkey, pubCA: pubkey, idOption: branch_option,
   psk: preSharedKey, cr: random, sr: random, offer: params, mode: params, gxy: bitstring,
   kch: ae_key, ks: ae_key, kc: ae_key, ems: bitstring, rms: bitstring, shash_algo: hash_alg
 ) =
@@ -506,22 +546,23 @@ let Client_EA(
   in(io, (manifest: bitstring, endorsements: bitstring));
 
   (* ea_cert carries attestation evidence + server_cert matching the handshake *)
-  let (quote:bitstring, =server_cert) = ea_cert in (* pattern match ea_cert *)
-  let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in (* unpack cert format only — no trust check performed here *)
-  let (cert_subject:identity, =pubTSK) = id_pub_pair in
+  let (cmw:bitstring, server_cert:bitstring) = ea_cert in (* Pattern match CMW [RFC 9999], server_cert (may be self-signed) *)
+  let (pat: bitstring, kat: bitstring) = cmw in (* Collect the pat and kat from the Combined Attestation Bundle inside cmw *)
 
-  let (platform_info:bitstring, sig2:bitstring) = endorsements in
+  let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  (* check server_cert format *)
+  let (cert_subject:identity, =pubTSK) = id_pub_pair in  (* universal parse of certificate; pubTSK is the TLS authentication key [seat-cc-workload-identity §2] *)
+
+  (* Also collect signed workload manifest and endorsements from wire [seat-cc-workload-identity §6] *)
+  in(io, (manifest: bitstring, endorsements: bitstring)) [precise];
+
+  let (platform_info:bitstring, sig2:bitstring) = endorsements in 
   let (=NULL_ID,pubAK:pubkey) = platform_info in (* Assume CSP nulls out TEE hardware IDs [seat-cc-workload-identity §4] *)
-  if verify(pubISV,platform_info,sig2) = true then  (* CSP/Endorser signs platform endorsement [seat-cc-workload-identity §3] *)
+  if verify(pubCSP,platform_info,sig2) = true then  (* CSP/Endorser signs platform endorsement [seat-cc-workload-identity §3] *)
 
-  let (dataSign:bitstring, sig:bitstring) = quote in  (* check quote format *)
-  let (rdata:bitstring,evidenceAttr:attribute,dev_status:measurements) = dataSign in  (* check dataSign format; evidenceAttr is the key-attributes claim [key-binding §7.4] *)
-
-  if verify(pubAK,dataSign,sig) = true then  (* check signatures on Quote: [key-binding §5.2 step 1] *)
-
-  (* verify binding between the TLS Authenticator Identity Key (pubTSK) and Attestation Evidence,
-     bound to the Authenticator exporter value instead of the handshake transcript *)
+  (* Calculate binding between the TLS Authenticator Identity Key (pubTSK) and Attestation Evidence,
+     bound to the Authenticator exporter value. *)
   let exported_val = ea_derive_attestation_binder(ems, req_ctx) in  (* derive exported key material using exporter_secret (ems) and req_ctx as context_value [Sec. 7.5, RFC9846; Sec. 5.1, draft-fossati-seat-expat] *)
+  let clientNonce = (exported_val, pubTSK) in
 
   (* ============================================================ *)
   (* Appraisal Policy Branching *)
@@ -531,38 +572,40 @@ let Client_EA(
   if idOption = OptionA then
   ( (* Option A: Target identity must match the attested measurement [seat-cc-workload-identity §5] *)
 
-    let dev_statusRef = id2dev(ID_S) in
+    let dev_status = id2dev(ID_S) in
 
-    if dev_status = dev_statusRef then (* Ensure signed measurements match expectations from expected device identity *)
-    if rdata = (exported_val, pubTSK) then (* bound to the Authenticator exporter value, not the handshake transcript *)
-    event ClientAcceptsProvenance(cr, sr, evidenceAttr);  (* key provenance attribute accepted *)
+    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
+    let (WorkloadType: identity, workloadAtrr:attribute) = workload_manifest in
+    if verify(pubISV, workload_manifest, sig_manifest) = true then
+
+    (*  Verify Platform Attestation Token (PAT) *)
+    let (pat_claims: bitstring, ae_sig: bitstring) = pat in
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, 
+          dev_statusRef:measurements, eat_nonce:bitstring) = pat_claims in
+
+    let rdata = (Hashed, pat_claims) in
+    let dataSign = (dev_statusRef, rdata) in
+    if verify(pubAK, dataSign, ae_sig) = true then
+
+    (*  Verify Key Attestation Token (KAT): pubKAK signs this session's own
+    eat_nonce = (log_SH, pubTSK) directly [key-binding §8.8]. *)
+    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    if verify(pubKAK, kat_claims, kat_sig) = true then (* PoP of pubKAK cnf. *)
+
+    (* Confirm binding between attested TSK and active TLS session *)
+    if ID_S = WorkloadType then (* Ensure that the Identity of this workload matches the workload type *)
+    if evidenceAttr = workloadAtrr then (* Verifier validates known good Evidence attributes *)
+    if dev_status = dev_statusRef then (* Ensure measurements align with golden ref *)
+    if eat_nonce = clientNonce then (* Validate per-connection binding - legacy: 'rdata' *)
+
+    (* Mark when Client evaluates key provenance claims *)
+    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
 
     let ea_hs_ctx = ea_derive_hs_context(ems) in  (* derive Authenticator Handshake Context using label "EXPORTER-server authenticator handshake context" [Sec. 5.1, RFC9261] *)
-    let log_EA_CRT = (ea_hs_ctx, req_msg, CRT(ea_cert)) in  (* after this step, log_EA_CRT contains ea_hs_ctx || Authenticator Request || Certificate [Sec. 5.2.2, RFC9261] *)
 
-    if verify(pubTSK, hash(shash_algo, (ea_cv_context, log_EA_CRT)), ea_sg) = true then  (* verify CertificateVerify signature over Authenticator transcript hash using pubTSK [Sec. 5.2.2, RFC9261] *)
-    (
-      event Accepted(quote);
-      event Appraised(log_EA_CRT);
-      event AcceptedRdata(dev_status);
-      let log_EA_CV = (log_EA_CRT, CV(ea_sg)) in  (* after this step, log_EA_CV contains ea_hs_ctx || Authenticator Request || Certificate || CertificateVerify *)
-
-      let ea_fin = ea_derive_fin_key(ems) in  (* derive Authenticator Finished Key using label "EXPORTER-server authenticator finished key" [Sec. 5.1, RFC9261] *)
-      if ea_mac = hmac(StrongHash, b2mk(ea_fin), log_EA_CV) then  (* verify Authenticator Finished HMAC over log_EA_CV using key derived from ea_fin [Sec. 5.2.3, RFC9261] *)
-      (
-        event ClientConn(quote);
-        event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_status);
-        event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_status,quote);
-        event ClientID(ID_S,gxy);
-        event ClientStateEvKc(quote,kc);
-        event ClientStateEvKch(quote,kch);
-        event ClientStateEv(quote,gxy);
-
-        in(io, (app_msg_enc:bitstring));  (* receive post-handshake encrypted application message *)
-        let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in  (* decrypt and verify AEAD application record using server write key ks *)
-        event ClientReceivesAppData(ID_S,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s)
-      )
-    )
+    Client_EA_CV_fin(ID_S,pubTSK,pubAK,pubKAK,pubISV,shash_algo,ea_hs_ctx,req_msg,ea_cert,ea_sg,ea_mac,
+      ems,dev_status,cmw,gxy,kch,ks,kc,rms,psk,offer,mode,cr,sr,req_ctx)
   )
 
   else if idOption = OptionB then
@@ -570,56 +613,47 @@ let Client_EA(
 
     if verify(pubCA,id_pub_pair,sig1) = true then  (* check signatures on server_cert; WIMSE trust domain [seat-cc-workload-identity §6] *)
     if TargetHost = ID_S then if ID_S = cert_subject then
-
-    (* Apply appraisal policy [seat-cc-workload-identity §6] *)
+    
     let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
-    let (WID:identity, dev_statusRef:measurements) = workload_manifest in
-    if verify(pubOwner, workload_manifest, sig_manifest) = true then
+    let (WID: identity, workloadAtrr:attribute, dev_statusRef: measurements) = workload_manifest in
+    if verify(pubISV, workload_manifest, sig_manifest) = true then
 
+    (*  Verify Platform Attestation Token (PAT) *)
+    let (pat_claims: bitstring, pat_sig: bitstring) = pat in
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, 
+          dev_status:measurements, eat_nonce:bitstring) = pat_claims in
+    let rdata = (Hashed, pat_claims) in
+    let dataSign = (dev_status, rdata) in
+    if verify(pubAK, dataSign, pat_sig) = true then
+
+    (*  Verify Key Attestation Token (KAT) *)
+    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    if verify(pubKAK, kat_claims, kat_sig) = true then
+    
+    (* Confirm binding between attested TSK and active TLS session *)
     if WID = ID_S then (* Apply appraisal policy for authorization; joint identity/measurement check [seat-cc-workload-identity §6, §8 "Siloed appraisal"] *)
+    if evidenceAttr = workloadAtrr then (* Verifier validates known good Evidence attributes *)
     if dev_status = dev_statusRef then (* Ensure the measurements match expectations from the platform endorsement *)
-    if rdata = (exported_val, pubTSK) then (* bound to the Authenticator exporter value, not the handshake transcript *)
-    event ClientAcceptsProvenance(cr, sr, evidenceAttr);  (* key provenance attribute accepted [seat-cc-workload-identity §7; key-binding §7.4] *)
+    if eat_nonce = clientNonce then (* Validate per-connection binding - legacy: 'rdata' *)
+    
+    (* Mark when Client evaluates key provenance claims *)
+    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK); 
 
     let ea_hs_ctx = ea_derive_hs_context(ems) in
-    let log_EA_CRT = (ea_hs_ctx, req_msg, CRT(ea_cert)) in
 
-    if verify(pubTSK, hash(shash_algo, (ea_cv_context, log_EA_CRT)), ea_sg) = true then
-    (
-      event Accepted(quote);
-      event Appraised(log_EA_CRT);
-      event AcceptedRdata(dev_status);
-      let log_EA_CV = (log_EA_CRT, CV(ea_sg)) in
-
-      let ea_fin = ea_derive_fin_key(ems) in
-      if ea_mac = hmac(StrongHash, b2mk(ea_fin), log_EA_CV) then
-      (
-        event ClientConn(quote);
-        event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_statusRef);
-        event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubTSK,dev_statusRef,quote);
-        event ClientID(ID_S,gxy);
-        event ClientStateEvKc(quote,kc);
-        event ClientStateEvKch(quote,kch);
-        event ClientStateEv(quote,gxy);
-
-        in(io, (app_msg_enc:bitstring));
-        let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in
-        event ClientReceivesAppData(ID_S,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_statusRef,app_msg_s)
-      )
-    )
+    Client_EA_CV_fin(ID_S,pubTSK,pubAK,pubKAK,pubISV,shash_algo,ea_hs_ctx,req_msg,ea_cert,ea_sg,ea_mac,
+      ems,dev_statusRef,cmw,gxy,kch,ks,kc,rms,psk,offer,mode,cr,sr,req_ctx)
   )
 ).
 
 (********************************************************)
 (* Server Authenticator                                 *)
 (********************************************************)
-(* Runs after the vanilla handshake's Finished. Owns all evidence construction (quote,
-   dev_status, AK signature) that used to live inline in Server — none of that is idOption-
-   dependent, since only the Client's appraisal ever branched on idOption; Server just signs
-   whatever evidence it's given, same as before. rdata is now bound to the Authenticator's
-   own exporter-derived value instead of the handshake transcript. *)
 
-let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privAK: privkey,
+(* Runs after the vanilla handshake's Finished. Owns all evidence construction. *)
+
+let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privKAK: privkey,
     dev_status1: measurements, psk: preSharedKey, cr: random, sr: random, offer: params, mode: params,
     gxy: bitstring, kch: ae_key, ks: ae_key, kc: ae_key, ems: bitstring, rms: bitstring, hash_algo: hash_alg) =
 (
@@ -628,19 +662,35 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privAK: 
   let AuthenticatorRequest(req_ctx) = req_msg in  (* pattern-match to extract certificate_request_context *)
 
   let pubTSK = pk(privTSK) in
-  let pubAK = pk(privAK) in
+  let pubKAK = pk(privKAK) in
 
-  (* Evidence generation. *)
-  in(io, (evidenceAttr: attribute)) [precise];
-
-  (* RFC 9261 Authenticator Construction *)
+(* -- *)
+  (* Evidence generation *)
   let exported_val = ea_derive_attestation_binder(ems, req_ctx) in  (* derive exported key material using exporter_secret (ems) and req_ctx as context_value [Sec. 7.5, RFC9846; Sec. 5.1, draft-fossati-seat-expat] *)
-  let rdata = (exported_val, pubTSK) in
+  let eat_nonce = (exported_val, pubTSK) in (* Produce per-connection binding value - legacy: 'rdata' *)
 
-  let dataSign = (rdata, evidenceAttr, dev_status1) in
+  (* Key Attestation Token *)  (*  cnf   , key-attributes    , measurements,nonce *)
+  let pat_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_status1  ,eat_nonce) in
+  let rdata = (Hashed, pat_claims) in
+  out(io, (dev_status1, rdata)); (* Submit rdata to Attestation Environment with paired cVM measurements *)
+
+  (* Receive signed data back from Attestion Environment (could be a signing oracle) *)
+  in(io, (dataSign:bitstring)) [precise];
+  let (signed_claims:bitstring, pat_sig:bitstring) = dataSign in
+
+  let eat_pat_profile(=pubKAK, evidenceAttr:attribute, =dev_status1, =eat_nonce) = signed_claims in
+  let pat = (signed_claims, pat_sig) in
+
+  (* Key Attestation Token *)   (*  cnf   , key-attributes, nonce *)
+  let kat_claims = eat_kat_profile(pubTSK, evidenceAttr  , eat_nonce) in
+  let kat = (kat_claims, sign(privKAK, kat_claims)) in
+
   event ServerAssertsProvenance(cr, sr, evidenceAttr);
-  let quote = (dataSign, sign(privAK, dataSign)) in
-  let ea_cert = (quote,server_cert) in
+
+  (* Conceptual Message Wrapper, CMW [RFC 9999] *)
+  let cmw = (pat, kat) in (* Place Combined Attestation Bundle (CAB) into CMW *)
+  let ea_cert = (cmw,server_cert) in
+(* -- *)
 
   let ea_hs_ctx = ea_derive_hs_context(ems) in  (* derive Authenticator Handshake Context using label "EXPORTER-server authenticator handshake context" [Sec. 5.1, RFC9261] *)
   let log_EA_CRT = (ea_hs_ctx, req_msg, CRT(ea_cert)) in  (* construct Authenticator transcript log containing ea_hs_ctx || Authenticator Request || Certificate [Sec. 5.2.2, RFC9261] *)
@@ -652,15 +702,15 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privAK: 
   let ea_mac = hmac(StrongHash, b2mk(ea_fin), log_EA_CV) in  (* compute Authenticator Finished HMAC over log_EA_CV using ea_fin key [Sec. 5.2.3, RFC9261] *)
 
   event PreServerComp(ID_S,psk,offer,mode,kc,ks,ems,cr,sr,pubTSK,dev_status1);
-  event ServerStateEvKc(quote,kc);
-  event ServerStateEvKch(quote,kch);
-  event ServerStateEv(quote,gxy);
+  event ServerStateEvKc(cmw,kc);
+  event ServerStateEvKch(cmw,kch);
+  event ServerStateEv(cmw,gxy);
 
   let ea_bundle = AuthenticatorResponse(CRT(ea_cert), CV(ea_sg), FIN(ea_mac)) in
   out(io, AuthFrame(ALTA_magic, authenticator, ea_bundle));  (* send Authenticator message bundle inside Shim Mode AuthFrame [Sec. 7, ALTEA] *)
 
   new app_msg: bitstring;  (* generate fresh application payload *)
-  event ServerSendsAppData(ID_S,pubTSK,pubAK,cr,sr,req_ctx,ems,ks,kc,dev_status1,app_msg);
+  event ServerSendsAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_status1,app_msg);
   out(io, ph_msg(app_msg, ae2b(ks)))  (* encrypt and transmit post-handshake record with server application write key ks *)
 ).
 
@@ -670,12 +720,8 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privAK: 
 (* (for usability/extensibility), we can use variables for messages, 
 e.g., SH so that these variables can then be used in logs *)
 
-let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubkey,idOption:branch_option) =
+let Client(ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,idOption:branch_option) =
 (
-  (* pubOwner, pubISV, pubCA, and idOption are not used anywhere in this vanilla handshake
-     body — they are reserved pass-through parameters for the Client_EA tail call that will
-     be wired in next. All identity/workload trust judgment (pubCA / self-signed verification,
-     manifest checks, measurement matching) now happens entirely in Client_EA, not here. *)
   in(io, (TargetHost: identity, ioffer:params));  (* io is a public channel. ioffer is obtained from adversary as input to allow adversary to generate all valid patterns *)
   let nego(=aTLS,DHE_13(g,eee),hash_algo,ev_type) = ioffer in
   (* Message parsing modeled as a pattern-match with the constructors [Bhargavan2017; p. 17] *)
@@ -730,7 +776,7 @@ let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubke
 
     (* continue from vanilla TLS handshake into the Exported Authenticator handshake, where
        identity/workload appraisal (idOption branching) and evidence appraisal now live *)
-    Client_EA(ID_C,ID_S,TargetHost,pubTSK,server_cert,pubOwner,pubISV,pubCA,idOption,psk,cr,sr,offer,mode,gxy,kch,ks,kc,ems,rms,shash_algo)
+    Client_EA(ID_C,ID_S,TargetHost,pubTSK,server_cert,pubISV,pubCSP,pubCA,idOption,psk,cr,sr,offer,mode,gxy,kch,ks,kc,ems,rms,shash_algo)
   )
 ).
 
@@ -738,7 +784,7 @@ let Client(ID_C:identity,ID_S:identity,pubOwner:pubkey,pubISV:pubkey,pubCA:pubke
 (* Server *)
 (********************************************************)
 
-let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measurements, server_cert:bitstring) =
+let Server(ID_S:identity, dev_status1: measurements, privKAK: privkey, privTSK: privkey, server_cert:bitstring) =
 (
   in(io, ch:msg); (* Receive ClientHello message from Client and store in variable ch *)
   let CH(cr,offer,sni) = ch in (* pattern matching to ensure that received message in variable ch is in the desired format fun CH(random,params,random):msg [data]. nonce will be stored in variable cr and parameters will be stored in variable offer. Attestation nonce will be stored in ar *)
@@ -769,10 +815,7 @@ let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measure
   event AttackerControlsHSK(kch,ksh);
 
   let pubTSK = pk(privTSK) in
-  let pubAK = pk(privAK) in
   event ServerID(ID_S,gxy);
-  (* privAK, pubAK, and dev_status1 are unused below — reserved pass-through for the
-     Server_EA tail call, where evidence generation (quote, AK signature) now happens. *)
 
   out(io,CRT(server_cert));  (* Send Certificate message; server_cert only, no evidence carried here *)
   let log_CRT = (log_SH,CRT(server_cert)) in  (* received ClientHello || sent ServerHello || sent Certificate *)
@@ -797,5 +840,5 @@ let Server(ID_S:identity, privAK: privkey, privTSK: privkey, dev_status1:measure
 
   (* continue from vanilla TLS handshake into the Exported Authenticator handshake, where
      evidence construction (quote, AK signature over dev_status1) now happens *)
-  Server_EA(server_cert,ID_S,privTSK,privAK,dev_status1,psk,cr,sr,offer,mode,gxy,kch,ks,kc,ems,rms,hash_algo)
+  Server_EA(server_cert,ID_S,privTSK,privKAK,dev_status1,psk,cr,sr,offer,mode,gxy,kch,ks,kc,ems,rms,hash_algo)
 ).
