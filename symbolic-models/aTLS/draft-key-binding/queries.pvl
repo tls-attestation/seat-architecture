@@ -58,7 +58,7 @@ Interpretation of result: none of these events are dead code; results
   elsewhere that build on them are meaningful.
 *)
 query cr:random, sr:random, ID_S,ID_C:identity,
-      psk:preSharedKey, pubTSK,pubAK,pubKAK,pubISV:pubkey, e:element,
+      psk:preSharedKey, pubTSK,pubAK,pubKAK,pubISV:pubkey, e:bitstring,
       offer:params, mode:params, ev,pat,kat,log,rdata:bitstring,
       kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
       idS, idXS: identity, gxy:bitstring, dev_state: measurements,
@@ -112,7 +112,7 @@ query dev_state:measurements,quote:bitstring,
       psk:preSharedKey, pubCA,pubCSP,pubISV:pubkey,
       offer:params, mode:params, ev,pat,kat:bitstring,
       kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
-      req_ctx,app_msg:bitstring,e:element;
+      req_ctx,app_msg:bitstring,e:bitstring;
 
       ( event(ClientReceivesAppData(ID,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
         && event(ServerSendsAppData(ID,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_state,app_msg))
@@ -120,9 +120,8 @@ query dev_state:measurements,quote:bitstring,
       ==> 
          event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable, pubKAK)) 
       || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) 
-      || event(ClientAcceptsElement(cr, BadElement))
+      || event(ClientAcceptsKEM(cr, WeakKEM))
       || event(ClientAcceptsHash(cr, WeakHash)) 
-      || event(SentBadElement) 
       || event(LeakedAK(pubAK)) 
       || event(LeakedTSK(pubTSK)) 
       || event(LeakedKAK(pubKAK))
@@ -140,9 +139,8 @@ query dev_state:measurements,quote:bitstring,
       ==>
          event(ClientAcceptsProvenance(cr, sr, ExternalOrExportable, pubKAK)) 
       || event(ServerAssertsProvenance(cr, sr, ExternalOrExportable)) 
-      || event(ClientAcceptsElement(cr, BadElement))
+      || event(ClientAcceptsKEM(cr, WeakKEM))
       || event(ClientAcceptsHash(cr, WeakHash)) 
-      || event(SentBadElement) 
       || event(LeakedAK(pubAK)) 
       || event(LeakedTSK(pubTSK)) 
       || event(LeakedKAK(pubKAK))
@@ -177,7 +175,7 @@ Interpretation of result: the binding properties below aren't testing
 query ev,ev1,ev2,gxy,gxy1,gxy2,pat,kat:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
       cr,sr,cr',sr':random,ID1,ID2,ID,ID_C:identity,
-      pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:element, 
+      pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:bitstring, 
       psk:preSharedKey,ems,rms:bitstring,
       dev_state,dev_state1,dev_state2:measurements,
       req_ctx,app_msg:bitstring,
@@ -229,7 +227,7 @@ Formalization: event(ClientStateEv*(ev,X)) && event(ServerStateEv*(ev,Y))
 query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
       cr,sr,cr',sr':random,ID1,ID2,ID,ID_C:identity,
-      pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:element, 
+      pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:bitstring, 
       psk:preSharedKey,ems,rms:bitstring,
       dev_state,dev_state1,dev_state2:measurements,
       req_ctx,app_msg:bitstring,
@@ -297,7 +295,7 @@ In each case, the TLS signing key (TSK) is NOT considered confidential!
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random, gxy:bitstring,
       ID,ID2,EUID,ID_C:identity,pubTSK:pubkey,pubAK,pubKAK:pubkey,
-      psk:preSharedKey, e:element, pubISV,pubCA,pubCSP:pubkey,
+      psk:preSharedKey, e:bitstring, pubISV,pubCA,pubCSP:pubkey,
       offer:params, mode:params, pat,kat:bitstring,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
 
@@ -436,7 +434,7 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random,
       ID,ID_C:identity,pubTSK:pubkey,pubAK:pubkey, pat,kat: bitstring,
-      psk:preSharedKey, e:element, pubISV,pubCA,pubCSP,pubKAK:pubkey,
+      psk:preSharedKey, e:bitstring, pubISV,pubCA,pubCSP,pubKAK:pubkey,
       offer:params, mode:params,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
 
@@ -523,7 +521,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
 query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
       cr,sr,cr',sr':random,ID,ID_C:identity,pubTSK,pubAK,pubKAK,pubCA,pubISV,
       pubCSP:pubkey,psk:preSharedKey,ems,rms:bitstring, pat,kat: bitstring,
-      dev_state:measurements,offer,mode:params,req_ctx,app_msg:bitstring,e:element;
+      dev_state:measurements,offer,mode:params,req_ctx,app_msg:bitstring,e:bitstring;
 
 (* Goal: injective version of Target Environment Engagement, pushed
   past RA/TLS completion to the actual encrypted app-data exchange. *)

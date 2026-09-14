@@ -36,17 +36,13 @@ We want to model that some server machines may be compromised while others remai
 The compromise of a server machine is modelled by leaking privAK or privTSK.
 *)
 
-(* Generation of agents and keys *)
-(* All parameters for Server side *)
-(*    agent_keys(UEID,    dev_statusRef ,privTSK,pubTSK,privAK ,pubAK) *)
-table agent_keys(identity,measurements,    privkey,pubkey,privkey,pubkey).
-
 (* Generation events *)
 event CSRSigned(identity,pubkey).
 event ProvisionedTargetEnv(identity, pubkey, pubkey, measurements).
 event EndorsementsIssued(identity,pubkey).
 event IdentityManifestIssued(identity, measurements).
 
+(* WebPKI Certificates *)
 let gen_certs_csr (privCA:privkey,ID_S:identity,pubTSK:pubkey) = 
   let CA_sig = sign(privCA,(ID_S,pubTSK)) in   
   let server_cert = ((ID_S,pubTSK),CA_sig) in  (* PKI cert = {ID_S,pubTSK_S}CA [seat-cc-workload-identity §6] *)
@@ -54,6 +50,7 @@ let gen_certs_csr (privCA:privkey,ID_S:identity,pubTSK:pubkey) =
   out(io, server_cert)
 .
 
+(* Generate the actual cVMs *)
 let gen_agents_data (privCA:privkey, idOption: branch_option) = 
   (* Generate the hardware-backed attestation key (AK) that will sign the evidence *)
   new privAK: privkey;  
@@ -72,8 +69,12 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
       new dev_statusRef: measurements;  
       out(io, dev_statusRef);
 
-      (* A single identity can validly issue multiple ephemeral TLS signing keys (TSK) *)
-      !( 
+      (* Per cVM Key Attestation Key *)
+      new privKAK: privkey;
+      let pubKAK = pk(privKAK) in
+      out(io,pubKAK);
+
+      !( (* A single identity can validly issue multiple ephemeral TLS signing keys (TSK) *)
         new privTSK: privkey;  
         let pubTSK = pk(privTSK) in
 
@@ -82,12 +83,11 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
 
         (* Provision the target environment and generate the PKI certificate tying ID_S to pubTSK *)
         event ProvisionedTargetEnv(ID_S, pubAK, pubTSK, dev_statusRef);
-        insert agent_keys(UEID,dev_statusRef,privTSK,pubTSK,privAK,pubAK)
-        
-        (* Note: No gen_certs_csr is called here because Option A does not use a PKI certificate *)
+        insert agent_keys(UEID,dev_statusRef,privTSK,pubTSK,privAK,pubAK,privKAK,pubKAK)
       )   
     )
-  ) else if idOption = OptionB then (
+  ) 
+    else if idOption = OptionB then (
     (* OPTION B: PKI-Anchored Certificate with Workload Identity [seat-cc-workload-identity §6] *)
     (* The identity (ID_S) is a distinct identifier, bound later via a CA-signed cert *)
     !(
@@ -98,62 +98,74 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
       new dev_statusRef: measurements;  
       out(io, dev_statusRef);
 
-      (* A single identity can validly issue multiple ephemeral TLS signing keys (TSK) *)
-      !( 
+      (* Per cVM Key Attestation Key *)
+      new privKAK: privkey;
+      let pubKAK = pk(privKAK) in
+      out(io,pubKAK);
+
+      !( (* A single identity can validly issue multiple ephemeral TLS signing keys (TSK) *)
         new privTSK: privkey;  
         let pubTSK = pk(privTSK) in
         out(io,pubTSK);  
 
         (* Provision the target environment and generate the PKI certificate tying ID_S to pubTSK *)
         event ProvisionedTargetEnv(ID_S, pubAK, pubTSK, dev_statusRef);
-        insert agent_keys(UEID,dev_statusRef,privTSK,pubTSK,privAK,pubAK);
+        insert agent_keys(UEID,dev_statusRef,privTSK,pubTSK,privAK,pubAK,privKAK,pubKAK);
 
-        gen_certs_csr(privCA,ID_S,pubTSK)
+        (* Issue webPKI cert for newwly generated TSK *)
+        (gen_certs_csr(privCA,ID_S,pubTSK))
       )
     )
   )
 .
 
-let gen_endorsements (privISV:privkey) =
+let gen_endorsements (privCSP:privkey) =
   (* ISV optionally reports the hardware ID (UEID) and 
      the associated trusted pubAK keys *)
-  get agent_keys(UEID,_,_,_,privAK,pubAK) in
+  get agent_keys(UEID,_,_,_,privAK,pubAK,_,_) in
 
   let UEID = NULL_ID in (* Assume CSP nulls out TEE hardware IDs [seat-cc-workload-identity §4] *)
 
-  let ISV_sig = sign(privISV,(UEID,pubAK)) in 
-  let endorsements = ((UEID,pubAK),ISV_sig) in
+  let CSP_sig = sign(privCSP,(UEID,pubAK)) in 
+  let endorsements = ((UEID,pubAK),CSP_sig) in
   event EndorsementsIssued(UEID,pubAK);
   out(io, endorsements)
 .
 
-let gen_identity_document (pubCA: pubkey, privOwner: privkey, idOption: branch_option) =
-  get agent_keys(_,dev_statusRef,privTSK,pubTSK,_,_) in 
+let gen_identity_document (pubCA: pubkey, privISV: privkey, idOption: branch_option) =
+  get agent_keys(_,dev_statusRef,privTSK,pubTSK,_,pubAK,_,_) in 
+
+  let workloadAttr = LocalNonExportable in
 
   if idOption = OptionA then (
-    (* Option A: The measurement *is* the identity [seat-cc-workload-identity §5] *)
+    (* Option A: The measurement *is* the identity [seat-cc-workload-identity §5]. *)
 
     let ID_S = dev2id(dev_statusRef) in
-    event IdentityManifestIssued(ID_S, dev_statusRef)
-  ) 
+  
+    let manifest_tuple = (ID_S, workloadAttr) in
+    let manifest_sig = sign(privISV, manifest_tuple) in 
+    let manifest = (manifest_tuple, manifest_sig) in
+    event IdentityManifestIssued(ID_S, dev_statusRef);
+    out(io, manifest)
 
+  ) 
   else if idOption = OptionB then (
-   (* Option B: Manifest binds to a PKI identity, requires CA validation [seat-cc-workload-identity §6] *)
+    (* Option B: Manifest binds to a PKI identity, requires CA validation [seat-cc-workload-identity §6] *)
 
     in(io, (server_cert:bitstring)); 
     let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
     let (ID_S:identity,=pubTSK) = id_pub_pair in 
     if verify(pubCA,id_pub_pair,sig1) = true then
 
-    let manifest_tuple = (ID_S, dev_statusRef) in 
-    let manifest_sig = sign(privOwner, manifest_tuple) in 
+    let manifest_tuple = (ID_S, workloadAttr, dev_statusRef) in
+    let manifest_sig = sign(privISV, manifest_tuple) in 
     let manifest = (manifest_tuple, manifest_sig) in
     event IdentityManifestIssued(ID_S, dev_statusRef);
     out(io, manifest)
   )
 .
 
-let run_Client(pubCA, pubISV, pubOwner: pubkey, idOption: branch_option) = 
+let run_Client(pubCA, pubCSP, pubISV: pubkey, idOption: branch_option) = 
   (* Intuitively, the following models a single client (single agent) 
   and the replication takes care of multiple clients (multi agent) *)
   new ID_C: identity;
@@ -166,16 +178,17 @@ let run_Client(pubCA, pubISV, pubOwner: pubkey, idOption: branch_option) =
       let ID_S = dev2id(TargetWorkload) in
 
       (* The following replication models multiple sessions of client with these parameters *)
-      !Client(ID_C, ID_S, pubOwner, pubISV, pubCA, idOption)
+      !Client(ID_C, ID_S, pubISV, pubCSP, pubCA, idOption)
     )
 
   ) else if idOption = OptionB then (
     !(
       (* adversary controls lookup, i,e., untrusted DNS [seat-cc-workload-identity §6] *)
-      in(io, (TargetHost: identity)); 
+      in(io, (TargetHost: identity));
+      let ID_S = TargetHost in
 
       (* The following replication models multiple sessions of client with these parameters *)
-      !Client(ID_C, TargetHost, pubOwner, pubISV, pubCA, idOption)
+      !Client(ID_C, ID_S, pubISV, pubCSP, pubCA, idOption)
     )
   )
 .
@@ -184,28 +197,21 @@ let run_Server(idOption:branch_option) =
 (* Intuitively, this models a single server and the replication takes care of multiple servers *)
 
   if idOption = OptionA then ( (* In Option A, the identity is intrinsically bound to the TLS signing key *)
-    
-    (* model of workloadRef (measurements): input from adversary *)
-    (* Lets the adversary instantiate any desired VM 
-       but only the one with correct measurements will be accepted at Verifier *)
-    in(io, (workloadRef: measurements));
 
-    get agent_keys(_,=workloadRef,privTSK,pubTSK,_,_) in (* Match private TLS key to chosen workload type *)
-    get agent_keys(_,_,=privTSK,_,privAK,pubAK) in  (* privTSK is confidential and should be matched with AK *)
+    get agent_keys(_,workloadRef,privTSK,pubTSK,_,_,_,_) in (* Select a provisioned workload by it's launch measurements *)
+    get agent_keys(_,_,=privTSK,_,_,_,privKAK,pubKAK) in  (* privTSK is confidential and should be matched with the same device's KAK *)
     
     (* Option A: The identity IS the measurement [seat-cc-workload-identity §5, self-signed cert with no validated PKI identity] *)
     let ID_S = dev2id(workloadRef) in
     let selfsign = ((ID_S, pubTSK), NULL_bs) in
 
-    (* The following replication models multiple sessions of server with these parameters *)
-    !Server(ID_S, privAK, privTSK, workloadRef, selfsign)
+    (* Server only holds privKAK/privTSK now [key-binding §8.3] *)
+    !Server(ID_S, workloadRef, privKAK, privTSK, selfsign)
 
-  ) else if idOption = OptionB then ( (* In Option B, identity is selected from the CA certificate *)
+  ) else if idOption = OptionB then ( (* In Option B, identity is defined from the X.509 certificate *)
     
-    (* model of dev_status (measurements): input from adversary *)
-    (* Lets the adversary instantiate any desired VM 
-       but only the one with correct measurements will be accepted at Verifier *)
-    in(io, (server_cert:bitstring, dev_status:measurements)); (* Let adversary choose server certificate *)
+    (* Let adversary choose server certificate and initial cVM launch measurements *)
+    in(io, (server_cert:bitstring,workloadRef:measurements)); 
 
     let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
     let (SAN:identity,pubTSK:pubkey) = id_pub_pair in (* Configure SubjectAltName/SAN from cert *)
@@ -213,39 +219,12 @@ let run_Server(idOption:branch_option) =
 
     (* Allow combinations, but for each private key, 
        choose the corresponding public key *)
-    get agent_keys(UEID,_,privTSK,_,_,_) in (* Pair a private key to whatever the adversary picked *)
-    get agent_keys(=UEID,_,_,_,privAK,pubAK) in (* privTSK is confidential and should be matched with AK *)
+    get agent_keys(UEID,_,privTSK,_,_,_,_,_) in (* Pair a private key to whatever the adversary picked *)
+    get agent_keys(=UEID,_,_,_,_,_,privKAK,pubKAK) in (* privTSK is confidential and should be matched with the same device's KAK *)
 
-    (* The following replication models multiple sessions of server with these parameters *)
-    !Server(SAN, privAK, privTSK, dev_status, server_cert)
+    (* Server only holds privKAK/privTSK now [key-binding §8.3] *)
+    !Server(SAN, workloadRef, privKAK, privTSK, server_cert)
   )
-.
-
-(* ============================================================ *)
-(* Evidence Oracle / UCCS proxy-forwarding attack *)
-(* ============================================================ *)
-(* 
-Models the Attesting Environment's signing interface exposed as a public oracle: 
-the adversary supplies rdata (e.g. its own TLS key material) for an endorsed AK to 
-sign over, as a TEE-bound process would if it blindly forwarded a caller-fabricated 
-claims set [key-binding §8.3, UCCS proxy-forwarding attack]. 
-
-Note: ExternalOrExportable is hardcoded rather than adversary-chosen: it is 
-HW-asserted metadata about *how the key came to be signed over* 
-(received, not generated, by this environment). The metadata value
-does not demonstrate protection against Byzantine TEE hardware.
-*) 
-event EvidenceOracle(pubkey, measurements, bitstring).
-
-let TEE_Oracle_Vuln =
-  (* Bind to the machine's actual endorsed AK *)
-  get agent_keys(UEID,_,_,_,privAK,pubAK) in 
-
-  in(io, (rdata: bitstring, dev_status:measurements));
-  let dataSign = (rdata, ExternalOrExportable, dev_status) in
-  let quote = (dataSign, sign(privAK, dataSign)) in
-  event EvidenceOracle(pubAK, dev_status, quote);
-  out(io, quote)
 .
 
 (* ============================================================ *)
@@ -255,15 +234,21 @@ let TEE_Oracle_Vuln =
 (* Mark the event when the keys of a specific machine are leaked
 i.e., not all server machines are compromised at the same time *)
 let LAK =
-  get agent_keys(_,_,_,_,privAK,pubAK) in
+  get agent_keys(_,_,_,_,privAK,pubAK,_,_) in
   event LeakedAK(pubAK);  (* mark the leakage of AK [seat-cc-workload-identity §8, "Attestation Key compromise"] *)  
   out(io, privAK)
 .
 
 let LTSK =
-  get agent_keys(_,_,privTSK,pubTSK,_,_) in 
+  get agent_keys(_,_,privTSK,pubTSK,_,_,_,_) in 
   event LeakedTSK(pubTSK);  (* mark the leakage of TSK *)
   out(io, privTSK)
+.
+
+let LKAK =
+  get agent_keys(_,_,_,_,_,_,privKAK,pubKAK) in
+  event LeakedKAK(pubKAK);  (* mark the leakage of KAK [key-binding §8.3] *)
+  out(io, privKAK)
 .
 
 let LCA(privCA:privkey) =
@@ -271,14 +256,14 @@ let LCA(privCA:privkey) =
   out(io, privCA)
 .
 
-let LISV(privISV:privkey) =
-  event CompromisedCSP(pk(privISV));  (* mark the compromise of the CSP/ISV [seat-cc-workload-identity §3, CSP/Endorser] *)  
-  out(io, privISV)
+let LCSP(privCSP:privkey) =
+  event CompromisedCSP(pk(privCSP));  (* mark the compromise of the CSP [seat-cc-workload-identity §3, CSP/Endorser] *)  
+  out(io, privCSP)
 .
 
-let LOWN(privOwner:privkey) =
-  event UncheckedPolicies(pk(privOwner));  (* Simulates a failure to validate our own sigs  *)
-  out(io, privOwner)
+let LISV(privISV:privkey) =
+  event UncheckedPolicies(pk(privISV));  (* Simulates a failure to validate our own sigs  *)
+  out(io, privISV)
 .
 
 (* set traceDisplay = long. Display full trace *)
@@ -292,28 +277,30 @@ process
   out(io,pubCA);
 
   (* CSP / Independant Software Vendor *)
+  new privCSP: privkey; 
+  let pubCSP = pk(privCSP) in
+  out(io, pubCSP);
+
+  (* ISV / Policy issuer *)
   new privISV: privkey; 
   let pubISV = pk(privISV) in
   out(io, pubISV);
 
-  (* Policy owner *)
-  new privOwner: privkey; 
-  let pubOwner = pk(privOwner) in
-  out(io, pubOwner);
-
   in(io, idOption:branch_option) [precise];
 
     !(gen_agents_data(privCA,idOption)) 
-  | !(gen_endorsements(privISV)) 
-  | !(gen_identity_document(pubCA,privOwner,idOption))
+  | !(gen_endorsements(privCSP)) 
+  | !(gen_identity_document(pubCA,privISV,idOption))
 
-  | !(run_Client(pubCA,pubISV,pubOwner,idOption)) 
+  | !(run_Client(pubCA,pubCSP,pubISV,idOption)) 
   | !(run_Server(idOption))
   
-  | !(TEE_Oracle_Vuln)
+  | !(Attestation_Environment)
   | !(LTSK)
   | !(LAK)
-  | !(LISV(privISV)) (* We don't necessarily trust the CSP/ISV *)
+  | !(LKAK)
+  | !(LCSP(privCSP)) (* We don't necessarily trust the CSP *)
   | !(LCA(privCA)) (* We don't necessarily trust the CA *)
-  | !(LOWN(privOwner)) (* What happens if we don't validate our own policies? *)
-  | !(SendBadElement)
+  | !(LISV(privISV)) (* What happens if we don't validate our own policies? *)
+  
+(* END *)

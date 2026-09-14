@@ -1,5 +1,5 @@
 restriction opt: branch_option, cr,sr:random, pubAK:pubkey,UEID:identity;
 
 (* Note: Server remains unconstrained *)
-event(ClientAcceptsElement(cr, BadElement));
+event(ClientAcceptsKEM(cr, WeakKEM));
 event(ClientAcceptsHash(cr, WeakHash)) ==> false.
