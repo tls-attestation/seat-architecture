@@ -1,10 +1,35 @@
+(* 
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
+Copyright 2026 Nathanael Ritz.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*)
+
 (********************************************************)
 (* Client *)
 (********************************************************)
-(* (for usability/extensibility), we can use variables for messages, 
-e.g., SH so that these variables can then be used in logs *)
 
-let Client(ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,idOption:branch_option) =
+(* Prune branches that aren't matched with intra-handshake *)
+(* Prune branches that aren't matched with post-handshake *)
+restriction opt:attestation_option;
+  (* not *) event(AttestationTimingWindow(Post)) ==> (* not *) false
+.
+
+let Client(
+    ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,
+    idOption:branch_option
+) =
 (
   in(io, (TargetHost: identity, ioffer:params));  (* io is a public channel. ioffer is obtained from adversary as input to allow adversary to generate all valid patterns *)
   let nego(=aTLS,MLKEM_13_C(ka,eee),hash_algo,ev_type) = ioffer in
@@ -36,6 +61,8 @@ let Client(ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,
   let (hs:bitstring,kch:ae_key,ksh:ae_key,kcm:mac_key,ksm:mac_key) = kdf_hs(es,kem_ss,log_SH) in
 
   in(io, CRT(crt_msg)) [precise]; (* receive Certificate message; cmw is now signed by privKAK per-handshake [key-binding §8.8] *)
+  let log_CRT = (log_SH, CRT(crt_msg)) in
+
   let (cmw:bitstring, server_cert:bitstring) = crt_msg in (* Pattern match CMW [RFC 9999], server_cert (may be self-signed) *)
 
   let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  (* check server_cert format *)
@@ -46,54 +73,21 @@ let Client(ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,
   (* =================================================================== *)
   (* Appraisal Policy Branching -- shared with post via atls-library.pvl *)
   (* =================================================================== *)
-  new return_chan: channel; (* Abstracts co-located Verifier *)
-  (
-    VerifierAppraisal(idOption, ID_S, TargetHost, pubCA, pubCSP, pubISV, pubTSK, 
-       server_cert, cmw, sessionNonce, cr, sr, return_chan)
-  )
-  |
-  (
-  in(return_chan, (* The handshake will not continue if appraisal fails *)
-    (=sessionNonce, pubAK:pubkey, pubKAK:pubkey, dev_status:measurements));
 
-  let log_CRT = (log_SH, CRT(crt_msg)) in
+  VerifierAppraisal(
+    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubISV, pubTSK, 
+    server_cert, cmw, sessionNonce, cr, sr, shash_algo, psk, offer, mode, kem_ss, kch,
     
-  in(io,CV(sg));  (* receive signature (sg) from CertificateVerify message *)
-  if verify(pubTSK,hash(shash_algo,log_CRT),sg) = true then  (* PoP of pubTSK cnf. - log_CRT contains msgs up to Certificate *)
-  event Accepted(cmw);
-  event Appraised(log_SH);
-  event AcceptedRdata(dev_status);
-  let log_CV = (log_CRT,CV(sg)) in  (* after this step, log_CV contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify *)
-
-  in(io,FIN(m1));  (* receive server Finished message containing hmac of log *)
-  if m1 = hmac(StrongHash,ksm,log_CV) then    (* hmac(hash_alg,mac_key,bitstring); mac_key = ksm using Client's perspective of log_CV; that's why client needs to generate server keys also *)
-  (
-    let log_SFIN = (log_CV,FIN(m1)) in  (* after this step, log_SFIN contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify || received server Finished *)
-    let (ms:bitstring,kc:ae_key,ks:ae_key,ems:bitstring) = kdf_ms(hs,log_SFIN) in
-    let m2 = hmac(StrongHash,kcm,log_SFIN) in  (* hmac(hash_alg,mac_key,bitstring); mac_key = kcm *)
-    let log_CFIN = (log_SFIN,FIN(m2)) in  (* after this step, log_CFIN contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify || received server Finished || sent client Finished *)
-    let rms =  kdf_psk(ms,log_CFIN) in
-
-    event ClientFin1WayAgr(ID_S,pubTSK,psk,offer,mode,kc,ks,ems,rms);
-    event ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr);
-    event ClientConn(cmw);
-    event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_status);
-    event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubISV,dev_status,cmw);
-    event ClientID(ID_S,kem_ss);
-    event ClientStateEvKc(cmw,kc);    
-    event ClientStateEvKch(cmw,kch);
-    event ClientStateEv(cmw,kem_ss);
-    event ClientFinished(pubTSK,psk,cr,sr,offer,mode,kc,ks,ems,rms);
-    (* insert clientSession(cr,sr,psk,offer,mode,kc,ks,ems,rms);  kc and ks are passed to appData via this table *)
-    out(io,FIN(m2));  (* send ClientFinished message *)
-
-    in(io, (app_msg_enc:bitstring)); (* receive post-handshake encrypted application message *)
-    let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in (* decrypt and verify AEAD application record using server write key ks *)
-    let req_ctx = r2b(cr) in (* Backward compatible shim with EXPAT *)
-    event ClientReceivesAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s)
-
+    (* Intra-specific params (Active) *)
+    log_SH, log_CRT, hs, ksm, kcm,
+    
+    (* Post-specific params (Dummies) *)
+    CRT(Nil), Nil, Nil, Nil, Nil, b2ae(Nil), b2ae(Nil), Nil, Nil
   )
-)).
+
+  (* The VerifierAppraisal process will call Intra_Client_CV_Fin upon completetion *)
+
+).
 
 (********************************************************)
 (* Server *)

@@ -135,6 +135,8 @@ const NULL_pubkey:pubkey.
 const NULL_privkey:privkey.
 const NULL_bs:bitstring.
 
+const Nil:bitstring.
+
 (********************************************************)
 (* LAK *)
 (********************************************************)
@@ -462,21 +464,19 @@ fun eat_kat_profile(pubkey (* cnf: TSK *), attribute (* claim-attributes *), bit
 type branch_option.
 const OptionA, OptionB: branch_option [data].
 
+type attestation_option.
+const Intra, Post: attestation_option [data].
+
+event ClientIdentityOption(branch_option).
+event AttestationTimingWindow(attestation_option).
+
 event ClientAcceptsProvenance(random, random, attribute, pubkey).
 event ServerAssertsProvenance(random, random, attribute).
-event ClientIdentityOption(branch_option).
 
 (**********************************************************************)
-(* Appraisal Bundle Definition                                        *)
-(**********************************************************************)
-type appraisal_bundle.
-
-fun AppraisalBundle(
-    bitstring (* cmw *), 
-    bitstring (* manifest *))
-: appraisal_bundle [data].
-
 (* Generation of agents and keys *)
+(**********************************************************************)
+
 (* All parameters for Server side *)
 (* privKAK/pubKAK: device-generated Key Attestation Key, Split Model [key-binding §8.3]. *)
 (*    agent_keys(UEID,    dev_statusRef ,privTSK,pubTSK,privAK ,pubAK ,privKAK,pubKAK) *)
@@ -484,164 +484,4 @@ table agent_keys(identity,measurements,    privkey,pubkey,privkey,pubkey,privkey
 
 (* Please see intra-hs.pvl and post-hs.pvl for the handshake specific 
    models that share this file *)
-
-(**********************************************************************)
-(* Attestation Environment and Oracle Process *)
-(**********************************************************************)
-
-event EvidenceOracle(pubkey, measurements, bitstring).
-
-let Attestation_Environment =
-(
-  (* Instantiate the AE for the given device by matching AK with hardware specific measurements *)
-  get agent_keys(EUID,_,_,_,privAK,pubAK,_,_) in
-  get agent_keys(=EUID,dev_statusRef,_,_,_,_,privKAK,pubKAK) in
-  (* The KAK pair are confidential (never leave the enclave) unless compromised (see LeakedKAK) *)
-
-  (* model of dev_status (measurements): input from adversary *)
-  (* Lets the adversary instantiate any desired VM *)
-  in(io, (dev_status:measurements, rdata: bitstring));
-
-  let (=Hashed, pat_claims:bitstring) = rdata in (* Deconstruct hashed rdata to let adversary pick and choose values *)
-  let eat_pat_profile(reqKAK:pubkey, evidenceAttr:attribute, =dev_status, eat_nonce:bitstring) = pat_claims in
-
-  (* Determine the expected values for confidential claims *)
-  let internal_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_statusRef, eat_nonce) in
-
-  if rdata = (Hashed, internal_claims) then ( 
-    let hwQuote = (dev_statusRef, rdata) in
-    let pat = (pat_claims, sign(privAK, hwQuote)) in 
-    out(io, pat)
-
-  ) else if evidenceAttr = ExternalOrExportable then ( 
-    (* Signing ExternalOrExportable measurements, keys and rdata represents an oracle, enabled on purpose. *)
-    let hwQuote = (dev_status, rdata) in
-    let pat = (pat_claims, sign(privAK, hwQuote)) in 
-    event EvidenceOracle(reqKAK, dev_status, pat);
-    out(io, pat)
-  )
-).
-
-(**********************************************************************)
-(* Generate Evidence *)
-(**********************************************************************)
-
-let EvidenceGeneration(dev_status: measurements, privKAK: privkey, pubTSK: pubkey, eat_nonce: bitstring,
-  cr: random, sr: random, return_chan: channel
-) =
-(
-  let pubKAK = pk(privKAK) in
-
-  (* Key Attestation Token *)  (*  cnf   , key-attributes    , measurements,nonce *)
-  let pat_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_status, eat_nonce) in
-  
-  let rdata = (Hashed, pat_claims) in
-  out(io, (dev_status, rdata)); (* Submit rdata to Attestation Environment, dev_status is for context *)
-
-  (* Receive signed data back from Attestion Environment (could be a signing oracle) *)
-  in(io, (dataSign: bitstring)) [precise];
-  let (signed_claims: bitstring, pat_sig: bitstring) = dataSign in
-
-  let eat_pat_profile(=pubKAK, evidenceAttr: attribute, =dev_status, =eat_nonce) = signed_claims in
-  let pat = (signed_claims, pat_sig) in
-
-  (* Key Attestation Token *)  (*  cnf   , key-attributes, nonce *)
-  let kat_claims = eat_kat_profile(pubTSK, evidenceAttr  , eat_nonce) in
-  let kat = (kat_claims, sign(privKAK, kat_claims)) in
-
-  event ServerAssertsProvenance(cr, sr, evidenceAttr);
-
-  (* Conceptual Message Wrapper, CMW [RFC 9999] *)
-  let cmw = (pat, kat) in (* Place Combined Attestation Bundle (CAB) into CMW *)
-  out(return_chan, cmw) 
-).
-
-(**********************************************************************)
-(* Verifier and RP Appraisal Process *)
-(**********************************************************************)
-
-(* 
-   This process exists strictly to unify and formalize the same abstraction 
-   for appraisal and verification across both intra and post TLS 1.3 handshakes.
-
-   The attacker never gets the return_chan's name, so it can't inject 
-   or read from it either.
-*)
-
-let VerifierAppraisal(
-  idOption: branch_option, ID_S,TargetHost: identity, 
-  pubCA,pubCSP,pubISV,pubTSK: pubkey,
-  server_cert,cmw,expectedNonce: bitstring,
-  cr,sr:random, return_chan: channel
-) =
-(
-
-  let (pat:bitstring, kat:bitstring) = cmw in
-
-  (* Also collect signed workload manifest and endorsements from wire [seat-cc-workload-identity §6] *)
-  in(io, (manifest: bitstring, endorsements: bitstring));
-
-  let (platform_info:bitstring, sig2:bitstring) = endorsements in 
-  let (=NULL_ID, pubAK:pubkey) = platform_info in
-  if verify(pubCSP, platform_info, sig2) = true then
-
-  event ClientIdentityOption(idOption);
-  if idOption = OptionA then
-  (
-    let dev_status = id2dev(ID_S) in
-    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
-    let (WorkloadType: identity, workloadAtrr:attribute) = workload_manifest in
-    if verify(pubISV, workload_manifest, sig_manifest) = true then
-
-    let (pat_claims: bitstring, ae_sig: bitstring) = pat in
-    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, dev_statusRef:measurements, eat_nonce:bitstring) = pat_claims in
-    let rdata = (Hashed, pat_claims) in
-    if verify(pubAK, (dev_statusRef, rdata), ae_sig) = true then
-
-    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
-    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
-    if verify(pubKAK, kat_claims, kat_sig) = true then
-
-    if ID_S = WorkloadType then
-    if evidenceAttr = workloadAtrr then
-    if dev_status = dev_statusRef then
-    if eat_nonce = expectedNonce then
-
-    (* Mark when Client evaluates key provenance claims *)
-    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
-
-    out(return_chan, (expectedNonce, pubAK, pubKAK, dev_status))
-  )
-
-  else if idOption = OptionB then
-  (
-    let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
-    let (cert_subject:identity, =pubTSK) = id_pub_pair in
-    if verify(pubCA, id_pub_pair, sig1) = true then
-    if TargetHost = ID_S then if ID_S = cert_subject then
-
-    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
-    let (WID: identity, workloadAtrr:attribute, dev_statusRef: measurements) = workload_manifest in
-    if verify(pubISV, workload_manifest, sig_manifest) = true then
-
-    let (pat_claims: bitstring, pat_sig: bitstring) = pat in
-    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, dev_status:measurements, eat_nonce:bitstring) = pat_claims in
-    let rdata = (Hashed, pat_claims) in
-    if verify(pubAK, (dev_status, rdata), pat_sig) = true then
-
-    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
-    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
-    if verify(pubKAK, kat_claims, kat_sig) = true then
-
-    if WID = ID_S then
-    if evidenceAttr = workloadAtrr then
-    if dev_status = dev_statusRef then
-    if eat_nonce = expectedNonce then
-
-    (* Mark when Client evaluates key provenance claims *)
-    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
-
-    out(return_chan, (expectedNonce, pubAK, pubKAK, dev_statusRef))
-  )
-).
 

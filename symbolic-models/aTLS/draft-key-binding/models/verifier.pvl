@@ -1,0 +1,147 @@
+(* 
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
+Copyright 2026 Nathanael Ritz.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*)
+
+
+(**********************************************************************)
+(* Verifier and RP Appraisal Process *)
+(**********************************************************************)
+
+(* 
+   This process exists strictly to unify and formalize the same abstraction 
+   for appraisal and verification across both intra and post TLS 1.3 handshakes.
+
+   The attacker never gets the return_chan's name, so it can't inject 
+   or read from it either.
+*)
+
+let VerifierAppraisal(
+  idOption: branch_option, ID_C: identity, ID_S: identity, TargetHost: identity,
+  pubCA: pubkey, pubCSP: pubkey, pubISV: pubkey, pubTSK: pubkey,
+  server_cert: bitstring, cmw: bitstring, expectedNonce: bitstring,
+  cr: random, sr: random, shash_algo: hash_alg, psk: preSharedKey,
+  offer: params, mode: params, kem_ss: bitstring, kch: ae_key,
+
+  (* --- Intra-specific params --- *)
+  log_SH: bitstring, log_CRT: bitstring, hs: bitstring, 
+  ksm: mac_key, kcm: mac_key,
+
+  (* --- Post-specific params --- *)
+  req_msg: msg, ea_cert: bitstring, ea_sg: bitstring, 
+  ea_mac: bitstring, ems: bitstring, ks: ae_key, 
+  kc: ae_key, rms: bitstring, req_ctx: bitstring
+) =
+(
+
+  let (pat:bitstring, kat:bitstring) = cmw in
+
+  (* Also collect signed workload manifest and endorsements from wire [seat-cc-workload-identity §6] *)
+  in(io, (manifest: bitstring, endorsements: bitstring)); 
+
+  let (platform_info:bitstring, sig2:bitstring) = endorsements in 
+  let (=NULL_ID, pubAK:pubkey) = platform_info in
+  if verify(pubCSP, platform_info, sig2) = true then
+
+  event ClientIdentityOption(idOption);
+  in(io, timingOption:attestation_option) [precise];
+
+  if idOption = OptionA then
+  (
+    let dev_status = id2dev(ID_S) in
+    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
+    let (WorkloadType: identity, workloadAtrr:attribute) = workload_manifest in
+    if verify(pubISV, workload_manifest, sig_manifest) = true then
+
+    let (pat_claims: bitstring, ae_sig: bitstring) = pat in
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, dev_statusRef:measurements, eat_nonce:bitstring) = pat_claims in
+    let rdata = (Hashed, pat_claims) in
+    if verify(pubAK, (dev_statusRef, rdata), ae_sig) = true then
+
+    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    if verify(pubKAK, kat_claims, kat_sig) = true then
+
+    if ID_S = WorkloadType then
+    if evidenceAttr = workloadAtrr then
+    if dev_status = dev_statusRef then
+    if eat_nonce = expectedNonce then
+
+    (* Mark when Client evaluates key provenance claims *)
+    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
+
+    if timingOption = Intra then
+    (
+      Intra_Client_CV_Fin(
+        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubISV, shash_algo, log_SH, log_CRT, cmw,
+        dev_status, dev_statusRef, kem_ss, hs, kch, ksm, kcm, psk, offer,
+        mode, cr, sr, timingOption)
+    
+    ) else if timingOption = Post then
+    (
+      Post_Client_CV_fin(
+        ID_S,pubTSK,pubAK,pubKAK,pubISV,shash_algo,
+        req_msg,ea_cert,ea_sg,ea_mac,ems,dev_status,cmw,
+        kem_ss,kch,ks,kc,rms,psk,offer,mode,cr,sr,req_ctx,
+        timingOption)
+    )
+  )
+
+  else if idOption = OptionB then
+  (
+    let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
+    let (cert_subject:identity, =pubTSK) = id_pub_pair in
+    if verify(pubCA, id_pub_pair, sig1) = true then
+    if TargetHost = ID_S then if ID_S = cert_subject then
+
+    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
+    let (WID: identity, workloadAtrr:attribute, dev_statusRef: measurements) = workload_manifest in
+    if verify(pubISV, workload_manifest, sig_manifest) = true then
+
+    let (pat_claims: bitstring, pat_sig: bitstring) = pat in
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, dev_status:measurements, eat_nonce:bitstring) = pat_claims in
+    let rdata = (Hashed, pat_claims) in
+    if verify(pubAK, (dev_status, rdata), pat_sig) = true then
+
+    let (kat_claims: bitstring, kat_sig: bitstring) = kat in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    if verify(pubKAK, kat_claims, kat_sig) = true then
+
+    if WID = ID_S then
+    if evidenceAttr = workloadAtrr then
+    if dev_status = dev_statusRef then
+    if eat_nonce = expectedNonce then
+
+    (* Mark when Client evaluates key provenance claims *)
+    event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
+
+    if timingOption = Intra then
+    (
+      Intra_Client_CV_Fin(
+        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubISV, shash_algo, log_SH, log_CRT, cmw,
+        dev_status, dev_statusRef, kem_ss, hs, kch, ksm, kcm, psk, offer,
+        mode, cr, sr, timingOption)
+    
+    ) else if timingOption = Post then
+    (
+      Post_Client_CV_fin(
+        ID_S,pubTSK,pubAK,pubKAK,pubISV,shash_algo,
+        req_msg,ea_cert,ea_sg,ea_mac,ems,dev_status,cmw,
+        kem_ss,kch,ks,kc,rms,psk,offer,mode,cr,sr,req_ctx,
+        timingOption)
+    )
+  )
+).

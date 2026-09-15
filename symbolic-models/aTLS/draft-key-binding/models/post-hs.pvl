@@ -1,10 +1,31 @@
+(* 
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
+Copyright 2026 Nathanael Ritz.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*)
+
 (********************************************************)
 (* Client_EA_CV_fin Process                             *)
 (********************************************************)
 
-(* Runs after the Client handshake's Finished. *)
+(* Prune branches that aren't matched with post-handshake *)
+restriction opt:attestation_option;
+  event(AttestationTimingWindow(Intra)) ==> (* not *) false
+.
 
-let Client_EA(
+let Client_EA( (* Runs after the Client handshake's Finished. *)
   ID_C: identity, ID_S: identity, TargetHost: identity, pubTSK: pubkey, server_cert: bitstring,
   pubISV: pubkey, pubCSP: pubkey, pubCA: pubkey, idOption: branch_option,
   psk: preSharedKey, cr: random, sr: random, offer: params, mode: params, kem_ss: bitstring,
@@ -31,43 +52,19 @@ let Client_EA(
   (* ==================================================================== *)
   (* Appraisal Policy Branching -- shared with intra via atls-library.pvl *)
   (* ==================================================================== *)
-  new return_chan: channel; (* Abstracts co-located Verifier *)
-  (
-    VerifierAppraisal(idOption, ID_S, TargetHost, pubCA, pubCSP, pubISV, pubTSK, 
-      server_cert, cmw, sessionNonce, cr, sr, return_chan)
-  )
-  |
-  (
-  in(return_chan, (* The handshake will not continue if appraisal fails *)
-    (=sessionNonce, pubAK:pubkey, pubKAK:pubkey, dev_status:measurements));
 
-  let ea_hs_ctx = ea_derive_hs_context(ems) in  (* derive Authenticator Handshake Context using label "EXPORTER-server authenticator handshake context" [Sec. 5.1, RFC9261] *)
-  let log_EA_CRT = (ea_hs_ctx, req_msg, CRT(ea_cert)) in  (* after this step, log_EA_CRT contains ea_hs_ctx || Authenticator Request || Certificate [Sec. 5.2.2, RFC9261] *)
-
-  if verify(pubTSK, hash(shash_algo, (ea_cv_context, log_EA_CRT)), ea_sg) = true then  (* verify CertificateVerify signature over Authenticator transcript hash using pubTSK [Sec. 5.2.2, RFC9261] *)
-  (
-    event Accepted(cmw);
-    event Appraised(log_EA_CRT);
-    event AcceptedRdata(dev_status);
-    let log_EA_CV = (log_EA_CRT, CV(ea_sg)) in  (* after this step, log_EA_CV contains ea_hs_ctx || Authenticator Request || Certificate || CertificateVerify *)
-
-    let ea_fin = ea_derive_fin_key(ems) in  (* derive Authenticator Finished Key using label "EXPORTER-server authenticator finished key" [Sec. 5.1, RFC9261] *)
-    if ea_mac = hmac(StrongHash, b2mk(ea_fin), log_EA_CV) then  (* verify Authenticator Finished HMAC over log_EA_CV using key derived from ea_fin [Sec. 5.2.3, RFC9261] *)
-    (
-      event ClientConn(cmw);
-      event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_status);
-      event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubISV,dev_status,cmw);
-      event ClientID(ID_S,kem_ss);
-      event ClientStateEvKc(cmw,kc);
-      event ClientStateEvKch(cmw,kch);
-      event ClientStateEv(cmw,kem_ss);
-
-      in(io, (app_msg_enc:bitstring));  (* receive post-handshake encrypted application message *)
-      let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in  (* decrypt and verify AEAD application record using server write key ks *)
-      event ClientReceivesAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s)
-    )
-  )
-)).
+  VerifierAppraisal(
+    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubISV, pubTSK, 
+    server_cert, cmw, sessionNonce, cr, sr, shash_algo, psk, offer, mode, kem_ss, kch,
+    
+    (* Intra-specific params (Dummies) *)
+    Nil, Nil, Nil, b2mk(Nil), b2mk(Nil),
+    
+    (* Post-specific params (Active) *)
+    req_msg, ea_cert, ea_sg, ea_mac, ems, ks, kc, rms, req_ctx
+  ) 
+  (* The VerifierAppraisal process will call Intra_Client_CV_Fin upon completetion *)
+).
 
 (********************************************************)
 (* Server Authenticator                                 *)
@@ -126,7 +123,10 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privKAK:
 (* (for usability/extensibility), we can use variables for messages, 
 e.g., SH so that these variables can then be used in logs *)
 
-let Client(ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,idOption:branch_option) =
+let Client(
+  ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,
+  idOption:branch_option
+) =
 (
   in(io, (TargetHost: identity, ioffer:params));  (* io is a public channel. ioffer is obtained from adversary as input to allow adversary to generate all valid patterns *)
   let nego(=aTLS,MLKEM_13_C(ka,eee),hash_algo,ev_type) = ioffer in

@@ -1,0 +1,74 @@
+(**********************************************************************)
+(* Generate Evidence *)
+(**********************************************************************)
+
+let EvidenceGeneration(dev_status: measurements, privKAK: privkey, pubTSK: pubkey, eat_nonce: bitstring,
+  cr: random, sr: random, return_chan: channel
+) =
+(
+  let pubKAK = pk(privKAK) in
+
+  (* Key Attestation Token *)  (*  cnf   , key-attributes    , measurements,nonce *)
+  let pat_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_status, eat_nonce) in
+  
+  let cdata = (Hashed, pat_claims) in
+  out(io, (dev_status, cdata)); (* Submit cdata to Attestation Environment, dev_status is for context *)
+
+  (* Receive signed data back from Attestion Environment (could be a signing oracle) *)
+  in(io, (dataSign: bitstring)) [precise];
+  let (signed_claims: bitstring, pat_sig: bitstring) = dataSign in
+
+  let eat_pat_profile(=pubKAK, evidenceAttr: attribute, =dev_status, =eat_nonce) = signed_claims in
+  let pat = (signed_claims, pat_sig) in
+
+  (* Key Attestation Token *)  (*  cnf   , key-attributes, nonce *)
+  let kat_claims = eat_kat_profile(pubTSK, evidenceAttr  , eat_nonce) in
+  let kat = (kat_claims, sign(privKAK, kat_claims)) in
+
+  event ServerAssertsProvenance(cr, sr, evidenceAttr);
+
+  (* Conceptual Message Wrapper, CMW [RFC 9999] *)
+  let cmw = (pat, kat) in (* Place Combined Attestation Bundle (CAB) into CMW *)
+  out(return_chan, cmw) 
+).
+
+
+(**********************************************************************)
+(* Attestation Environment and Oracle Process *)
+(**********************************************************************)
+
+event EvidenceOracle(pubkey, measurements, bitstring).
+
+let Attestation_Environment =
+(
+  (* Instantiate the AE for the given device by matching AK with hardware specific measurements *)
+  get agent_keys(EUID,_,_,_,privAK,pubAK,_,_) in
+  get agent_keys(=EUID,dev_statusRef,_,_,privAK,pubAK,privKAK,pubKAK) in
+  (* The KAK pair are confidential (never leave the enclave) unless compromised (see LeakedKAK) *)
+
+  (* model of dev_status (measurements): input from adversary *)
+  (* Lets the adversary instantiate any desired VM *)
+  in(io, (dev_status:measurements, cdata: bitstring));
+
+  (* Deconstruct hashed cdata (claims data/rdata) to let adversary pick and choose values *)
+  let (=Hashed, pat_claims:bitstring) = cdata in 
+  let eat_pat_profile(reqKAK:pubkey, evidenceAttr:attribute, =dev_status, eat_nonce:bitstring) = pat_claims in
+
+  (* Determine the expected values for confidential claims *)
+  let internal_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_statusRef, eat_nonce) in
+
+  if cdata = (Hashed, internal_claims) then ( 
+    let hwQuote = (dev_statusRef, cdata) in
+    let pat = (pat_claims, sign(privAK, hwQuote)) in 
+    out(io, pat)
+
+  ) else if evidenceAttr = ExternalOrExportable then ( 
+    (* Signing ExternalOrExportable measurements, keys and cdata represents an oracle, enabled on purpose. *)
+    let hwQuote = (dev_status, cdata) in
+    let pat = (pat_claims, sign(privAK, hwQuote)) in 
+    event EvidenceOracle(reqKAK, dev_status, pat);
+    out(io, pat)
+  )
+).
+
+

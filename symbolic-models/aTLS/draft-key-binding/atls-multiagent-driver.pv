@@ -286,7 +286,7 @@ process
   let pubISV = pk(privISV) in
   out(io, pubISV);
 
-  in(io, idOption:branch_option) [precise];
+  in(io, (idOption:branch_option)) [precise];
 
     !(gen_agents_data(privCA,idOption)) 
   | !(gen_endorsements(privCSP)) 

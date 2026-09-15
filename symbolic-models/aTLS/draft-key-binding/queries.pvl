@@ -61,14 +61,14 @@ query cr:random, sr:random, ID_S,ID_C:identity,
       psk:preSharedKey, pubTSK,pubAK,pubKAK,pubISV:pubkey, e:bitstring,
       offer:params, mode:params, ev,pat,kat,log,rdata:bitstring,
       kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
-      idS, idXS: identity, gxy:bitstring, dev_state: measurements,
+      idS, idXS: identity, kem_ss:bitstring, dev_state: measurements,
       ev_attr:attribute;
 
 (* should be false (confirms both events are reachable) 
 i.e., there exists a trace where *both* ServerID and ClientID 
-are reachable with a shared/common gxy *)
-    (event(ServerID(idS,gxy)) &&
-     event(ClientID(idXS,gxy)));
+are reachable with a shared/common kem_ss *)
+    (event(ServerID(idS,kem_ss)) &&
+     event(ClientID(idXS,kem_ss)));
 
     event(Accepted((pat,kat)));
     event(Appraised(log));
@@ -154,12 +154,12 @@ query dev_state:measurements,quote:bitstring,
 (* Binding and correlation queries *)
 (**********************************************************************)
 
-(* Property: State Reachability (gxy / kch / kc)
+(* Property: State Reachability (kem_ss / kch / kc)
 Goal: Client and Server can land on the same evidence ev with matching
-  gxy / kch / kc at all -- a prerequisite for the binding properties
+  kem_ss / kch / kc at all -- a prerequisite for the binding properties
   that follow.
 
-Events: ClientStateEv/ServerStateEv (L1: gxy), ClientStateEvKch/
+Events: ClientStateEv/ServerStateEv (L1: kem_ss), ClientStateEvKch/
   ServerStateEvKch (L2: kch), ClientStateEvKc/ServerStateEvKc (L3: kc).
 
 Parameters (of agreement): ev (shared evidence identifier), and the
@@ -172,7 +172,7 @@ Result: true (reachable), all 3 sub-queries, all 4 logs.
 Interpretation of result: the binding properties below aren't testing
   an empty trace set.
 *)
-query ev,ev1,ev2,gxy,gxy1,gxy2,pat,kat:bitstring, 
+query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2,pat,kat:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
       cr,sr,cr',sr':random,ID1,ID2,ID,ID_C:identity,
       pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:bitstring, 
@@ -181,8 +181,8 @@ query ev,ev1,ev2,gxy,gxy1,gxy2,pat,kat:bitstring,
       req_ctx,app_msg:bitstring,
       offer:params, mode:params;
 
-      event(ClientStateEv(ev,gxy)) &&
-      event(ServerStateEv(ev,gxy))
+      event(ClientStateEv(ev,kem_ss)) &&
+      event(ServerStateEv(ev,kem_ss))
 ;
 
       event(ClientStateEvKch(ev,kch)) &&
@@ -215,7 +215,7 @@ Parameters (of agreement): ev (shared evidence) plus the session term at
   separately by Server Identity + Key Correspondence and G-TLS1 below).
 
 Method: three increasingly late binding points, in order:
-  L1. gxy (up to the (EC)DHE exchange)
+  L1. kem_ss (up to the (EC)DHE exchange)
   L2. kch (up to ServerHello)
   L3. kc (up to ServerFinished)
   L1 <= L2 <= L3 -- if they see the same evidence, they should be in the
@@ -224,7 +224,7 @@ Method: three increasingly late binding points, in order:
 Formalization: event(ClientStateEv*(ev,X)) && event(ServerStateEv*(ev,Y))
   ==> X = Y. Trace should never contain matching ev with differing X/Y.
 *)
-query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring, 
+query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring, 
       kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
       cr,sr,cr',sr':random,ID1,ID2,ID,ID_C:identity,
       pubAK,pubCA,pubTSK,pubTSK1,pubTSK2:pubkey,e:bitstring, 
@@ -233,10 +233,10 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
       req_ctx,app_msg:bitstring,
       offer:params, mode:params;
 
-(* G1 (gxy). Result: true, all 4 logs. *)
-      event(ClientStateEv(ev,gxy1)) &&
-      event(ServerStateEv(ev,gxy2)) ==>
-      (gxy1 = gxy2)
+(* G1 (kem_ss). Result: true, all 4 logs. *)
+      event(ClientStateEv(ev,kem_ss1)) &&
+      event(ServerStateEv(ev,kem_ss2)) ==>
+      (kem_ss1 = kem_ss2)
 ;
 
 (* G2 (kch). Result: true, all 4 logs. *)
@@ -262,18 +262,18 @@ query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,
      ) ==> ((kc1,ev1) = (kc2,ev2))
 .
 
-query ID1,ID2:identity, gxy,ev,pat,kat:bitstring, dev_state:measurements, kc1,kc2:ae_key,
+query ID1,ID2:identity, kem_ss,ev,pat,kat:bitstring, dev_state:measurements, kc1,kc2:ae_key,
       cr:random, sr:random, pubTSK,pubAK,pubCA,pubCSP,pubISV:pubkey;
 
      (
-          event(ClientID(ID1, gxy)) 
-       && event(ClientStateEv(ev, gxy)) 
+          event(ClientID(ID1, kem_ss)) 
+       && event(ClientStateEv(ev, kem_ss)) 
        && event(ClientStateEvKc(ev, kc1))
      )
           && (* Correlation *)
      (
-          event(ServerID(ID2, gxy)) 
-       && event(ServerStateEv(ev, gxy)) 
+          event(ServerID(ID2, kem_ss)) 
+       && event(ServerStateEv(ev, kem_ss)) 
        && event(ServerStateEvKc(ev, kc2))
      ) ==> ((ID1,kc1) = (ID2,kc2))
 .
@@ -293,7 +293,7 @@ In each case, the TLS signing key (TSK) is NOT considered confidential!
 *)
 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
-      cr:random, sr:random, cr':random, sr':random, gxy:bitstring,
+      cr:random, sr:random, cr':random, sr':random, kem_ss:bitstring,
       ID,ID2,EUID,ID_C:identity,pubTSK:pubkey,pubAK,pubKAK:pubkey,
       psk:preSharedKey, e:bitstring, pubISV,pubCA,pubCSP:pubkey,
       offer:params, mode:params, pat,kat:bitstring,
@@ -518,7 +518,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
 (* Agreement of Composition TLS+RA in post-handshake app data         *)
 (**********************************************************************)
 
-query ev,ev1,ev2,gxy,gxy1,gxy2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
+query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
       cr,sr,cr',sr':random,ID,ID_C:identity,pubTSK,pubAK,pubKAK,pubCA,pubISV,
       pubCSP:pubkey,psk:preSharedKey,ems,rms:bitstring, pat,kat: bitstring,
       dev_state:measurements,offer,mode:params,req_ctx,app_msg:bitstring,e:bitstring;

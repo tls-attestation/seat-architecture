@@ -1,0 +1,103 @@
+(* 
+Copyright 2017 Bhargavan et al.
+Copyright 2026 Sardar et al.
+Copyright 2026 Nathanael Ritz.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*)
+
+
+let Intra_Client_CV_Fin( (* Called after VerifierAppraisal process completes *)
+  ID_C: identity, ID_S: identity, pubTSK, pubAK, pubKAK, pubISV: pubkey, hash_algo: hash_alg,
+  log_SH: bitstring, log_CRT: bitstring, cmw: bitstring, dev_status: measurements, dev_statusRef: measurements,
+  gxy: bitstring, hs: bitstring, kch: ae_key, ksm: mac_key, kcm: mac_key, psk: preSharedKey, offer: params, 
+  mode: params, cr: random, sr: random, timingOption: attestation_option
+) =
+(
+  event AttestationTimingWindow(timingOption);
+
+  in(io,CV(sg));  (* receive signature (sg) from CertificateVerify message *)
+  if verify(pubTSK,hash(hash_algo,log_CRT),sg) = true then  (* PoP of pubTSK cnf. - log_CRT contains msgs up to Certificate *)
+  event Accepted(cmw);
+  event Appraised(log_SH);
+  event AcceptedRdata(dev_status);
+  let log_CV = (log_CRT,CV(sg)) in  (* after this step, log_CV contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify *)
+
+  in(io,FIN(m1));  (* receive server Finished message containing hmac of log *)
+  if m1 = hmac(StrongHash,ksm,log_CV) then    (* hmac(hash_alg,mac_key,bitstring); mac_key = ksm using Client's perspective of log_CV; that's why client needs to generate server keys also *)
+  (
+    let log_SFIN = (log_CV,FIN(m1)) in  (* after this step, log_SFIN contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify || received server Finished *)
+    let (ms:bitstring,kc:ae_key,ks:ae_key,ems:bitstring) = kdf_ms(hs,log_SFIN) in
+    let m2 = hmac(StrongHash,kcm,log_SFIN) in  (* hmac(hash_alg,mac_key,bitstring); mac_key = kcm *)
+    let log_CFIN = (log_SFIN,FIN(m2)) in  (* after this step, log_CFIN contains sent ClientHello || received ServerHello || received Certificate || received CertificateVerify || received server Finished || sent client Finished *)
+    let rms =  kdf_psk(ms,log_CFIN) in
+
+    event ClientFin1WayAgr(ID_S,pubTSK,psk,offer,mode,kc,ks,ems,rms);
+    event ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr);
+    event ClientConn(cmw);
+    event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_statusRef);
+    event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubISV,dev_statusRef,cmw);
+    event ClientID(ID_S,gxy);
+    event ClientStateEvKc(cmw,kc);    
+    event ClientStateEvKch(cmw,kch);
+    event ClientStateEv(cmw,gxy);
+    event ClientFinished(pubTSK,psk,cr,sr,offer,mode,kc,ks,ems,rms);
+    out(io,FIN(m2));  (* send ClientFinished message *)
+
+    in(io, (app_msg_enc:bitstring)); (* receive post-handshake encrypted application message *)
+    let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in (* decrypt and verify AEAD application record using server write key ks *)
+    let req_ctx = r2b(cr) in (* Backward compatible shim with EXPAT *)
+    event ClientReceivesAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_statusRef,app_msg_s)
+
+  )
+).
+
+
+let Post_Client_CV_fin( (* Called after VerifierAppraisal process completes *)
+  ID_S: identity, pubTSK: pubkey, pubAK: pubkey, pubKAK: pubkey, pubISV: pubkey, 
+  shash_algo: hash_alg, req_msg: msg, ea_cert: bitstring, ea_sg: bitstring, 
+  ea_mac: bitstring, ems: bitstring, dev_status: measurements, cmw: bitstring, 
+  gxy: bitstring, kch: ae_key, ks: ae_key, kc: ae_key, rms: bitstring, psk: preSharedKey,
+  offer: params, mode: params, cr: random, sr: random, req_ctx: bitstring,
+  timingOption: attestation_option
+) =
+(
+  event AttestationTimingWindow(timingOption);
+
+  let ea_hs_ctx = ea_derive_hs_context(ems) in  (* derive Authenticator Handshake Context using label "EXPORTER-server authenticator handshake context" [Sec. 5.1, RFC9261] *)
+  let log_EA_CRT = (ea_hs_ctx, req_msg, CRT(ea_cert)) in  (* after this step, log_EA_CRT contains ea_hs_ctx || Authenticator Request || Certificate [Sec. 5.2.2, RFC9261] *)
+
+  if verify(pubTSK, hash(shash_algo, (ea_cv_context, log_EA_CRT)), ea_sg) = true then  (* verify CertificateVerify signature over Authenticator transcript hash using pubTSK [Sec. 5.2.2, RFC9261] *)
+  (
+    event Accepted(cmw);
+    event Appraised(log_EA_CRT);
+    event AcceptedRdata(dev_status);
+    let log_EA_CV = (log_EA_CRT, CV(ea_sg)) in  (* after this step, log_EA_CV contains ea_hs_ctx || Authenticator Request || Certificate || CertificateVerify *)
+
+    let ea_fin = ea_derive_fin_key(ems) in  (* derive Authenticator Finished Key using label "EXPORTER-server authenticator finished key" [Sec. 5.1, RFC9261] *)
+    if ea_mac = hmac(StrongHash, b2mk(ea_fin), log_EA_CV) then  (* verify Authenticator Finished HMAC over log_EA_CV using key derived from ea_fin [Sec. 5.2.3, RFC9261] *)
+    (
+      event ClientConn(cmw);
+      event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_status);
+      event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubISV,dev_status,cmw);
+      event ClientID(ID_S,gxy);
+      event ClientStateEvKc(cmw,kc);
+      event ClientStateEvKch(cmw,kch);
+      event ClientStateEv(cmw,gxy);
+
+      in(io, (app_msg_enc:bitstring));  (* receive post-handshake encrypted application message *)
+      let app_msg_s = ph_read(app_msg_enc, ae2b(ks)) in  (* decrypt and verify AEAD application record using server write key ks *)
+      event ClientReceivesAppData(ID_S,pubTSK,pubKAK,cr,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s)
+    )
+  )
+).
