@@ -283,19 +283,19 @@ query ID1,ID2:identity, kem_ss,ev,pat,kat:bitstring, dev_state:measurements, kc1
      ) ==> ((ID1,kc1) = (ID2,kc2))
 .
 (**********************************************************************)
-(* Attestation Key / Oracle Abuse [seat-use-cases-01 §3.8.2] *)
+(* Attestation Signing Oracle Abuse [draft-reddy-rats-key-binding-02 §8.3] *)
 (* Tag: Q-ORACLE *)
 (**********************************************************************)
 
-(* Demonstrated property: 
+(* Demonstrated property:
 
-The correspondence query formalizes that a TLS session key terminates inside a 
-genuine, specific execution state by proving that when a client accepts both the 
-TLS handshake and the composite attestation token (PAT and KAT) bound to the session 
-keys (or trusts a webPKI CA equivalent), the resulting environment is authentic: 
-UNLESS an entity within the __distributed trust perimeter__ is compromised.
+EvidenceOracle is distinct from LeakedAK/LeakedKAK/LeakedTSK throughout this
+file; it models a TEE-bound proxy that forwards fabricated claims on behalf 
+of an untrusted caller, producing valid signatures without key exposure.
 
-In each case, the TLS signing key (TSK) is NOT considered confidential!
+Rejection of oracle-manufactured credentials holds only under strict
+provenance validation (ClientAcceptsProvenance = TrustedNonExportable).
+Under loose validation (ExternalOrUntrusted), the oracle succeeds.
 *)
 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
@@ -340,9 +340,20 @@ Interpretation: The Evidence Oracle is an active, coexisting threat
 .
 
 (**********************************************************************)
-(* Target Environment Engagement [seat-use-cases-01 §3.8.1, §4.3, §3.4] *)
+(* Target Environment Engagement [seat-use-cases-01 §3.8.1, §3.4] *)
 (* Tag: Q-DIVERSION / Q-SUBST *)
 (**********************************************************************)
+
+(* Demonstrated property: 
+
+The correspondence query formalizes that a TLS session key terminates inside a 
+genuine, specific execution state by proving that when a client accepts both the 
+TLS handshake and the composite attestation token (PAT and KAT) bound to the session 
+keys (or trusts a webPKI CA equivalent), the resulting environment is authentic: 
+UNLESS an entity within the __distributed trust perimeter__ is compromised.
+
+In each case, the TLS signing key (TSK) is NOT considered confidential!
+*)
 query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: params,
     kc, ks: ae_key, ems, rms: bitstring, cr, sr: random, pat,kat: bitstring, dev_state: measurements,
     pubAK, pubCA, pubCSP, pubVOK: pubkey, ev_attr: attribute;
