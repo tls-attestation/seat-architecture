@@ -47,7 +47,7 @@ let Client_EA( (* Runs after the Client handshake's Finished. *)
   let (cert_subject:identity,=pubTSK) = id_pub_pair in  (* universal parse of certificate; pubTSK is the TLS authentication key [seat-cc-workload-identity §2] *)
 
   let exported_val = ea_derive_attestation_binder(ems, req_ctx) in
-  let sessionNonce = (exported_val, pubTSK) in (* legacy: was 'rdata' *)
+  let sessionNonce = hash(StrongHash, (exported_val, pubTSK)) in (* legacy: was 'rdata' *)
 
   (* ==================================================================== *)
   (* Appraisal Policy Branching -- shared with intra via atls-library.pvl *)
@@ -85,7 +85,7 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privKAK:
 
   (* Evidence generation *)
   let exported_val = ea_derive_attestation_binder(ems, req_ctx) in  (* derive exported key material using exporter_secret (ems) and req_ctx as context_value [Sec. 7.5, RFC9846; Sec. 5.1, draft-fossati-seat-expat] *)
-  let eat_nonce = (exported_val, pubTSK) in (* legacy: was 'rdata' *)
+  let eat_nonce = hash(StrongHash, (exported_val, pubTSK)) in (* legacy: was 'rdata' *)
   new ev_return: channel;
   ( EvidenceGeneration(dev_status, privKAK, pubTSK, eat_nonce, cr, sr, ev_return) )
   |

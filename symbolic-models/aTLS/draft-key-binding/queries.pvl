@@ -120,7 +120,7 @@ query dev_state:measurements,quote:bitstring,
       ==> 
          event(ClientAcceptsProvenance(cr, sr, ExternalOrUntrusted, pubKAK)) 
       || event(ServerAssertsProvenance(cr, sr, ExternalOrUntrusted)) 
-      || event(ClientAcceptsKEM(cr, WeakKEM))
+      || event(ClientAcceptsKEM(cr, WeakKEM))   (* Tag: Q-DOWNGRADE [seat-use-cases-01 §3.7] *)
       || event(ClientAcceptsHash(cr, WeakHash)) 
       || event(LeakedAK(pubAK)) 
       || event(LeakedTSK(pubTSK)) 
@@ -152,6 +152,7 @@ query dev_state:measurements,quote:bitstring,
 
 (**********************************************************************)
 (* Binding and correlation queries [seat-use-cases-01 §4.1, §3.3.2] *)
+(* Tag: Q-RELAY *)
 (**********************************************************************)
 
 (* Property: State Reachability (kem_ss / kch / kc)
@@ -262,6 +263,10 @@ query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,
      ) ==> ((kc1,ev1) = (kc2,ev2))
 .
 
+(**********************************************************************)
+(* Server Identity + Key Correspondence [seat-use-cases-01 §4.2] *)
+(* Tag: Q-COMPOUND *)
+(**********************************************************************)
 query ID1,ID2:identity, kem_ss,ev,pat,kat:bitstring, dev_state:measurements, kc1,kc2:ae_key,
       cr:random, sr:random, pubTSK,pubAK,pubCA,pubCSP,pubVOK:pubkey;
 
@@ -278,7 +283,8 @@ query ID1,ID2:identity, kem_ss,ev,pat,kat:bitstring, dev_state:measurements, kc1
      ) ==> ((ID1,kc1) = (ID2,kc2))
 .
 (**********************************************************************)
-(* Target Environment Engagement [seat-use-cases-01 §3.8.2, §3.4] *)
+(* Attestation Key / Oracle Abuse [seat-use-cases-01 §3.8.2] *)
+(* Tag: Q-ORACLE *)
 (**********************************************************************)
 
 (* Demonstrated property: 
@@ -333,6 +339,10 @@ Interpretation: The Evidence Oracle is an active, coexisting threat
   ) ==> false
 .
 
+(**********************************************************************)
+(* Target Environment Engagement [seat-use-cases-01 §3.8.1, §4.3, §3.4] *)
+(* Tag: Q-DIVERSION / Q-SUBST *)
+(**********************************************************************)
 query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: params,
     kc, ks: ae_key, ems, rms: bitstring, cr, sr: random, pat,kat: bitstring, dev_state: measurements,
     pubAK, pubCA, pubCSP, pubVOK: pubkey, ev_attr: attribute;
@@ -428,7 +438,8 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
 .
 
 (**********************************************************************)
-(* Key Secrecy Correspondence [seat-use-cases-01 §4.2, §3.8] *)
+(* Key Secrecy Correspondence [seat-use-cases-01 §4.2, §3.5.2] *)
+(* Tag: Q-SECRECY *)
 (**********************************************************************)
 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
@@ -515,7 +526,8 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
 .
 
 (**********************************************************************)
-(* Agreement of Composition TLS+RA in post-handshake app data [seat-use-cases-01 §4.2, §3.3.1] *)
+(* Agreement of Composition TLS+RA in post-handshake app data [seat-use-cases-01 §4.4, §3.3.1] *)
+(* Tag: Q-REPLAY *)
 (**********************************************************************)
 
 query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,

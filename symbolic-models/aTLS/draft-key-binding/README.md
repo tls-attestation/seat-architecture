@@ -68,6 +68,22 @@ The automated verification of the model demonstrates several core cryptographic 
 
 * **Application Key Confidentiality:** The client application traffic secret (`kc`) remains completely confidential from active Dolev-Yao attackers. Secrecy is breached only in the explicit presence of underlying root compromise (`CompromisedCSP` / `CompromisedCA` / `UncheckedPolicies`), key compromise (`LeakedAK` / `LeakedKAK` / `LeakedTSK`), or negotiation downgrades to weak primitives (`WeakKEM` / `WeakHash`) elsewhere in the model.
 
+### Security Equivalence of Post-Handshake Attestation
+
+Intra-handshake attestation (e.g., Early Attestation) embeds the Conceptual Message Wrapper (CMW) directly into the TLS transcript by including it within the Certificate message—thereby directly feeding into the HKDF derivation of the application traffic keys. In contrast, post-handshake attestation (e.g., via RFC 9261 Exported Authenticators and ALTEA transport framing) derives the application traffic keys *before* attestation evidence is generated or exchanged.
+
+Despite this structural difference, the formal model proves that post-handshake attestation preserves the exact same compound authentication and security properties as intra-handshake attestation. This equivalence is achieved through the **late attestation of the session binding value**:
+
+1. **Exporter-Derived Binding:** Following the baseline connection establishment, the protocol derives an exported attestation binder from the TLS Exporter Master Secret (`ems`) and the authenticator request context.
+
+2. **Cryptographic Commitment:** This binder, along with the TLS signing key (`pubTSK`), is committed directly into the attestation challenge (the EAT nonce) and signed by the hardware root of trust within the Platform Attestation Token (PAT).
+
+3. **Retroactive Authentication:** Because the `ems` is cryptographically bound to the entire baseline TLS 1.3 handshake transcript, incorporating this binder into the hardware-signed quote retroactively authenticates the established connection.
+
+Consequently, once the Relying Party successfully appraises the post-handshake evidence, the late attestation comprehensively authenticates the entire dual-phase exchange. This mathematically proves that the actively established application keys (`kc`, `ks`) terminate strictly within the genuine, provisioned enclave, delivering identity and authorization guarantees identical to intra-handshake integration—provided application data release is gated on appraisal completion.
+
+> **Note:** These equivalence properties are formally proven to hold under baseline TLS 1.3 security assumptions. Specifically, relying parties must correctly validate handshake negotiation, reject degenerate or weak key exchange shares, and enforce transcript integrity checks as outlined in Appendix F. of RFC 9846.
+
 ---
 
 ## Enhanced Threat Modeling
