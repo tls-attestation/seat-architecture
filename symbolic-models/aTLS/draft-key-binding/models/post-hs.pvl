@@ -27,7 +27,7 @@ restriction opt:attestation_option;
 
 let Client_EA( (* Runs after the Client handshake's Finished. *)
   ID_C: identity, ID_S: identity, TargetHost: identity, pubTSK: pubkey, server_cert: bitstring,
-  pubISV: pubkey, pubCSP: pubkey, pubCA: pubkey, idOption: branch_option,
+  pubVOK: pubkey, pubCSP: pubkey, pubCA: pubkey, idOption: branch_option,
   psk: preSharedKey, cr: random, sr: random, offer: params, mode: params, kem_ss: bitstring,
   kch: ae_key, ks: ae_key, kc: ae_key, ems: bitstring, rms: bitstring, shash_algo: hash_alg
 ) =
@@ -54,7 +54,7 @@ let Client_EA( (* Runs after the Client handshake's Finished. *)
   (* ==================================================================== *)
 
   VerifierAppraisal(
-    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubISV, pubTSK, 
+    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubVOK, pubTSK, 
     server_cert, cmw, sessionNonce, cr, sr, shash_algo, psk, offer, mode, kem_ss, kch,
     
     (* Intra-specific params (Dummies) *)
@@ -124,7 +124,7 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privKAK:
 e.g., SH so that these variables can then be used in logs *)
 
 let Client(
-  ID_C:identity,ID_S:identity,pubISV:pubkey,pubCSP:pubkey,pubCA:pubkey,
+  ID_C:identity,ID_S:identity,pubVOK:pubkey,pubCSP:pubkey,pubCA:pubkey,
   idOption:branch_option
 ) =
 (
@@ -142,7 +142,7 @@ let Client(
   let psk = NoPSK in (* non-PSK handshake, so use NoPSK to get zero. *)
   let (es:bitstring,kb:mac_key,kc0:ae_key,ems0:bitstring) = kdf_es(psk,msg2bytes(ch)) in  (* non-PSK handshake, so use NoPSK to get zero. log1 is simply ch *)
   (* If a given secret is not available, then the 0-value consisting of a string of Hash.length bytes set to zeros is used.
-  Note that this does not mean skipping rounds, so if PSK is not in use, Early Secret will still be HKDF-Extract(0, 0). [Section 7.1, RFC8446]  *)
+  Note that this does not mean skipping rounds, so if PSK is not in use, Early Secret will still be HKDF-Extract(0, 0). [Section 7.1, RFC9846]  *)
   event ClientOffersHash(cr,hash_algo); (*hash algorithm used for HKDF [Table 4 in Appendix B.4 8446bis]*)
   event ClientOffersKEX(cr,MLKEM_13_C(ka,ek));  (* key_share extension: client's ML-KEM encapsulation key for the offered parameter set [sec. 4.1.1. in 8446; RFC 9846 sect. 4.3.8] *)
   event ClientOffersEvType(cr,ev_type);
@@ -150,11 +150,11 @@ let Client(
 
   in(io, SH(sr,mode)) [precise];  (* Receive ServerHello *)
   let nego(=aTLS,MLKEM_13_S(=ka,ciph),shash_algo,sev_type) = mode in  (* pattern matching to ensure that received mode is in the desired format and negotiates the same KEM parameter set ka as sent *)
-  event ClientAcceptsKEM(cr, ka);  (* Capture KEM downgrade / WeakKEM; no hard cutoff -- queries.pvl carries the WeakKEM disjunct *)
+  event ClientAcceptsKEM(cr, ka);  (* Capture KEM downgrade / WeakKEM *)
   event ClientAcceptsHash(cr, shash_algo); (* Capture TLS 1.2 downgrade attack *)
   let log_SH = (ch,SH(sr,mode)) in  (* after this step, log_SH contains sent ClientHello || received ServerHello *)
 
-  let kem_ss = kem_decap(ka, dk, ciph) in  (* ML-KEM shared secret in Key Derivation [Sec. 7.1, RFC8446; RFC9846 sect. 7.1] *)
+  let kem_ss = kem_decap(ka, dk, ciph) in  (* ML-KEM shared secret in Key Derivation [Sec. 7.1, RFC9846] *)
   let (hs:bitstring,kch:ae_key,ksh:ae_key,kcm:mac_key,ksm:mac_key) = kdf_hs(es,kem_ss,log_SH) in
   in(io,CRT(server_cert));  (* receive Certificate message; server_cert only, no evidence carried here *)
   let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  (* unpack cert format only — no trust check performed here *)
@@ -182,7 +182,7 @@ let Client(
 
     (* continue from vanilla TLS handshake into the Exported Authenticator handshake, where
        identity/workload appraisal (idOption branching) and evidence appraisal now live *)
-    Client_EA(ID_C,ID_S,TargetHost,pubTSK,server_cert,pubISV,pubCSP,pubCA,idOption,psk,cr,sr,offer,mode,kem_ss,kch,ks,kc,ems,rms,shash_algo)
+    Client_EA(ID_C,ID_S,TargetHost,pubTSK,server_cert,pubVOK,pubCSP,pubCA,idOption,psk,cr,sr,offer,mode,kem_ss,kch,ks,kc,ems,rms,shash_algo)
   )
 ).
 
@@ -214,7 +214,7 @@ let Server(ID_S:identity, dev_status1: measurements, privKAK: privkey, privTSK: 
   event ServerChoosesATLS(cr,sr,aTLS); (* Standard or Attested TLS *)
   event ServerChoosesEvType(cr,sr,ev_type);  (* Evidence type *)
 
-  let kem_ss = ss_kem in  (* ML-KEM shared secret bound into ciph via kem_encap above; Key Derivation [Sec. 7.1, RFC8446; RFC9846 sect. 7.1] *)
+  let kem_ss = ss_kem in  (* ML-KEM shared secret bound into ciph via kem_encap above; Key Derivation [Sec. 7.1, RFC9846] *)
   let (hs:bitstring,kch:ae_key,ksh:ae_key,kcm:mac_key,ksm:mac_key) = kdf_hs(es,kem_ss,log_SH) in
   
   (* https://github.com/Inria-Prosecco/reftls/blob/a71a74538e8af80dec5f6719f9e726b8c654468a/pv/tls-lib-rfc8446.pvl#L598 *)
@@ -228,14 +228,14 @@ let Server(ID_S:identity, dev_status1: measurements, privKAK: privkey, privTSK: 
   let log_CRT = (log_SH,CRT(server_cert)) in  (* received ClientHello || sent ServerHello || sent Certificate *)
 
   (* CertificateVerify message *)
-  let sg     = sign(privTSK ,hash(hash_algo,log_CRT)) in  (* A signature over the value Transcript-Hash(Handshake Context, Certificate) [Sec. 4.4, RFC8446] using TSK; Handshake Context via first row of table in Sec. 4.4 of RFC8446. log_CRT contains Handshake Context, Certificate. *)
+  let sg     = sign(privTSK ,hash(hash_algo,log_CRT)) in  (* A signature over the value Transcript-Hash(Handshake Context, Certificate) [Sec. 4.5, RFC9846] using TSK; Handshake Context via first row of table in Sec. 4.5 of RFC9846. log_CRT contains Handshake Context, Certificate. *)
   out(io,CV(sg));  (* Send CertificateVerify message *)
   let log_CV = (log_CRT,CV(sg)) in  (* received ClientHello || sent ServerHello || sent Certificate || sent CertificateVerify *)
 
   (* serverFinished message *)
-  let m1 = hmac(StrongHash,ksm,log_CV) in  (* A MAC over the value Transcript-Hash(Handshake Context, Certificate, CertificateVerify) using a MAC key derived from the Base Key [Sec. 4.4, RFC8446]. Handshake Context via first row of table in Sec. 4.4 of RFC8446. log_CV contains Handshake Context, Certificate, CertificateVerify  *)
+  let m1 = hmac(StrongHash,ksm,log_CV) in  (* A MAC over the value Transcript-Hash(Handshake Context, Certificate, CertificateVerify) using a MAC key derived from the Base Key [Sec. 4.5, RFC9846]. Handshake Context via first row of table in Sec. 4.5 of RFC9846. log_CV contains Handshake Context, Certificate, CertificateVerify  *)
   let log_SFIN = (log_CV,FIN(m1)) in  (* received ClientHello || sent ServerHello || sent Certificate || sent CertificateVerify || sent ServerFinished *)
-  let (ms:bitstring,kc:ae_key,ks:ae_key,ems:bitstring) = kdf_ms(hs,log_SFIN) in  (* Key Derivation [Sec. 7.1, RFC8446] *)
+  let (ms:bitstring,kc:ae_key,ks:ae_key,ems:bitstring) = kdf_ms(hs,log_SFIN) in  (* Key Derivation [Sec. 7.1, RFC9846] *)
   out(io,FIN(m1));  (* Send serverFinished message *)
 
   (* clientFinished message *)

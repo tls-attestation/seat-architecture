@@ -20,11 +20,11 @@ limitations under the License.
 (*  Security and Threat Model *)
 (********************************************************)
 type identity.  (* long-term identity of the machine *)
-type measurements. (* Launch measurements of the Target Environment *)
+type measurements. (* Runtime measurements of the Target Environment *)
 
 free io:channel.
+free non_provisioned_dev:measurements. (* Untrusted servers *)
 const zero: bitstring.
-const Hashed: bitstring.
 
 (********************************************************)
 (* Authenticated Encryption with Additional Data *)
@@ -180,27 +180,27 @@ otherwise psk2b(NoPSK) = zero.
 type label.
 (* Labels are represented as constants in ProVerif *)
 
-(* Organized following labels according to order in the figure [Sec. 7.1, RFC8446] *)
-const tls13_resumption_psk_binder_key,  (* represents label "ext binder" | "res binder" [Sec. 7.1, RFC8446] *)
-  tls13_client_early_traffic_secret,  (* represents label "c e traffic" [Sec. 7.1, RFC8446] *)
-  tls13_early_exporter_master_secret,  (* represents label "e exp master" [Sec. 7.1, RFC8446] *)
+(* Organized following labels according to order in the figure [Sec. 7.1, RFC9846] *)
+const tls13_resumption_psk_binder_key,  (* represents label "ext binder" | "res binder" [Sec. 7.1, RFC9846] *)
+  tls13_client_early_traffic_secret,  (* represents label "c e traffic" [Sec. 7.1, RFC9846] *)
+  tls13_early_exporter_master_secret,  (* represents label "e exp master" [Sec. 7.1, RFC9846] *)
 
-  tls13_derived,  (* represents label "derived" [Sec. 7.1, RFC8446] *)
+  tls13_derived,  (* represents label "derived" [Sec. 7.1, RFC9846] *)
 
-  tls13_client_handshake_traffic_secret,  (* represents label "c hs traffic" [Sec. 7.1, RFC8446] *)
-  tls13_server_handshake_traffic_secret,  (* represents label "s hs traffic" [Sec. 7.1, RFC8446] *)
+  tls13_client_handshake_traffic_secret,  (* represents label "c hs traffic" [Sec. 7.1, RFC9846] *)
+  tls13_server_handshake_traffic_secret,  (* represents label "s hs traffic" [Sec. 7.1, RFC9846] *)
 
-  tls13_client_application_traffic_secret,  (* represents label "c ap traffic" [Sec. 7.1, RFC8446] *)
-  tls13_server_application_traffic_secret,  (* represents label "s ap traffic" [Sec. 7.1, RFC8446] *)
-  tls13_exporter_master_secret,  (* represents label "exp master" [Sec. 7.1, RFC8446] *)
-  tls13_resumption_master_secret,  (* represents label "res master" [Sec. 7.1, RFC8446] *)
+  tls13_client_application_traffic_secret,  (* represents label "c ap traffic" [Sec. 7.1, RFC9846] *)
+  tls13_server_application_traffic_secret,  (* represents label "s ap traffic" [Sec. 7.1, RFC9846] *)
+  tls13_exporter_master_secret,  (* represents label "exp master" [Sec. 7.1, RFC9846] *)
+  tls13_resumption_master_secret,  (* represents label "res master" [Sec. 7.1, RFC9846] *)
 
-  tls13_key,  (* represents "key" [Sec. 7.3, RFC8446] *)
+  tls13_key,  (* represents "key" [Sec. 7.3, RFC9846] *)
 
-  tls13_finished: label.  (* represents label "finished" [Sec. 4.4.4, RFC8446] *)
+  tls13_finished: label.  (* represents label "finished" [Sec. 4.5.3, RFC9846] *)
 
 (* Basic functions *)
-letfun hkdf_extract(salt:bitstring, ikm:bitstring) =  (* 1st argument is salt and 2nd argument is Input Keying Material (IKM) [Sec. 7.1, RFC8446] *)
+letfun hkdf_extract(salt:bitstring, ikm:bitstring) =  (* 1st argument is salt and 2nd argument is Input Keying Material (IKM) [Sec. 7.1, RFC9846] *)
   hmac(StrongHash,b2mk(salt),ikm).
   (* Note that in the extract step, 'IKM' is used as the HMAC input (data), not as the HMAC key. [Sec. 2.1, RFC5869] *)
 
@@ -208,44 +208,44 @@ letfun hkdf_expand_label(s:bitstring, l:label, c:bitstring) =  (* 1st argument i
   (* 2nd argument is label, 3rd argument is Context (Transcript-Hash of messages) *)
   hmac(StrongHash,b2mk(s),(l,c)).
 
-letfun derive_secret(s:bitstring, l:label, m:bitstring) =  (* Arguments are 1. Secret, 2. Label, 3. Messages [Sec. 7.1, RFC8446] *)
+letfun derive_secret(s:bitstring, l:label, m:bitstring) =  (* Arguments are 1. Secret, 2. Label, 3. Messages [Sec. 7.1, RFC9846] *)
   hkdf_expand_label(s,l,hash(StrongHash,m)).
 
 (* Early Secret and its derivatives *)
-letfun kdf_es(psk:preSharedKey,log1:bitstring) = (* 1st parameter represents PSK input as IKM [Sec. 7.1, RFC8446], 2nd parameter represents message ClientHello for derive_secret *)
-  let es = hkdf_extract(zero,psk2b(psk)) in (* es is early secret [Sec. 7.1, RFC8446]; zero is a const *)
-  let kb = derive_secret(es,tls13_resumption_psk_binder_key,zero) in  (* kb is binder_key [Sec. 7.1, RFC8446]; derive_secret internally calls hkdf_expand_label *)
-  let atsc0 = derive_secret(es, tls13_client_early_traffic_secret, log1) in (* atsc0 is the client_early_traffic_secret [Sec. 7.1, RFC8446] *)
-  let kc0   = hkdf_expand_label(atsc0,tls13_key,zero) in (* [sender]_write_key for Record type = 0-RTT Application in the table [Sec. 7.3, RFC8446] *)
-  let ems0  = derive_secret(es,tls13_early_exporter_master_secret,log1) in  (* ems0 is the early_exporter_master_secret [Sec. 7.1, RFC8446] *)
+letfun kdf_es(psk:preSharedKey,log1:bitstring) = (* 1st parameter represents PSK input as IKM [Sec. 7.1, RFC9846], 2nd parameter represents message ClientHello for derive_secret *)
+  let es = hkdf_extract(zero,psk2b(psk)) in (* es is early secret [Sec. 7.1, RFC9846]; zero is a const *)
+  let kb = derive_secret(es,tls13_resumption_psk_binder_key,zero) in  (* kb is binder_key [Sec. 7.1, RFC9846]; derive_secret internally calls hkdf_expand_label *)
+  let atsc0 = derive_secret(es, tls13_client_early_traffic_secret, log1) in (* atsc0 is the client_early_traffic_secret [Sec. 7.1, RFC9846] *)
+  let kc0   = hkdf_expand_label(atsc0,tls13_key,zero) in (* [sender]_write_key for Record type = 0-RTT Application in the table [Sec. 7.3, RFC9846] *)
+  let ems0  = derive_secret(es,tls13_early_exporter_master_secret,log1) in  (* ems0 is the early_exporter_master_secret [Sec. 7.1, RFC9846] *)
   (es,b2mk(kb),b2ae(kc0),ems0).
 
 (* Handshake Secret and its derivatives *)
 letfun kdf_hs(es:bitstring, gxy:bitstring, log2:bitstring) =  (* 1st parameter represents Early Secret as salt; 2nd parameter represents the KEX shared secret (ML-KEM kem_ss, formerly (EC)DHE gxy) as IKM; 3rd parameter represents messages ClientHello...ServerHello for derive_secret *)
-  let salt1 = derive_secret(es,tls13_derived,zero) in  (* represents Derive-Secret(., "derived", "") before hs in Key Schedule [Sec. 7.1, RFC8446] *)
+  let salt1 = derive_secret(es,tls13_derived,zero) in  (* represents Derive-Secret(., "derived", "") before hs in Key Schedule [Sec. 7.1, RFC9846] *)
   let hs = hkdf_extract(salt1,gxy) in  (* Handshake Secret *)
-  let htsc = derive_secret(hs, tls13_client_handshake_traffic_secret, log2) in  (* represents client_handshake_traffic_secret in the Key Schedule [Sec. 7.1, RFC8446] *)
-  let htss = derive_secret(hs, tls13_server_handshake_traffic_secret, log2) in  (* represents server_handshake_traffic_secret in the Key Schedule [Sec. 7.1, RFC8446] *)
-  let kch = hkdf_expand_label(htsc,tls13_key,zero) in  (* client_write_key for Record type = Handshake in the table [Sec. 7.3, RFC8446] *)
-  let ksh = hkdf_expand_label(htss,tls13_key,zero) in  (* server_write_key for Record type = Handshake in the table [Sec. 7.3, RFC8446] *)
-  let kcm = hkdf_expand_label(htsc,tls13_finished,zero) in  (* represents finished_key in Finished for client [Sec. 4.4.4, RFC8446]; the 1st argument BaseKey from table in Sec. 4.4 of RFC8446: see 2nd row of table *)
-  let ksm = hkdf_expand_label(htss,tls13_finished,zero) in  (* represents finished_key in Finished for server [Sec. 4.4.4, RFC8446]; the 1st argument BaseKey from table in Sec. 4.4 of RFC8446: see 1st row of table *)
+  let htsc = derive_secret(hs, tls13_client_handshake_traffic_secret, log2) in  (* represents client_handshake_traffic_secret in the Key Schedule [Sec. 7.1, RFC9846] *)
+  let htss = derive_secret(hs, tls13_server_handshake_traffic_secret, log2) in  (* represents server_handshake_traffic_secret in the Key Schedule [Sec. 7.1, RFC9846] *)
+  let kch = hkdf_expand_label(htsc,tls13_key,zero) in  (* client_write_key for Record type = Handshake in the table [Sec. 7.3, RFC9846] *)
+  let ksh = hkdf_expand_label(htss,tls13_key,zero) in  (* server_write_key for Record type = Handshake in the table [Sec. 7.3, RFC9846] *)
+  let kcm = hkdf_expand_label(htsc,tls13_finished,zero) in  (* represents finished_key in Finished for client [Sec. 4.5.3, RFC9846]; the 1st argument BaseKey from table in Sec. 4.5 of RFC9846: see 2nd row of table *)
+  let ksm = hkdf_expand_label(htss,tls13_finished,zero) in  (* represents finished_key in Finished for server [Sec. 4.5.3, RFC9846]; the 1st argument BaseKey from table in Sec. 4.5 of RFC9846: see 1st row of table *)
   (hs,b2ae(kch),b2ae(ksh),b2mk(kcm),b2mk(ksm)).
 
 (* Master Secret and its derivatives *)
 letfun kdf_ms(hs:bitstring, log3:bitstring) =  (* 1st parameter represents Handshake Secret; 2nd parameter represents messages ClientHello...server Finished for derive_secret *)
-  let salt2 = derive_secret(hs,tls13_derived,zero) in  (* represents Derive-Secret(., "derived", "") before ms in Key Schedule [Sec. 7.1, RFC8446] *)
-  let ms = hkdf_extract(salt2, zero) in  (* It represents Master/Main Secret in the Key Schedule [Sec. 7.1, RFC8446] Note: This has actually changed after draft 18. *)
-  let atsc = derive_secret(ms, tls13_client_application_traffic_secret, log3) in  (* represents client_application_traffic_secret_0 in the Key Schedule [Sec. 7.1, RFC8446] *)
-  let atss = derive_secret(ms, tls13_server_application_traffic_secret, log3) in  (* represents server_application_traffic_secret_0 in the Key Schedule [Sec. 7.1, RFC8446] *)
-  let kc   = hkdf_expand_label(atsc,tls13_key,zero) in  (* client_write_key for Record type = Application Data in the table [Sec. 7.3, RFC8446] *)
-  let ks   = hkdf_expand_label(atss,tls13_key,zero) in  (* server_write_key for Record type = Application Data in the table [Sec. 7.3, RFC8446] *)
-  let ems  = derive_secret(ms, tls13_exporter_master_secret, log3) in  (* represents exporter_master_secret in the Key Schedule [Sec. 7.1, RFC8446] *)
+  let salt2 = derive_secret(hs,tls13_derived,zero) in  (* represents Derive-Secret(., "derived", "") before ms in Key Schedule [Sec. 7.1, RFC9846] *)
+  let ms = hkdf_extract(salt2, zero) in  (* It represents Master/Main Secret in the Key Schedule [Sec. 7.1, RFC9846] Note: This has actually changed after draft 18. *)
+  let atsc = derive_secret(ms, tls13_client_application_traffic_secret, log3) in  (* represents client_application_traffic_secret_0 in the Key Schedule [Sec. 7.1, RFC9846] *)
+  let atss = derive_secret(ms, tls13_server_application_traffic_secret, log3) in  (* represents server_application_traffic_secret_0 in the Key Schedule [Sec. 7.1, RFC9846] *)
+  let kc   = hkdf_expand_label(atsc,tls13_key,zero) in  (* client_write_key for Record type = Application Data in the table [Sec. 7.3, RFC9846] *)
+  let ks   = hkdf_expand_label(atss,tls13_key,zero) in  (* server_write_key for Record type = Application Data in the table [Sec. 7.3, RFC9846] *)
+  let ems  = derive_secret(ms, tls13_exporter_master_secret, log3) in  (* represents exporter_master_secret in the Key Schedule [Sec. 7.1, RFC9846] *)
   (ms,b2ae(kc),b2ae(ks),ems).
 
 (* PSK *)
 letfun kdf_psk(ms:bitstring, log4:bitstring) =  (* 1st parameter represents Master Secret; 2nd parameter represents messages ClientHello...client Finished for derive_secret *)
-       derive_secret(ms,tls13_resumption_master_secret,log4).  (* represents resumption_master_secret in the Key Schedule [Sec. 7.1, RFC8446] *)
+       derive_secret(ms,tls13_resumption_master_secret,log4).  (* represents resumption_master_secret in the Key Schedule [Sec. 7.1, RFC9846] *)
 
 (********************************************************)
 (*  Message Formats, Session State *)
@@ -451,18 +451,18 @@ event ClientReceivesAppData(identity, pubkey, pubkey, random, random, bitstring,
 event ServerSendsAppData(identity, pubkey, pubkey, random, random, bitstring, bitstring, ae_key, ae_key, measurements, bitstring).
 
 (**********************************************************************)
-(* Key Provenance Attributes - I-D.reddy-rats-key-binding *)
+(* Key/Evidence Provenance Attributes - I-D.reddy-rats-key-binding *)
 (**********************************************************************)
 type attribute.
-const LocalNonExportable: attribute [data]. (* The Good Kind (TM) *)
-const ExternalOrExportable: attribute [data].
+const TrustedNonExportable: attribute [data]. (* The Good Kind (TM) *)
+const ExternalOrUntrusted: attribute [data].
 
 (* Structured EAT Claims Sets per draft-reddy-rats-key-binding §6 *)
 fun eat_pat_profile(pubkey (* cnf: KAK *), attribute (* claim-attributes *), measurements, bitstring (* eat_nonce *)): bitstring [data].
 fun eat_kat_profile(pubkey (* cnf: TSK *), attribute (* claim-attributes *), bitstring (* eat_nonce *)): bitstring [data].
 
 type branch_option.
-const OptionA, OptionB: branch_option [data].
+const OptionA (* RPK *), OptionB (* WebPKI *): branch_option [data].
 
 type attestation_option.
 const Intra, Post: attestation_option [data].
@@ -472,6 +472,14 @@ event AttestationTimingWindow(attestation_option).
 
 event ClientAcceptsProvenance(random, random, attribute, pubkey).
 event ServerAssertsProvenance(random, random, attribute).
+
+(**********************************************************************)
+(* CoRIM / CoMID Structured Triples (draft-ietf-rats-corim-11 §5.1)   *)
+(**********************************************************************)
+
+(* Predicate is implicit in the constructor name (CoRIM §5.1.4) *)
+fun AttestKeyTriple(identity (* Subject: UEID/Env *), pubkey (* Object: AK *)): bitstring [data].
+fun RefValTriple(identity (* Subject: Workload ID *), measurements (* Object: Nominal state *), attribute (* Object: Claims *)): bitstring [data].
 
 (**********************************************************************)
 (* Generation of agents and keys *)

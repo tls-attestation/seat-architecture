@@ -8,10 +8,10 @@ let EvidenceGeneration(dev_status: measurements, privKAK: privkey, pubTSK: pubke
 (
   let pubKAK = pk(privKAK) in
 
-  (* Key Attestation Token *)  (*  cnf   , key-attributes    , measurements,nonce *)
-  let pat_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_status, eat_nonce) in
+  (* Key Attestation Token *)  (*  cnf   , key-attributes      , measurements,nonce *)
+  let pat_claims = eat_pat_profile(pubKAK, TrustedNonExportable, dev_status, eat_nonce) in
   
-  let cdata = (Hashed, pat_claims) in
+  let cdata = (StrongHash, pat_claims) in
   out(io, (dev_status, cdata)); (* Submit cdata to Attestation Environment, dev_status is for context *)
 
   (* Receive signed data back from Attestion Environment (could be a signing oracle) *)
@@ -41,34 +41,40 @@ event EvidenceOracle(pubkey, measurements, bitstring).
 
 let Attestation_Environment =
 (
-  (* Instantiate the AE for the given device by matching AK with hardware specific measurements *)
-  get agent_keys(EUID,_,_,_,privAK,pubAK,_,_) in
-  get agent_keys(=EUID,dev_statusRef,_,_,privAK,pubAK,privKAK,pubKAK) in
-  (* The KAK pair are confidential (never leave the enclave) unless compromised (see LeakedKAK) *)
-
-  (* model of dev_status (measurements): input from adversary *)
+  (* model of caller_device (measurements): input from adversary *)
   (* Lets the adversary instantiate any desired VM *)
-  in(io, (dev_status:measurements, cdata: bitstring));
+  in(io, (caller_device:measurements, cdata: bitstring));
 
   (* Deconstruct hashed cdata (claims data/rdata) to let adversary pick and choose values *)
-  let (=Hashed, pat_claims:bitstring) = cdata in 
-  let eat_pat_profile(reqKAK:pubkey, evidenceAttr:attribute, =dev_status, eat_nonce:bitstring) = pat_claims in
+  let (=StrongHash, pat_claims:bitstring) = cdata in (* This is an abstraction convenience, cdata is otherwise an opaque one-way hash *)
+  let eat_pat_profile(reqKAK:pubkey, evidenceAttr:attribute, =caller_device, eat_nonce:bitstring) = pat_claims in
+
+  get agent_keys(_,trusted_device,_,_,_,_,privKAK,pubKAK) in
+  (* The KAK pair are confidential (never leave the enclave) unless compromised (see LeakedKAK) *)
 
   (* Determine the expected values for confidential claims *)
-  let internal_claims = eat_pat_profile(pubKAK, LocalNonExportable, dev_statusRef, eat_nonce) in
+  let genuine_claims = eat_pat_profile(pubKAK, TrustedNonExportable, trusted_device, eat_nonce) in
 
-  if cdata = (Hashed, internal_claims) then ( 
-    let hwQuote = (dev_statusRef, cdata) in
+  (* Branch AE signing invocation based on API configuration of the original caller *)
+
+  (*==============================*)
+  (* Genuine AE with trusted APIs *)
+  (*==============================*)
+  if cdata = (StrongHash, genuine_claims) then ( (* invoke the genuine AE for trusted attestation requests *)
+    get agent_keys(_,=trusted_device,_,_,privAK,pubAK,_,_) in
+    let hwQuote = (trusted_device, cdata) in
     let pat = (pat_claims, sign(privAK, hwQuote)) in 
     out(io, pat)
 
-  ) else if evidenceAttr = ExternalOrExportable then ( 
-    (* Signing ExternalOrExportable measurements, keys and cdata represents an oracle, enabled on purpose. *)
-    let hwQuote = (dev_status, cdata) in
+  (*================================*)
+  (* AE oracle with untrusted APIs  *)
+  (*================================*)
+  ) else if evidenceAttr = ExternalOrUntrusted then (  
+    (* Some workloads might accept external API calls, representing an oracle *)
+    get agent_keys(_,_,_,_,privAK,pubAK,_,_) in (* Adversary still has unconstrained access to any endorsed AK *)
+    let hwQuote = (caller_device, cdata) in
     let pat = (pat_claims, sign(privAK, hwQuote)) in 
-    event EvidenceOracle(reqKAK, dev_status, pat);
+    event EvidenceOracle(reqKAK, caller_device, pat);
     out(io, pat)
   )
 ).
-
-

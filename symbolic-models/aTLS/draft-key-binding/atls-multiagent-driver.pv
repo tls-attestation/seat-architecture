@@ -119,53 +119,52 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
   )
 .
 
-let gen_endorsements (privCSP:privkey) =
-  (* ISV optionally reports the hardware ID (UEID) and 
-     the associated trusted pubAK keys *)
-  get agent_keys(UEID,_,_,_,privAK,pubAK,_,_) in
+let gen_endorsements (privCSP: privkey) =
+  get agent_keys(UEID, _, _, _, privAK, pubAK, _, _) in
 
-  let UEID = NULL_ID in (* Assume CSP nulls out TEE hardware IDs [seat-cc-workload-identity §4] *)
+  let UEID = NULL_ID in (* CSP nulls out hardware ID per seat-cc-workload-identity §4 *)
+  let triple = AttestKeyTriple(UEID, pubAK) in
+  let csp_sig = sign(privCSP, triple) in
+  let endorsements = (triple, csp_sig) in
 
-  let CSP_sig = sign(privCSP,(UEID,pubAK)) in 
-  let endorsements = ((UEID,pubAK),CSP_sig) in
-  event EndorsementsIssued(UEID,pubAK);
+  event EndorsementsIssued(UEID, pubAK);
   out(io, endorsements)
 .
 
-let gen_identity_document (pubCA: pubkey, privISV: privkey, idOption: branch_option) =
-  get agent_keys(_,dev_statusRef,privTSK,pubTSK,_,pubAK,_,_) in 
-
-  let workloadAttr = LocalNonExportable in
+let gen_reference_manifest (pubCA: pubkey, privVOK: privkey, idOption: branch_option) =
+  get agent_keys(_, dev_statusRef, privTSK, pubTSK, _, pubAK, _, _) in 
+  let workloadAttr = TrustedNonExportable in
 
   if idOption = OptionA then (
-    (* Option A: The measurement *is* the identity [seat-cc-workload-identity §5]. *)
-
+    (* OPTION A: Identity IS the measurement [seat-cc-workload-identity §5] *)
+    
     let ID_S = dev2id(dev_statusRef) in
-  
-    let manifest_tuple = (ID_S, workloadAttr) in
-    let manifest_sig = sign(privISV, manifest_tuple) in 
-    let manifest = (manifest_tuple, manifest_sig) in
+    let triple = RefValTriple(ID_S, dev_statusRef, workloadAttr) in
+    let vo_sig = sign(privVOK, triple) in
+    let manifest = (triple, vo_sig) in
+
     event IdentityManifestIssued(ID_S, dev_statusRef);
     out(io, manifest)
 
-  ) 
-  else if idOption = OptionB then (
-    (* Option B: Manifest binds to a PKI identity, requires CA validation [seat-cc-workload-identity §6] *)
+  ) else if idOption = OptionB then (
+    (* OPTION B: Manifest binds distinct PKI identity to launch measurements [seat-cc-workload-identity §6] *)
+    
+    in(io, (server_cert: bitstring)); 
+    let (id_pub_pair: bitstring, sig1: bitstring) = server_cert in  
+    let (ID_S: identity, =pubTSK) = id_pub_pair in 
+    
+    if verify(pubCA, id_pub_pair, sig1) = true then
 
-    in(io, (server_cert:bitstring)); 
-    let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
-    let (ID_S:identity,=pubTSK) = id_pub_pair in 
-    if verify(pubCA,id_pub_pair,sig1) = true then
+    let triple = RefValTriple(ID_S, dev_statusRef, workloadAttr) in
+    let vo_sig = sign(privVOK, triple) in
+    let manifest = (triple, vo_sig) in
 
-    let manifest_tuple = (ID_S, workloadAttr, dev_statusRef) in
-    let manifest_sig = sign(privISV, manifest_tuple) in 
-    let manifest = (manifest_tuple, manifest_sig) in
     event IdentityManifestIssued(ID_S, dev_statusRef);
     out(io, manifest)
   )
 .
 
-let run_Client(pubCA, pubCSP, pubISV: pubkey, idOption: branch_option) = 
+let run_Client(pubCA, pubCSP, pubVOK: pubkey, idOption: branch_option) = 
   (* Intuitively, the following models a single client (single agent) 
   and the replication takes care of multiple clients (multi agent) *)
   new ID_C: identity;
@@ -178,7 +177,7 @@ let run_Client(pubCA, pubCSP, pubISV: pubkey, idOption: branch_option) =
       let ID_S = dev2id(TargetWorkload) in
 
       (* The following replication models multiple sessions of client with these parameters *)
-      !Client(ID_C, ID_S, pubISV, pubCSP, pubCA, idOption)
+      !Client(ID_C, ID_S, pubVOK, pubCSP, pubCA, idOption)
     )
 
   ) else if idOption = OptionB then (
@@ -188,7 +187,7 @@ let run_Client(pubCA, pubCSP, pubISV: pubkey, idOption: branch_option) =
       let ID_S = TargetHost in
 
       (* The following replication models multiple sessions of client with these parameters *)
-      !Client(ID_C, ID_S, pubISV, pubCSP, pubCA, idOption)
+      !Client(ID_C, ID_S, pubVOK, pubCSP, pubCA, idOption)
     )
   )
 .
@@ -203,7 +202,7 @@ let run_Server(idOption:branch_option) =
     
     (* Option A: The identity IS the measurement [seat-cc-workload-identity §5, self-signed cert with no validated PKI identity] *)
     let ID_S = dev2id(workloadRef) in
-    let selfsign = ((ID_S, pubTSK), NULL_bs) in
+    let selfsign = ((ID_S, pubTSK), Nil) in
 
     (* Server only holds privKAK/privTSK now [key-binding §8.3] *)
     !Server(ID_S, workloadRef, privKAK, privTSK, selfsign)
@@ -261,9 +260,9 @@ let LCSP(privCSP:privkey) =
   out(io, privCSP)
 .
 
-let LISV(privISV:privkey) =
-  event UncheckedPolicies(pk(privISV));  (* Simulates a failure to validate our own sigs  *)
-  out(io, privISV)
+let LVOK(privVOK:privkey) =
+  event UncheckedPolicies(pk(privVOK));  (* Simulates a failure to validate our own sigs  *)
+  out(io, privVOK)
 .
 
 (* set traceDisplay = long. Display full trace *)
@@ -276,23 +275,23 @@ process
   let pubCA = pk(privCA) in 
   out(io,pubCA);
 
-  (* CSP / Independant Software Vendor *)
+  (* CSP / Endorser *)
   new privCSP: privkey; 
   let pubCSP = pk(privCSP) in
   out(io, pubCSP);
 
-  (* ISV / Policy issuer *)
-  new privISV: privkey; 
-  let pubISV = pk(privISV) in
-  out(io, pubISV);
+  (* Verifier Owner / Policy issuer *)
+  new privVOK: privkey; 
+  let pubVOK = pk(privVOK) in
+  out(io, pubVOK);
 
   in(io, (idOption:branch_option)) [precise];
 
     !(gen_agents_data(privCA,idOption)) 
   | !(gen_endorsements(privCSP)) 
-  | !(gen_identity_document(pubCA,privISV,idOption))
+  | !(gen_reference_manifest(pubCA,privVOK,idOption))
 
-  | !(run_Client(pubCA,pubCSP,pubISV,idOption)) 
+  | !(run_Client(pubCA,pubCSP,pubVOK,idOption)) 
   | !(run_Server(idOption))
   
   | !(Attestation_Environment)
@@ -301,6 +300,6 @@ process
   | !(LKAK)
   | !(LCSP(privCSP)) (* We don't necessarily trust the CSP *)
   | !(LCA(privCA)) (* We don't necessarily trust the CA *)
-  | !(LISV(privISV)) (* What happens if we don't validate our own policies? *)
+  | !(LVOK(privVOK)) (* What happens if we don't validate our own policies? *)
   
 (* END *)

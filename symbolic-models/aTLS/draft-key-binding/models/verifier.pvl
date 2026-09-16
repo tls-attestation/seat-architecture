@@ -16,7 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 *)
 
-
 (**********************************************************************)
 (* Verifier and RP Appraisal Process *)
 (**********************************************************************)
@@ -31,8 +30,8 @@ limitations under the License.
 
 let VerifierAppraisal(
   idOption: branch_option, ID_C: identity, ID_S: identity, TargetHost: identity,
-  pubCA: pubkey, pubCSP: pubkey, pubISV: pubkey, pubTSK: pubkey,
-  server_cert: bitstring, cmw: bitstring, expectedNonce: bitstring,
+  pubCA: pubkey, pubCSP: pubkey, pubVOK: pubkey, pubTSK: pubkey,
+  server_cert: bitstring, cmw: bitstring, sessionNonce: bitstring,
   cr: random, sr: random, shash_algo: hash_alg, psk: preSharedKey,
   offer: params, mode: params, kem_ss: bitstring, kch: ae_key,
 
@@ -46,101 +45,111 @@ let VerifierAppraisal(
   kc: ae_key, rms: bitstring, req_ctx: bitstring
 ) =
 (
+  let (pat: bitstring, kat: bitstring) = cmw in
 
-  let (pat:bitstring, kat:bitstring) = cmw in
-
-  (* Also collect signed workload manifest and endorsements from wire [seat-cc-workload-identity §6] *)
+  (* Ingest CoRIM containers from wire [corim-11 §2.1] *)
   in(io, (manifest: bitstring, endorsements: bitstring)); 
 
-  let (platform_info:bitstring, sig2:bitstring) = endorsements in 
-  let (=NULL_ID, pubAK:pubkey) = platform_info in
-  if verify(pubCSP, platform_info, sig2) = true then
+  (* 1. Universal Hardware Endorsement Appraisal (CSP / Endorser) [Sec. 8.2, RFC9334] *)
+  let (comid_csp: bitstring, sig_csp: bitstring) = endorsements in
+  if verify(pubCSP, comid_csp, sig_csp) = true then
+  let AttestKeyTriple(=NULL_ID, pubAK: pubkey) = comid_csp in
 
   event ClientIdentityOption(idOption);
-  in(io, timingOption:attestation_option) [precise];
+  in(io, timingOption: attestation_option) [precise];
 
+  (* Option A: Attestation-Anchored Key Evaluation *)
   if idOption = OptionA then
   (
     let dev_status = id2dev(ID_S) in
-    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
-    let (WorkloadType: identity, workloadAtrr:attribute) = workload_manifest in
-    if verify(pubISV, workload_manifest, sig_manifest) = true then
 
+    let (comid_rvp: bitstring, sig_vok: bitstring) = manifest in
+    if verify(pubVOK, comid_rvp, sig_vok) = true then
+    let RefValTriple(workloadID: identity, dev_statusRef: measurements, workloadAttr: attribute) = comid_rvp in (* [corim-11 §5.1.4] *)
+
+    (* Validate Platform Attestation Token (PAT) *)
     let (pat_claims: bitstring, ae_sig: bitstring) = pat in
-    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, dev_statusRef:measurements, eat_nonce:bitstring) = pat_claims in
-    let rdata = (Hashed, pat_claims) in
-    if verify(pubAK, (dev_statusRef, rdata), ae_sig) = true then
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr: attribute, =dev_statusRef, eat_nonce: bitstring) = pat_claims in (* [Sec. 8.1, RFC9334] *)
+    let cdata = (StrongHash, pat_claims) in
+    if verify(pubAK, (dev_statusRef, cdata), ae_sig) = true then
 
+    (* Validate Key Attestation Token (KAT) *)
     let (kat_claims: bitstring, kat_sig: bitstring) = kat in
-    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
+    let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in (* [key-binding §7.2] *)
     if verify(pubKAK, kat_claims, kat_sig) = true then
 
-    if ID_S = WorkloadType then
-    if evidenceAttr = workloadAtrr then
-    if dev_status = dev_statusRef then
-    if eat_nonce = expectedNonce then
+    (* Option A Checks: Attestation-Anchored Workload Appraisal *)
+    if ID_S = workloadID then if ID_S = dev2id(dev_statusRef) then  (* Authenticate: target peer ID matches the endorsed manifest ID [corim-11 §5.1.4.1] *)
+    if dev_status = dev_statusRef then  (* Corroborate: actual TEE runtime measurement matches golden reference [endorsements-09 §2] *)
+    if evidenceAttr = workloadAttr then (* Validate: hardware provenance attributes satisfy required policy [Sec. 8.5, RFC9334] *)
+    if eat_nonce = sessionNonce then   (* Freshness: token was generated for this exact TLS handshake context [Sec. 10, RFC9334] *)
 
-    (* Mark when Client evaluates key provenance claims *)
     event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
 
     if timingOption = Intra then
     (
       Intra_Client_CV_Fin(
-        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubISV, shash_algo, log_SH, log_CRT, cmw,
+        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo, log_SH, log_CRT, cmw,
         dev_status, dev_statusRef, kem_ss, hs, kch, ksm, kcm, psk, offer,
         mode, cr, sr, timingOption)
     
     ) else if timingOption = Post then
     (
       Post_Client_CV_fin(
-        ID_S,pubTSK,pubAK,pubKAK,pubISV,shash_algo,
-        req_msg,ea_cert,ea_sg,ea_mac,ems,dev_status,cmw,
-        kem_ss,kch,ks,kc,rms,psk,offer,mode,cr,sr,req_ctx,
+        ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo,
+        req_msg, ea_cert, ea_sg, ea_mac, ems, dev_status, cmw,
+        kem_ss, kch, ks, kc, rms, psk, offer, mode, cr, sr, req_ctx,
         timingOption)
     )
   )
 
+  (* Option B: PKI-Anchored Workload Certificate Evaluation *)
   else if idOption = OptionB then
   (
-    let (id_pub_pair:bitstring, sig1:bitstring) = server_cert in  
-    let (cert_subject:identity, =pubTSK) = id_pub_pair in
-    if verify(pubCA, id_pub_pair, sig1) = true then
-    if TargetHost = ID_S then if ID_S = cert_subject then
+    let (id_pub_pair: bitstring, sig_ca: bitstring) = server_cert in  
+    let (cert_subject: identity, =pubTSK) = id_pub_pair in
+    if verify(pubCA, id_pub_pair, sig_ca) = true then (* [seat-cc-workload-identity §6] *)
+    if TargetHost = ID_S then 
+    if ID_S = cert_subject then
 
-    let (workload_manifest: bitstring, sig_manifest: bitstring) = manifest in
-    let (WID: identity, workloadAtrr:attribute, dev_statusRef: measurements) = workload_manifest in
-    if verify(pubISV, workload_manifest, sig_manifest) = true then
+    let (comid_rvp: bitstring, sig_vok: bitstring) = manifest in
+    if verify(pubVOK, comid_rvp, sig_vok) = true then
+    let RefValTriple(WID: identity, dev_statusRef: measurements, workloadAttr: attribute) = comid_rvp in
 
+    (* Validate Platform Attestation Token (PAT) *)
     let (pat_claims: bitstring, pat_sig: bitstring) = pat in
-    let eat_pat_profile(pubKAK: pubkey, evidenceAttr:attribute, dev_status:measurements, eat_nonce:bitstring) = pat_claims in
-    let rdata = (Hashed, pat_claims) in
-    if verify(pubAK, (dev_status, rdata), pat_sig) = true then
+    let eat_pat_profile(pubKAK: pubkey, evidenceAttr: attribute, dev_status: measurements, eat_nonce: bitstring) = pat_claims in
+    let cdata = (StrongHash, pat_claims) in
+    if verify(pubAK, (dev_status, cdata), pat_sig) = true then
 
+    (* Validate Key Attestation Token (KAT) *)
     let (kat_claims: bitstring, kat_sig: bitstring) = kat in
     let eat_kat_profile(=pubTSK, =evidenceAttr, =eat_nonce) = kat_claims in
     if verify(pubKAK, kat_claims, kat_sig) = true then
 
-    if WID = ID_S then
-    if evidenceAttr = workloadAtrr then
-    if dev_status = dev_statusRef then
-    if eat_nonce = expectedNonce then
+    (* Option B Joint Appraisal: Cryptographically bind PKI SAN to attested TEE measurements *)
 
-    (* Mark when Client evaluates key provenance claims *)
+    if (WID,dev_status,evidenceAttr,eat_nonce) = (ID_S,dev_statusRef,workloadAttr,sessionNonce) then   
+    (* Authenticate & authorize: Cross-link manifest identity with verified X.509 cert subject *)
+    (* Corroborate: actual TEE runtime measurement matches golden reference *)
+    (* Validate: hardware provenance attributes satisfy required policy *)
+    (* Freshness: token was generated for this exact TLS handshake context *)
+
     event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
 
     if timingOption = Intra then
     (
       Intra_Client_CV_Fin(
-        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubISV, shash_algo, log_SH, log_CRT, cmw,
+        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo, log_SH, log_CRT, cmw,
         dev_status, dev_statusRef, kem_ss, hs, kch, ksm, kcm, psk, offer,
         mode, cr, sr, timingOption)
     
     ) else if timingOption = Post then
     (
       Post_Client_CV_fin(
-        ID_S,pubTSK,pubAK,pubKAK,pubISV,shash_algo,
-        req_msg,ea_cert,ea_sg,ea_mac,ems,dev_status,cmw,
-        kem_ss,kch,ks,kc,rms,psk,offer,mode,cr,sr,req_ctx,
+        ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo,
+        req_msg, ea_cert, ea_sg, ea_mac, ems, dev_status, cmw,
+        kem_ss, kch, ks, kc, rms, psk, offer, mode, cr, sr, req_ctx,
         timingOption)
     )
   )
