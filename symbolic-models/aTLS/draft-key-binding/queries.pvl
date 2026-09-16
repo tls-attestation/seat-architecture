@@ -120,7 +120,7 @@ query dev_state:measurements,quote:bitstring,
       ==> 
          event(ClientAcceptsProvenance(cr, sr, ExternalOrUntrusted, pubKAK)) 
       || event(ServerAssertsProvenance(cr, sr, ExternalOrUntrusted)) 
-      || event(ClientAcceptsKEM(cr, WeakKEM))   (* Tag: Q-DOWNGRADE [seat-use-cases-01 §3.7] *)
+      || event(ClientAcceptsKEM(cr, WeakKEM))   (* Tag: Q-DOWNGRADE [seat-use-cases-01 §3 ¶3, RFC 9846 App. F] *)
       || event(ClientAcceptsHash(cr, WeakHash)) 
       || event(LeakedAK(pubAK)) 
       || event(LeakedTSK(pubTSK)) 
