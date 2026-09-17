@@ -18,7 +18,7 @@ limitations under the License.
 
 
 let Intra_Client_CV_Fin( (* Called after VerifierAppraisal process completes *)
-  ID_C: identity, ID_S: identity, pubTSK, pubAK, pubKAK, pubVOK: pubkey, hash_algo: hash_alg,
+  ID_C: identity, ID_S: identity, pubTSK, pubAK, pubKAK, pubRVP: pubkey, hash_algo: hash_alg,
   log_SH: bitstring, log_CRT: bitstring, cmw: bitstring, dev_status: measurements, dev_statusRef: measurements,
   gxy: bitstring, hs: bitstring, kch: ae_key, ksm: mac_key, kcm: mac_key, psk: preSharedKey, offer: params, 
   mode: params, cr: random, sr: random, timingOption: attestation_option
@@ -46,7 +46,7 @@ let Intra_Client_CV_Fin( (* Called after VerifierAppraisal process completes *)
     event ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr);
     event ClientConn(cmw);
     event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_statusRef);
-    event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubVOK,dev_statusRef,cmw);
+    event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubRVP,dev_statusRef,cmw);
     event ClientID(ID_S,gxy);
     event ClientStateEvKc(cmw,kc);    
     event ClientStateEvKch(cmw,kch);
@@ -64,7 +64,7 @@ let Intra_Client_CV_Fin( (* Called after VerifierAppraisal process completes *)
 
 
 let Post_Client_CV_fin( (* Called after VerifierAppraisal process completes *)
-  ID_S: identity, pubTSK: pubkey, pubAK: pubkey, pubKAK: pubkey, pubVOK: pubkey, 
+  ID_S: identity, pubTSK: pubkey, pubAK: pubkey, pubKAK: pubkey, pubRVP: pubkey, 
   shash_algo: hash_alg, req_msg: msg, ea_cert: bitstring, ea_sg: bitstring, 
   ea_mac: bitstring, ems: bitstring, dev_status: measurements, cmw: bitstring, 
   gxy: bitstring, kch: ae_key, ks: ae_key, kc: ae_key, rms: bitstring, psk: preSharedKey,
@@ -89,7 +89,7 @@ let Post_Client_CV_fin( (* Called after VerifierAppraisal process completes *)
     (
       event ClientConn(cmw);
       event ClientComp(ID_S,psk,offer,mode,kc,ks,ems,rms,cr,sr,pubTSK,dev_status);
-      event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubVOK,dev_status,cmw);
+      event ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubRVP,dev_status,cmw);
       event ClientID(ID_S,gxy);
       event ClientStateEvKc(cmw,kc);
       event ClientStateEvKch(cmw,kch);

@@ -58,7 +58,7 @@ Interpretation of result: none of these events are dead code; results
   elsewhere that build on them are meaningful.
 *)
 query cr:random, sr:random, ID_S,ID_C:identity,
-      psk:preSharedKey, pubTSK,pubAK,pubKAK,pubVOK:pubkey, e:bitstring,
+      psk:preSharedKey, pubTSK,pubAK,pubKAK,pubRVP:pubkey, e:bitstring,
       offer:params, mode:params, ev,pat,kat,log,rdata:bitstring,
       kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
       idS, idXS: identity, kem_ss:bitstring, dev_state: measurements,
@@ -76,7 +76,7 @@ are reachable with a shared/common kem_ss *)
     event(ClientFinished(pubTSK,psk,cr,sr,offer,mode,kc,ks,ems,rms));
     event(ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr));
     event(ServerFinished(cr,sr,psk,pubTSK,offer,mode,kc,ks,ems,rms));
-    event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubVOK,dev_state,(pat,kat)));
+    event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubRVP,dev_state,(pat,kat)));
     event(ClientFin1WayAgr(ID_S,pubTSK,psk,offer,mode,kc,ks,ems,rms));
     event(ProvisionedTargetEnv(ID_S, pubAK, pubTSK, dev_state));
     event(ClientStateEvKc((pat,kat), kc));
@@ -109,7 +109,7 @@ Interpretation of result: the happy path is real and doesn't secretly
 query dev_state:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random,
       ID,ID_C:identity,pubTSK,pubAK,pubKAK:pubkey,
-      psk:preSharedKey, pubCA,pubCSP,pubVOK:pubkey,
+      psk:preSharedKey, pubCA,pubCSP,pubRVP:pubkey,
       offer:params, mode:params, ev,pat,kat:bitstring,
       kc:ae_key,ks:ae_key,ems:bitstring,rms:bitstring,
       req_ctx,app_msg:bitstring,e:bitstring;
@@ -127,12 +127,12 @@ query dev_state:measurements,quote:bitstring,
       || event(LeakedKAK(pubKAK))
       || event(CompromisedCA(pubCA)) 
       || event(CompromisedCSP(pubCSP)) 
-      || event(UncheckedPolicies(pubVOK)) 
+      || event(InvalidPolicies(pubRVP)) 
       || event(EvidenceOracle(pubKAK, dev_state, pat))
 ;
 
     (* -- second milestone (RA + 1-way agreement): see Property above -- *)
-      ( event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubVOK,dev_state,(pat,kat)))
+      ( event(ClientRANew(NULL_ID,NULL_pubkey,pubAK,pubKAK,pubTSK,pubRVP,dev_state,(pat,kat)))
         && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
         && event(ClientStateEvKc((pat,kat), kc)) 
       ) && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
@@ -146,7 +146,7 @@ query dev_state:measurements,quote:bitstring,
       || event(LeakedKAK(pubKAK))
       || event(CompromisedCA(pubCA)) 
       || event(CompromisedCSP(pubCSP)) 
-      || event(UncheckedPolicies(pubVOK)) 
+      || event(InvalidPolicies(pubRVP)) 
       || event(EvidenceOracle(pubKAK, dev_state, pat))
 .
 
@@ -268,7 +268,7 @@ query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,
 (* Tag: Q-COMPOUND *)
 (**********************************************************************)
 query ID1,ID2:identity, kem_ss,ev,pat,kat:bitstring, dev_state:measurements, kc1,kc2:ae_key,
-      cr:random, sr:random, pubTSK,pubAK,pubCA,pubCSP,pubVOK:pubkey;
+      cr:random, sr:random, pubTSK,pubAK,pubCA,pubCSP,pubRVP:pubkey;
 
      (
           event(ClientID(ID1, kem_ss)) 
@@ -301,7 +301,7 @@ Under loose validation (ExternalOrUntrusted), the oracle succeeds.
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random, kem_ss:bitstring,
       ID,ID2,EUID,ID_C:identity,pubTSK:pubkey,pubAK,pubKAK:pubkey,
-      psk:preSharedKey, e:bitstring, pubVOK,pubCA,pubCSP:pubkey,
+      psk:preSharedKey, e:bitstring, pubRVP,pubCA,pubCSP:pubkey,
       offer:params, mode:params, pat,kat:bitstring,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
 
@@ -315,7 +315,7 @@ Interpretation: The Evidence Oracle is an active, coexisting threat
   *)
   event(EvidenceOracle(pubKAK, dev_state, pat)) &&
   (    
-       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat, kat)))
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
     && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
@@ -331,7 +331,7 @@ Interpretation: The Evidence Oracle is an active, coexisting threat
   *)
   event(EvidenceOracle(pubKAK, dev_state, pat)) &&
   (    
-       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat, kat)))
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
     && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
@@ -356,20 +356,20 @@ In each case, the TLS signing key (TSK) is NOT considered confidential!
 *)
 query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: params,
     kc, ks: ae_key, ems, rms: bitstring, cr, sr: random, pat,kat: bitstring, dev_state: measurements,
-    pubAK, pubCA, pubCSP, pubVOK: pubkey, ev_attr: attribute;
+    pubAK, pubCA, pubCSP, pubRVP: pubkey, ev_attr: attribute;
 
   (* Hypothesis: We can be made assured of an enclave's identity even when the Attestation Key is compromised
      Expected false when AK is leaked.
      Branch: A+B
      Interpretation: A trust assumption for the security of the Attestation Key is mandatory when considering enclave identity 
   *)
-  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat,kat)))
+  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat,kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
       || event(CompromisedCA(pubCA)) (* Req. for B only *)
       || event(CompromisedCSP(pubCSP)) (* Req. for A+B *)
-      || event(UncheckedPolicies(pubVOK)) (* Always req. to resist EvidenceOracle compromise *)
+      || event(InvalidPolicies(pubRVP)) (* Always req. to resist EvidenceOracle compromise *)
       (* || event(LeakedAK(pubAK)) *) (* Keeping `LeakedAK` off RHS disjunct simulates compromise such as TEE.fail *)
       || event(LeakedKAK(pubKAK)) (* Req. for A only *)
       || event(LeakedTSK(pubTSK)) (* Can be leaked in isolation for A or B *)
@@ -381,13 +381,13 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
      Expected A: true 
      Expected B: counterexample (false)
   *)
-  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat,kat)))
+  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat,kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
       (* || event(CompromisedCA(pubCA)) *) (* Req. for B only *)
       || event(CompromisedCSP(pubCSP)) (* Req. for A+B *)
-      || event(UncheckedPolicies(pubVOK)) (* Always req. to resist EvidenceOracle compromise *)
+      || event(InvalidPolicies(pubRVP)) (* Always req. to resist EvidenceOracle compromise *)
       || event(LeakedAK(pubAK)) (* Assumption that AK is secure is ALWAYS mandatory *)
       || event(LeakedKAK(pubKAK)) (* Req. for A only *)
       (* || event(LeakedTSK(pubTSK)) *) (* The TLS signing itself does not need to be confidential *)
@@ -398,13 +398,13 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
      Expected A: counterexample (false)
      Expected B: true
   *)
-  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat,kat)))
+  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat,kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
       || event(CompromisedCA(pubCA)) (* Req. for B only *)
       || event(CompromisedCSP(pubCSP)) (* Req. for A+B *)
-      || event(UncheckedPolicies(pubVOK)) (* Always req. to resist EvidenceOracle compromise *)
+      || event(InvalidPolicies(pubRVP)) (* Always req. to resist EvidenceOracle compromise *)
       || event(LeakedAK(pubAK)) (* Assumption that AK is secure is ALWAYS mandatory *)
       (* || event(LeakedKAK(pubKAK)) *) (* Req. for A only *)
       (* || event(LeakedTSK(pubTSK)) *) (* The TLS signing itself does not need to be confidential *)
@@ -413,16 +413,16 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
 
   (* 
      Hypothesis: We can be made assured of an enclave's identity under EvidenceOracle threat without policy validation
-     Expected: false when UncheckedPolicies is not accounted for
+     Expected: false when InvalidPolicies is not accounted for
      Branch: A+B
   *)
-  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat,kat)))
+  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat,kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
       || event(CompromisedCA(pubCA)) (* Req. for B only *)
       || event(CompromisedCSP(pubCSP)) (* Req. for A+B *)
-      (* || event(UncheckedPolicies(pubVOK)) *)
+      (* || event(InvalidPolicies(pubRVP)) *)
       || event(LeakedAK(pubAK)) (* Assumption that AK is secure is ALWAYS mandatory *)
       || event(LeakedKAK(pubKAK)) (* Req. for A only *)
       || event(LeakedTSK(pubTSK)) (* Can be leaked in isolation for A or B *)
@@ -432,16 +432,16 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
   (* 
      Hypothesis: The EvidenceOracle event accounts for enclave identity compromise without policy checks
      Expected A: true under Option A when event(EvidenceOracle(pubKAK, dev_state, pat)) is present on RHS
-     Expected B: false when UncheckedPolicies is not accounted for
+     Expected B: false when InvalidPolicies is not accounted for
      Interpretation: Appraisal policies are always req. to resist threat of Evidence signing oracles 
   *) 
-  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat,kat)))
+  ( event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat,kat)))
     && event(ClientFinRecentAgr(ID,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
     && event(ClientStateEvKc((pat,kat), kc))
   ) ==> event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state)) 
       || event(CompromisedCA(pubCA)) (* Req. for B only *)
       || event(CompromisedCSP(pubCSP)) (* Req. for A+B *)
-      (* || event(UncheckedPolicies(pubVOK)) *)
+      (* || event(InvalidPolicies(pubRVP)) *)
       || event(LeakedAK(pubAK)) (* Assumption that AK is secure is ALWAYS mandatory *)
       || event(LeakedKAK(pubKAK)) (* Req. for A only *)
       || event(LeakedTSK(pubTSK)) (* Can be leaked in isolation for A or B *)
@@ -456,7 +456,7 @@ query ID,ID_C: identity, pubTSK,pubKAK: pubkey, psk: preSharedKey, offer, mode: 
 query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
       cr:random, sr:random, cr':random, sr':random,
       ID,ID_C:identity,pubTSK:pubkey,pubAK:pubkey, pat,kat: bitstring,
-      psk:preSharedKey, e:bitstring, pubVOK,pubCA,pubCSP,pubKAK:pubkey,
+      psk:preSharedKey, e:bitstring, pubRVP,pubCA,pubCSP,pubKAK:pubkey,
       offer:params, mode:params,
       kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
 
@@ -494,12 +494,12 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
    *)
    attacker(kc) && 
    (
-       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat, kat)))
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
     && event(ClientFinRecentAgr(ID, ID_C, pubTSK, psk, offer, mode, kc, ks, ems, rms, cr, sr))
     && event(ClientStateEvKc((pat, kat), kc))
   ) ==>          
          event(CompromisedCSP(pubCSP)) 
-      || event(UncheckedPolicies(pubVOK)) (* Always req. to resist EvidenceOracle compromise *)
+      || event(InvalidPolicies(pubRVP)) (* Always req. to resist EvidenceOracle compromise *)
       || event(LeakedAK(pubAK)) 
       || event(LeakedKAK(pubKAK))
       (* || event(LeakedTSK(pubTSK)) *) (* Allow the TLS signing key to be compromised *)
@@ -514,12 +514,12 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
    *)
    attacker(kc) && 
    (
-       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat, kat)))
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
     && event(ClientFinRecentAgr(ID, ID_C, pubTSK, psk, offer, mode, kc, ks, ems, rms, cr, sr))
     && event(ClientStateEvKc((pat, kat), kc))
   ) ==>          
          event(CompromisedCA(pubCA)) 
-      || event(UncheckedPolicies(pubVOK)) (* Always req. to resist EvidenceOracle compromise *)
+      || event(InvalidPolicies(pubRVP)) (* Always req. to resist EvidenceOracle compromise *)
       || event(LeakedTSK(pubTSK)) 
 ;
 
@@ -530,7 +530,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
    *)
    attacker(kc) && 
    (
-       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubVOK, dev_state, (pat, kat)))
+       event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
     && event(ClientFinRecentAgr(ID, ID_C, pubTSK, psk, offer, mode, kc, ks, ems, rms, cr, sr))
     && event(ClientStateEvKc((pat, kat), kc))
   ) ==> false
@@ -542,7 +542,7 @@ query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
 (**********************************************************************)
 
 query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae_key,
-      cr,sr,cr',sr':random,ID,ID_C:identity,pubTSK,pubAK,pubKAK,pubCA,pubVOK,
+      cr,sr,cr',sr':random,ID,ID_C:identity,pubTSK,pubAK,pubKAK,pubCA,pubRVP,
       pubCSP:pubkey,psk:preSharedKey,ems,rms:bitstring, pat,kat: bitstring,
       dev_state:measurements,offer,mode:params,req_ctx,app_msg:bitstring,e:bitstring;
 
@@ -562,7 +562,7 @@ query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae
        && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
       )
       || event(CompromisedCSP(pubCSP)) 
-      || event(UncheckedPolicies(pubVOK)) 
+      || event(InvalidPolicies(pubRVP)) 
       || event(LeakedAK(pubAK)) 
       || event(LeakedKAK(pubKAK)) 
       (* || event(LeakedTSK(pubTSK)) *) (* Allow the TLS signing key to be compromised *)
@@ -582,7 +582,7 @@ query ev,ev1,ev2,kem_ss,kem_ss1,kem_ss2:bitstring,kch,kch1,kch2,ks,kc,kc1,kc2:ae
         && event(ProvisionedTargetEnv(ID, pubAK, pubTSK, dev_state))
        )
        || event(CompromisedCA(pubCA)) 
-       || event(UncheckedPolicies(pubVOK)) (* Always req. to resist EvidenceOracle compromise *)
+       || event(InvalidPolicies(pubRVP)) (* Always req. to resist EvidenceOracle compromise *)
        || event(LeakedTSK(pubTSK)) 
 ;
 

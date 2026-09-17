@@ -145,7 +145,7 @@ let gen_endorsements (privCSP: privkey) =
   out(io, endorsements)
 .
 
-let gen_reference_manifest (pubCA: pubkey, privVOK: privkey, idOption: branch_option) =
+let gen_reference_manifest (pubCA: pubkey, privRVP: privkey, idOption: branch_option) =
   get agent_keys(_, dev_statusRef, privTSK, pubTSK, _, pubAK, _, _) in 
   let workloadAttr = TrustedNonExportable in
 
@@ -154,8 +154,8 @@ let gen_reference_manifest (pubCA: pubkey, privVOK: privkey, idOption: branch_op
     
     let ID_S = dev2id(dev_statusRef) in
     let triple = RefValTriple(ID_S, dev_statusRef, workloadAttr) in
-    let vo_sig = sign(privVOK, triple) in
-    let manifest = (triple, vo_sig) in
+    let rvp_sig = sign(privRVP, triple) in
+    let manifest = (triple, rvp_sig) in
 
     event IdentityManifestIssued(ID_S, dev_statusRef);
     out(io, manifest)
@@ -170,15 +170,15 @@ let gen_reference_manifest (pubCA: pubkey, privVOK: privkey, idOption: branch_op
     if verify(pubCA, id_pub_pair, sig1) = true then
 
     let triple = RefValTriple(ID_S, dev_statusRef, workloadAttr) in
-    let vo_sig = sign(privVOK, triple) in
-    let manifest = (triple, vo_sig) in
+    let rvp_sig = sign(privRVP, triple) in
+    let manifest = (triple, rvp_sig) in
 
     event IdentityManifestIssued(ID_S, dev_statusRef);
     out(io, manifest)
   )
 .
 
-let run_Client(pubCA, pubCSP, pubVOK: pubkey, idOption: branch_option) = 
+let run_Client(pubCA, pubCSP, pubRVP: pubkey, idOption: branch_option) = 
   (* Intuitively, the following models a single client (single agent) 
   and the replication takes care of multiple clients (multi agent) *)
   new ID_C: identity;
@@ -191,7 +191,7 @@ let run_Client(pubCA, pubCSP, pubVOK: pubkey, idOption: branch_option) =
       let ID_S = dev2id(TargetWorkload) in
 
       (* The following replication models multiple sessions of client with these parameters *)
-      !Client(ID_C, ID_S, pubVOK, pubCSP, pubCA, idOption)
+      !Client(ID_C, ID_S, pubRVP, pubCSP, pubCA, idOption)
     )
 
   ) else if idOption = OptionB then (
@@ -201,7 +201,7 @@ let run_Client(pubCA, pubCSP, pubVOK: pubkey, idOption: branch_option) =
       let ID_S = TargetHost in
 
       (* The following replication models multiple sessions of client with these parameters *)
-      !Client(ID_C, ID_S, pubVOK, pubCSP, pubCA, idOption)
+      !Client(ID_C, ID_S, pubRVP, pubCSP, pubCA, idOption)
     )
   )
 .
@@ -275,9 +275,9 @@ let LCSP(privCSP:privkey) =
   out(io, privCSP)
 .
 
-let LVOK(privVOK:privkey) =
-  event UncheckedPolicies(pk(privVOK));  (* Simulates a failure to validate our own sigs  *)
-  out(io, privVOK)
+let LRVP(privRVP:privkey) =
+  event InvalidPolicies(pk(privRVP));  (* Simulates a failure to validate our own sigs  *)
+  out(io, privRVP)
 .
 
 (* set traceDisplay = long. Display full trace *)
@@ -296,17 +296,17 @@ process
   out(io, pubCSP);
 
   (* Verifier Owner / Policy issuer *)
-  new privVOK: privkey; 
-  let pubVOK = pk(privVOK) in
-  out(io, pubVOK);
+  new privRVP: privkey; 
+  let pubRVP = pk(privRVP) in
+  out(io, pubRVP);
 
   in(io, (idOption:branch_option)) [precise];
 
     !(gen_agents_data(privCA,idOption)) 
   | !(gen_endorsements(privCSP)) 
-  | !(gen_reference_manifest(pubCA,privVOK,idOption))
+  | !(gen_reference_manifest(pubCA,privRVP,idOption))
 
-  | !(run_Client(pubCA,pubCSP,pubVOK,idOption)) 
+  | !(run_Client(pubCA,pubCSP,pubRVP,idOption)) 
   | !(run_Server(idOption))
   
   | !(Attestation_Environment)
@@ -315,6 +315,6 @@ process
   | !(LKAK)
   | !(LCSP(privCSP)) (* We don't necessarily trust the CSP *)
   | !(LCA(privCA)) (* We don't necessarily trust the CA *)
-  | !(LVOK(privVOK)) (* What happens if we don't validate our own policies? *)
+  | !(LRVP(privRVP)) (* What happens if we don't validate our own policies? *)
   
 (* END *)

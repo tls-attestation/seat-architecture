@@ -30,7 +30,7 @@ limitations under the License.
 
 let VerifierAppraisal(
   idOption: branch_option, ID_C: identity, ID_S: identity, TargetHost: identity,
-  pubCA: pubkey, pubCSP: pubkey, pubVOK: pubkey, pubTSK: pubkey,
+  pubCA: pubkey, pubCSP: pubkey, pubRVP: pubkey, pubTSK: pubkey,
   server_cert: bitstring, cmw: bitstring, sessionNonce: bitstring,
   cr: random, sr: random, shash_algo: hash_alg, psk: preSharedKey,
   offer: params, mode: params, kem_ss: bitstring, kch: ae_key,
@@ -63,8 +63,8 @@ let VerifierAppraisal(
   (
     let dev_status = id2dev(ID_S) in
 
-    let (comid_rvp: bitstring, sig_vok: bitstring) = manifest in
-    if verify(pubVOK, comid_rvp, sig_vok) = true then
+    let (comid_rvp: bitstring, sig_rvp: bitstring) = manifest in
+    if verify(pubRVP, comid_rvp, sig_rvp) = true then
     let RefValTriple(workloadID: identity, dev_statusRef: measurements, workloadAttr: attribute) = comid_rvp in (* [corim-11 §5.1.4] *)
 
     (* Validate Platform Attestation Token (PAT) *)
@@ -89,14 +89,14 @@ let VerifierAppraisal(
     if timingOption = Intra then
     (
       Intra_Client_CV_Fin(
-        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo, log_SH, log_CRT, cmw,
+        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubRVP, shash_algo, log_SH, log_CRT, cmw,
         dev_status, dev_statusRef, kem_ss, hs, kch, ksm, kcm, psk, offer,
         mode, cr, sr, timingOption)
     
     ) else if timingOption = Post then
     (
       Post_Client_CV_fin(
-        ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo,
+        ID_S, pubTSK, pubAK, pubKAK, pubRVP, shash_algo,
         req_msg, ea_cert, ea_sg, ea_mac, ems, dev_status, cmw,
         kem_ss, kch, ks, kc, rms, psk, offer, mode, cr, sr, req_ctx,
         timingOption)
@@ -112,8 +112,8 @@ let VerifierAppraisal(
     if TargetHost = ID_S then 
     if ID_S = cert_subject then
 
-    let (comid_rvp: bitstring, sig_vok: bitstring) = manifest in
-    if verify(pubVOK, comid_rvp, sig_vok) = true then
+    let (comid_rvp: bitstring, sig_rvp: bitstring) = manifest in
+    if verify(pubRVP, comid_rvp, sig_rvp) = true then
     let RefValTriple(WID: identity, dev_statusRef: measurements, workloadAttr: attribute) = comid_rvp in
 
     (* Validate Platform Attestation Token (PAT) *)
@@ -140,14 +140,14 @@ let VerifierAppraisal(
     if timingOption = Intra then
     (
       Intra_Client_CV_Fin(
-        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo, log_SH, log_CRT, cmw,
+        ID_C, ID_S, pubTSK, pubAK, pubKAK, pubRVP, shash_algo, log_SH, log_CRT, cmw,
         dev_status, dev_statusRef, kem_ss, hs, kch, ksm, kcm, psk, offer,
         mode, cr, sr, timingOption)
     
     ) else if timingOption = Post then
     (
       Post_Client_CV_fin(
-        ID_S, pubTSK, pubAK, pubKAK, pubVOK, shash_algo,
+        ID_S, pubTSK, pubAK, pubKAK, pubRVP, shash_algo,
         req_msg, ea_cert, ea_sg, ea_mac, ems, dev_status, cmw,
         kem_ss, kch, ks, kc, rms, psk, offer, mode, cr, sr, req_ctx,
         timingOption)

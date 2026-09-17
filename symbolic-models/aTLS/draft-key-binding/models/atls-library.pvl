@@ -153,7 +153,7 @@ event LeakedKAK(pubkey).
 (********************************************************)
 event CompromisedCA(pubkey).
 event CompromisedCSP(pubkey). (* or independant software vendor *)
-event UncheckedPolicies(pubkey).
+event InvalidPolicies(pubkey).
 
 (********************************************************)
 (* PSK *)

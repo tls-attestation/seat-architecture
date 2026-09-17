@@ -27,7 +27,7 @@ restriction opt:attestation_option;
 
 let Client_EA( (* Runs after the Client handshake's Finished. *)
   ID_C: identity, ID_S: identity, TargetHost: identity, pubTSK: pubkey, server_cert: bitstring,
-  pubVOK: pubkey, pubCSP: pubkey, pubCA: pubkey, idOption: branch_option,
+  pubRVP: pubkey, pubCSP: pubkey, pubCA: pubkey, idOption: branch_option,
   psk: preSharedKey, cr: random, sr: random, offer: params, mode: params, kem_ss: bitstring,
   kch: ae_key, ks: ae_key, kc: ae_key, ems: bitstring, rms: bitstring, shash_algo: hash_alg
 ) =
@@ -54,7 +54,7 @@ let Client_EA( (* Runs after the Client handshake's Finished. *)
   (* ==================================================================== *)
 
   VerifierAppraisal(
-    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubVOK, pubTSK, 
+    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubRVP, pubTSK, 
     server_cert, cmw, sessionNonce, cr, sr, shash_algo, psk, offer, mode, kem_ss, kch,
     
     (* Intra-specific params (Dummies) *)
@@ -124,7 +124,7 @@ let Server_EA(server_cert: bitstring, ID_S: identity, privTSK: privkey, privKAK:
 e.g., SH so that these variables can then be used in logs *)
 
 let Client(
-  ID_C:identity,ID_S:identity,pubVOK:pubkey,pubCSP:pubkey,pubCA:pubkey,
+  ID_C:identity,ID_S:identity,pubRVP:pubkey,pubCSP:pubkey,pubCA:pubkey,
   idOption:branch_option
 ) =
 (
@@ -182,7 +182,7 @@ let Client(
 
     (* continue from vanilla TLS handshake into the Exported Authenticator handshake, where
        identity/workload appraisal (idOption branching) and evidence appraisal now live *)
-    Client_EA(ID_C,ID_S,TargetHost,pubTSK,server_cert,pubVOK,pubCSP,pubCA,idOption,psk,cr,sr,offer,mode,kem_ss,kch,ks,kc,ems,rms,shash_algo)
+    Client_EA(ID_C,ID_S,TargetHost,pubTSK,server_cert,pubRVP,pubCSP,pubCA,idOption,psk,cr,sr,offer,mode,kem_ss,kch,ks,kc,ems,rms,shash_algo)
   )
 ).
 

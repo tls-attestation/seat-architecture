@@ -27,7 +27,7 @@ restriction opt:attestation_option;
 .
 
 let Client(
-    ID_C:identity,ID_S:identity,pubVOK:pubkey,pubCSP:pubkey,pubCA:pubkey,
+    ID_C:identity,ID_S:identity,pubRVP:pubkey,pubCSP:pubkey,pubCA:pubkey,
     idOption:branch_option
 ) =
 (
@@ -75,7 +75,7 @@ let Client(
   (* =================================================================== *)
 
   VerifierAppraisal(
-    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubVOK, pubTSK, 
+    idOption, ID_C, ID_S, TargetHost, pubCA, pubCSP, pubRVP, pubTSK, 
     server_cert, cmw, sessionNonce, cr, sr, shash_algo, psk, offer, mode, kem_ss, kch,
     
     (* Intra-specific params (Active) *)
