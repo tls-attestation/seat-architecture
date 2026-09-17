@@ -66,8 +66,15 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
     (* The workload is identified solely by its measurements and the attested key *)
     !( 
       (* Launch measurements of the Target Environment *)
-      new dev_statusRef: measurements;  
+      new launchConfig:config;
+      let trustedConf = (launchConfig,TrustedNonExportable) in 
+      let dev_statusRef = build_measurement(base_os, trustedConf) in  
       out(io, dev_statusRef);
+
+      (* Give the adversary access to measurements from both trusted and untrusted parties *)
+      let untrustConf = (launchConfig,ExternalOrUntrusted) in 
+      let other_TenantsRef = build_measurement(base_os, untrustConf) in  
+      out(io, other_TenantsRef);
 
       (* Per cVM Key Attestation Key *)
       new privKAK: privkey;
@@ -95,8 +102,15 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
       out(io,ID_S);  
 
       (* Launch measurements of the Target Environment *)
-      new dev_statusRef: measurements;  
+      new launchConfig:config;
+      let trustedConf = (launchConfig,TrustedNonExportable) in 
+      let dev_statusRef = build_measurement(base_os, trustedConf) in  
       out(io, dev_statusRef);
+
+      (* Give the adversary access to measurements from both trusted and untrusted parties *)
+      let untrustConf = (launchConfig,ExternalOrUntrusted) in 
+      let other_TenantsRef = build_measurement(base_os, untrustConf) in  
+      out(io, other_TenantsRef);
 
       (* Per cVM Key Attestation Key *)
       new privKAK: privkey;
@@ -197,7 +211,8 @@ let run_Server(idOption:branch_option) =
 
   if idOption = OptionA then ( (* In Option A, the identity is intrinsically bound to the TLS signing key *)
 
-    get agent_keys(_,workloadRef,privTSK,pubTSK,_,_,_,_) in (* Select a provisioned workload by it's launch measurements *)
+    in(io, workloadRef:measurements); 
+    get agent_keys(_,_,privTSK,pubTSK,_,_,_,_) in (* Select a provisioned workload by it's launch measurements *)
     get agent_keys(_,_,=privTSK,_,_,_,privKAK,pubKAK) in  (* privTSK is confidential and should be matched with the same device's KAK *)
     
     (* Option A: The identity IS the measurement [seat-cc-workload-identity §5, self-signed cert with no validated PKI identity] *)

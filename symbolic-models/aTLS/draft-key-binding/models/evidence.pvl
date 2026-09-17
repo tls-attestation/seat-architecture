@@ -7,28 +7,28 @@ let EvidenceGeneration(dev_status: measurements, privKAK: privkey, pubTSK: pubke
 ) =
 (
   let pubKAK = pk(privKAK) in
+  let runtime_attr = meas2attr(dev_status) in
 
-  (* Key Attestation Token *)  (*  cnf   , key-attributes      , measurements,nonce *)
-  let pat_claims = eat_pat_profile(pubKAK, TrustedNonExportable, dev_status, eat_nonce) in
+  (* PAT claims now dynamically inherit the innate property of the deployed cVM *)
+  let pat_claims = eat_pat_profile(pubKAK, runtime_attr, dev_status, eat_nonce) in
   
   let cdata = (StrongHash, pat_claims) in
-  out(io, (dev_status, cdata)); (* Submit cdata to Attestation Environment, dev_status is for context *)
+  out(io, (dev_status, cdata)); (* Submit cdata to Attestation Environment *)
 
-  (* Receive signed data back from Attestion Environment (could be a signing oracle) *)
+  (* Receive signed quote back from Attestation Environment *)
   in(io, (dataSign: bitstring)) [precise];
   let (signed_claims: bitstring, pat_sig: bitstring) = dataSign in
 
-  let eat_pat_profile(=pubKAK, evidenceAttr: attribute, =dev_status, =eat_nonce) = signed_claims in
+  let eat_pat_profile(=pubKAK, evidence_attr: attribute, =dev_status, =eat_nonce) = signed_claims in
   let pat = (signed_claims, pat_sig) in
 
-  (* Key Attestation Token *)  (*  cnf   , key-attributes, nonce *)
-  let kat_claims = eat_kat_profile(pubTSK, evidenceAttr  , eat_nonce) in
+  (* Key Attestation Token reflects the same verified provenance *)
+  let kat_claims = eat_kat_profile(pubTSK, evidence_attr, eat_nonce) in
   let kat = (kat_claims, sign(privKAK, kat_claims)) in
 
-  event ServerAssertsProvenance(cr, sr, evidenceAttr);
+  event ServerAssertsProvenance(cr, sr, evidence_attr);
 
-  (* Conceptual Message Wrapper, CMW [RFC 9999] *)
-  let cmw = (pat, kat) in (* Place Combined Attestation Bundle (CAB) into CMW *)
+  let cmw = (pat, kat) in
   out(return_chan, cmw) 
 ).
 
@@ -43,34 +43,34 @@ let Attestation_Environment =
 (
   (* model of caller_device (measurements): input from adversary *)
   (* Lets the adversary instantiate any desired VM *)
-  in(io, (caller_device:measurements, cdata: bitstring));
+  in(io, (caller_device: measurements, cdata: bitstring));
 
   (* Deconstruct hashed cdata (claims data/rdata) to let adversary pick and choose values *)
-  let (=StrongHash, pat_claims:bitstring) = cdata in (* This is an abstraction convenience, cdata is otherwise an opaque one-way hash *)
-  let eat_pat_profile(reqKAK:pubkey, evidenceAttr:attribute, =caller_device, eat_nonce:bitstring) = pat_claims in
+  let (=StrongHash, pat_claims: bitstring) = cdata in (* This is an abstraction convenience, cdata is otherwise an opaque one-way hash *)
+  let eat_pat_profile(reqKAK: pubkey, evidence_attr: attribute, =caller_device, eat_nonce: bitstring) = pat_claims in
 
-  get agent_keys(_,trusted_device,_,_,_,_,privKAK,pubKAK) in
-  (* The KAK pair are confidential (never leave the enclave) unless compromised (see LeakedKAK) *)
-
+  get agent_keys(_,trusted_instance,_,_,_,_,privKAK,pubKAK) in (* The KAK pair are confidential (never leave the enclave) unless compromised (see LeakedKAK) *)
+  
   (* Determine the expected values for confidential claims *)
-  let genuine_claims = eat_pat_profile(pubKAK, TrustedNonExportable, trusted_device, eat_nonce) in
+  let trusted_attr = meas2attr(trusted_instance) in
+  let genuine_claims = eat_pat_profile(pubKAK, trusted_attr, trusted_instance, eat_nonce) in
 
-  (* Branch AE signing invocation based on API configuration of the original caller *)
+  (* Branch AE signing invocation based on API configuration (evidence_attr) of the original caller *)
 
   (*==============================*)
-  (* Genuine AE with trusted APIs *)
+  (* Genuine AE for trusted cVM   *)
   (*==============================*)
-  if cdata = (StrongHash, genuine_claims) then ( (* invoke the genuine AE for trusted attestation requests *)
-    get agent_keys(_,=trusted_device,_,_,privAK,pubAK,_,_) in
-    let hwQuote = (trusted_device, cdata) in
+  if cdata = (StrongHash, genuine_claims) then (  (* invoke the genuine AE for trusted attestation requests *)
+    get agent_keys(_,=trusted_instance,_,_,privAK,pubAK,_,_) in
+    let hwQuote = (trusted_instance, cdata) in
     let pat = (pat_claims, sign(privAK, hwQuote)) in 
     out(io, pat)
 
   (*================================*)
-  (* AE oracle with untrusted APIs  *)
+  (* Insecure API / Other Tenants   *)
   (*================================*)
-  ) else if evidenceAttr = ExternalOrUntrusted then (  
-    (* Some workloads might accept external API calls, representing an oracle *)
+  ) else if evidence_attr = ExternalOrUntrusted then (
+    (* Some workloads (aka measurements) might accept external API calls, representing an oracle *)
     get agent_keys(_,_,_,_,privAK,pubAK,_,_) in (* Adversary still has unconstrained access to any endorsed AK *)
     let hwQuote = (caller_device, cdata) in
     let pat = (pat_claims, sign(privAK, hwQuote)) in 
@@ -78,3 +78,4 @@ let Attestation_Environment =
     out(io, pat)
   )
 ).
+

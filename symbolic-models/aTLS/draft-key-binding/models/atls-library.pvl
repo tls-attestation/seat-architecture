@@ -20,10 +20,8 @@ limitations under the License.
 (*  Security and Threat Model *)
 (********************************************************)
 type identity.  (* long-term identity of the machine *)
-type measurements. (* Runtime measurements of the Target Environment *)
 
 free io:channel.
-free non_provisioned_dev:measurements. (* Untrusted servers *)
 const zero: bitstring.
 
 (********************************************************)
@@ -113,10 +111,6 @@ type pubkey.
 fun pk(privkey): pubkey.
 const NoPubKey:pubkey.
 fun p2b(pubkey): bitstring [data].
-
-fun dev2id(measurements): identity [data].
-fun id2dev(identity): measurements
-reduc forall x: measurements; id2dev(dev2id(x)) = x.
 
 (* RSA Signatures, typically the argument is a hash over some data *)
 
@@ -272,6 +266,30 @@ fun SH(random,params):msg [data].  (* ServerHello *)
 fun CRT(bitstring):msg [data].  (* Certificate message of TLS *)
 fun CV(bitstring):msg [data].  (* CertificateVerify *)
 fun FIN(bitstring):msg [data].  (* Finished *)
+
+(**********************************************************************)
+(* Runtime Launch Measurements & Innate Attributes                    *)
+(**********************************************************************)
+
+type base_image.
+type config.
+type measurements.
+type attribute.
+
+const TrustedNonExportable: attribute [data]. (* The Good Kind (TM) *)
+const ExternalOrUntrusted: attribute [data].
+
+free base_os: base_image.
+
+fun build_measurement(base_image, bitstring): measurements [data].
+fun dev2id(measurements): identity [data].
+fun id2dev(identity): measurements
+reduc forall x: measurements; id2dev(dev2id(x)) = x.
+
+(* Extract innate deployment attribute from the measurement tuple *)
+fun meas2attr(measurements): attribute
+reduc forall b: base_image, c: config, a: attribute;
+  meas2attr(build_measurement(b, (c, a))) = a.
 
 (********************************************************)
 (*  Events for Properties *)
@@ -453,9 +471,6 @@ event ServerSendsAppData(identity, pubkey, pubkey, random, random, bitstring, bi
 (**********************************************************************)
 (* Key/Evidence Provenance Attributes - I-D.reddy-rats-key-binding *)
 (**********************************************************************)
-type attribute.
-const TrustedNonExportable: attribute [data]. (* The Good Kind (TM) *)
-const ExternalOrUntrusted: attribute [data].
 
 (* Structured EAT Claims Sets per draft-reddy-rats-key-binding §6 *)
 fun eat_pat_profile(pubkey (* cnf: KAK *), attribute (* claim-attributes *), measurements, bitstring (* eat_nonce *)): bitstring [data].
