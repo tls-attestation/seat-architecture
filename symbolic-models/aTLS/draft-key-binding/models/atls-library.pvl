@@ -281,7 +281,7 @@ const ExternalOrUntrusted: attribute [data].
 
 free base_os: base_image.
 
-fun build_measurement(base_image, bitstring): measurements [data].
+fun runtimeMeasurements(base_image, bitstring): measurements [data].
 fun dev2id(measurements): identity [data].
 fun id2dev(identity): measurements
 reduc forall x: measurements; id2dev(dev2id(x)) = x.
@@ -289,7 +289,7 @@ reduc forall x: measurements; id2dev(dev2id(x)) = x.
 (* Extract innate deployment attribute from the measurement tuple *)
 fun meas2attr(measurements): attribute
 reduc forall b: base_image, c: config, a: attribute;
-  meas2attr(build_measurement(b, (c, a))) = a.
+  meas2attr(runtimeMeasurements(b, (c, a))) = a.
 
 (********************************************************)
 (*  Events for Properties *)
@@ -489,12 +489,12 @@ event ClientAcceptsProvenance(random, random, attribute, pubkey).
 event ServerAssertsProvenance(random, random, attribute).
 
 (**********************************************************************)
-(* CoRIM / CoMID Structured Triples (draft-ietf-rats-corim-11 §5.1)   *)
+(*  Structured CoRIM / CoMID tuples (draft-ietf-rats-corim-11 §5.1)   *)
 (**********************************************************************)
 
 (* Predicate is implicit in the constructor name (CoRIM §5.1.4) *)
-fun AttestKeyTriple(identity (* Subject: UEID/Env *), pubkey (* Object: AK *)): bitstring [data].
-fun RefValTriple(identity (* Subject: Workload ID *), measurements (* Object: Nominal state *), attribute (* Object: Claims *)): bitstring [data].
+fun attestKeyTuple(identity (* Subject: UEID/Env *), pubkey (* Object: AK *)): bitstring [data].
+fun refValTuple(identity (* Subject: Workload ID *), measurements (* Object: Nominal state *)): bitstring [data].
 
 (**********************************************************************)
 (* Generation of agents and keys *)

@@ -52,6 +52,9 @@ let gen_certs_csr (privCA:privkey,ID_S:identity,pubTSK:pubkey) =
 
 (* Generate the actual cVMs *)
 let gen_agents_data (privCA:privkey, idOption: branch_option) = 
+  
+  in(io, (apiAttr:attribute));
+
   (* Generate the hardware-backed attestation key (AK) that will sign the evidence *)
   new privAK: privkey;  
   let pubAK = pk(privAK) in
@@ -67,14 +70,8 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
     !( 
       (* Launch measurements of the Target Environment *)
       new launchConfig:config;
-      let trustedConf = (launchConfig,TrustedNonExportable) in 
-      let dev_statusRef = build_measurement(base_os, trustedConf) in  
+      let dev_statusRef = runtimeMeasurements(base_os, (launchConfig,apiAttr)) in  
       out(io, dev_statusRef);
-
-      (* Give the adversary access to measurements from both trusted and untrusted parties *)
-      let untrustConf = (launchConfig,ExternalOrUntrusted) in 
-      let other_TenantsRef = build_measurement(base_os, untrustConf) in  
-      out(io, other_TenantsRef);
 
       (* Per cVM Key Attestation Key *)
       new privKAK: privkey;
@@ -103,14 +100,8 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
 
       (* Launch measurements of the Target Environment *)
       new launchConfig:config;
-      let trustedConf = (launchConfig,TrustedNonExportable) in 
-      let dev_statusRef = build_measurement(base_os, trustedConf) in  
+      let dev_statusRef = runtimeMeasurements(base_os, (launchConfig,apiAttr)) in  
       out(io, dev_statusRef);
-
-      (* Give the adversary access to measurements from both trusted and untrusted parties *)
-      let untrustConf = (launchConfig,ExternalOrUntrusted) in 
-      let other_TenantsRef = build_measurement(base_os, untrustConf) in  
-      out(io, other_TenantsRef);
 
       (* Per cVM Key Attestation Key *)
       new privKAK: privkey;
@@ -133,50 +124,68 @@ let gen_agents_data (privCA:privkey, idOption: branch_option) =
   )
 .
 
+(* ARCHITECTURE NOTE ON RATS ROLE CONFLATION:   
+   Per RFC 9334 §3.4, §6 and draft-ietf-rats-endorsements-09 §2-§4, the RATS 
+   roles of Reference Value Provider (RVP) and Verifier Owner (VO) are merged 
+   here into a single administrative entity signed under privRVP.   
+    
+   - Layer 0: CSP/Endorser endorses pubAK verification key via Attest Key tuple      
+     [draft-ietf-rats-corim-11 §5.1.10, draft-ietf-rats-endorsements-09 §4].   
+   - Layer 1+: RVP-as-VO issues golden reference measurements via Reference Values tuple
+     [draft-ietf-rats-corim-11 §5.1.5, draft-ietf-rats-endorsements-09 §2].  
+     Modeling this as a single trust anchor helps manage state-space explosion.
+*)
+
 let gen_endorsements (privCSP: privkey) =
   get agent_keys(UEID, _, _, _, privAK, pubAK, _, _) in
 
   let UEID = NULL_ID in (* CSP nulls out hardware ID per seat-cc-workload-identity §4 *)
-  let triple = AttestKeyTriple(UEID, pubAK) in
-  let csp_sig = sign(privCSP, triple) in
-  let endorsements = (triple, csp_sig) in
+  let tuple = attestKeyTuple(UEID, pubAK) in
+  let csp_sig = sign(privCSP, tuple) in
+  let endorsements = (tuple, csp_sig) in
 
   event EndorsementsIssued(UEID, pubAK);
   out(io, endorsements)
 .
 
 let gen_reference_manifest (pubCA: pubkey, privRVP: privkey, idOption: branch_option) =
-  get agent_keys(_, dev_statusRef, privTSK, pubTSK, _, pubAK, _, _) in 
-  let workloadAttr = TrustedNonExportable in
 
-  if idOption = OptionA then (
+  in(io, runtime_ref:measurements);
+  if meas2attr(runtime_ref) = TrustedNonExportable then (* Cross-check and prune measurements with untrusted APIs *)
+  (
+    let dev_statusRef = runtime_ref in 
+    get agent_keys(_, =dev_statusRef, privTSK, pubTSK, _, pubAK, _, _) in 
+    if idOption = OptionA then (
     (* OPTION A: Identity IS the measurement [seat-cc-workload-identity §5] *)
     
     let ID_S = dev2id(dev_statusRef) in
-    let triple = RefValTriple(ID_S, dev_statusRef, workloadAttr) in
-    let rvp_sig = sign(privRVP, triple) in
-    let manifest = (triple, rvp_sig) in
+    let tuple = refValTuple(ID_S, dev_statusRef) in
+    let rvp_sig = sign(privRVP, tuple) in
+    let manifest = (tuple, rvp_sig) in
 
     event IdentityManifestIssued(ID_S, dev_statusRef);
     out(io, manifest)
 
-  ) else if idOption = OptionB then (
-    (* OPTION B: Manifest binds distinct PKI identity to launch measurements [seat-cc-workload-identity §6] *)
-    
-    in(io, (server_cert: bitstring)); 
-    let (id_pub_pair: bitstring, sig1: bitstring) = server_cert in  
-    let (ID_S: identity, =pubTSK) = id_pub_pair in 
-    
-    if verify(pubCA, id_pub_pair, sig1) = true then
+    ) else if idOption = OptionB then (
+      (* OPTION B: Manifest binds distinct PKI identity to launch measurements [seat-cc-workload-identity §6] *)
+      
+      in(io, (server_cert: bitstring)); 
+      let (id_pub_pair: bitstring, sig1: bitstring) = server_cert in  
+      let (ID_S: identity, =pubTSK) = id_pub_pair in 
+      
+      if verify(pubCA, id_pub_pair, sig1) = true then
 
-    let triple = RefValTriple(ID_S, dev_statusRef, workloadAttr) in
-    let rvp_sig = sign(privRVP, triple) in
-    let manifest = (triple, rvp_sig) in
+      let tuple = refValTuple(ID_S, dev_statusRef) in
+      let rvp_sig = sign(privRVP, tuple) in
+      let manifest = (tuple, rvp_sig) in
 
-    event IdentityManifestIssued(ID_S, dev_statusRef);
-    out(io, manifest)
+      event IdentityManifestIssued(ID_S, dev_statusRef);
+      out(io, manifest)
+    )
   )
 .
+
+event ClientTargetWorkload(identity, identity).
 
 let run_Client(pubCA, pubCSP, pubRVP: pubkey, idOption: branch_option) = 
   (* Intuitively, the following models a single client (single agent) 
@@ -190,6 +199,8 @@ let run_Client(pubCA, pubCSP, pubRVP: pubkey, idOption: branch_option) =
       in(io, (TargetWorkload: measurements)); (* adversary controls lookup [seat-cc-workload-identity §5] *)
       let ID_S = dev2id(TargetWorkload) in
 
+      event ClientTargetWorkload(ID_C, ID_S);
+
       (* The following replication models multiple sessions of client with these parameters *)
       !Client(ID_C, ID_S, pubRVP, pubCSP, pubCA, idOption)
     )
@@ -199,6 +210,8 @@ let run_Client(pubCA, pubCSP, pubRVP: pubkey, idOption: branch_option) =
       (* adversary controls lookup, i,e., untrusted DNS [seat-cc-workload-identity §6] *)
       in(io, (TargetHost: identity));
       let ID_S = TargetHost in
+
+      event ClientTargetWorkload(ID_C, ID_S);
 
       (* The following replication models multiple sessions of client with these parameters *)
       !Client(ID_C, ID_S, pubRVP, pubCSP, pubCA, idOption)

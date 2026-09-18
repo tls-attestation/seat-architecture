@@ -53,7 +53,7 @@ let VerifierAppraisal(
   (* 1. Universal Hardware Endorsement Appraisal (CSP / Endorser) [Sec. 8.2, RFC9334] *)
   let (comid_csp: bitstring, sig_csp: bitstring) = endorsements in
   if verify(pubCSP, comid_csp, sig_csp) = true then
-  let AttestKeyTriple(=NULL_ID, pubAK: pubkey) = comid_csp in
+  let attestKeyTuple(=NULL_ID, pubAK: pubkey) = comid_csp in
 
   event ClientIdentityOption(idOption);
   in(io, timingOption: attestation_option) [precise];
@@ -65,7 +65,7 @@ let VerifierAppraisal(
 
     let (comid_rvp: bitstring, sig_rvp: bitstring) = manifest in
     if verify(pubRVP, comid_rvp, sig_rvp) = true then
-    let RefValTriple(workloadID: identity, dev_statusRef: measurements, workloadAttr: attribute) = comid_rvp in (* [corim-11 §5.1.4] *)
+    let refValTuple(workloadID: identity, dev_statusRef: measurements) = comid_rvp in (* [corim-11 §5.1.4] *)
 
     (* Validate Platform Attestation Token (PAT) *)
     let (pat_claims: bitstring, ae_sig: bitstring) = pat in
@@ -80,8 +80,7 @@ let VerifierAppraisal(
 
     (* Option A Checks: Attestation-Anchored Workload Appraisal *)
     if ID_S = workloadID then if ID_S = dev2id(dev_statusRef) then  (* Authenticate: target peer ID matches the endorsed manifest ID [corim-11 §5.1.4.1] *)
-    if dev_status = dev_statusRef then  (* Corroborate: actual TEE runtime measurement matches golden reference [endorsements-09 §2] *)
-    if evidenceAttr = workloadAttr then (* Validate: hardware provenance attributes satisfy required policy [Sec. 8.5, RFC9334] *)
+    if dev_status = dev_statusRef then  (* Validate: actual TEE runtime measurement matches golden reference [endorsements-09 §2] *)
     if eat_nonce = sessionNonce then   (* Freshness: token was generated for this exact TLS handshake context [Sec. 10, RFC9334] *)
 
     event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);
@@ -114,7 +113,7 @@ let VerifierAppraisal(
 
     let (comid_rvp: bitstring, sig_rvp: bitstring) = manifest in
     if verify(pubRVP, comid_rvp, sig_rvp) = true then
-    let RefValTriple(WID: identity, dev_statusRef: measurements, workloadAttr: attribute) = comid_rvp in
+    let refValTuple(WID: identity, dev_statusRef: measurements) = comid_rvp in
 
     (* Validate Platform Attestation Token (PAT) *)
     let (pat_claims: bitstring, pat_sig: bitstring) = pat in
@@ -129,10 +128,9 @@ let VerifierAppraisal(
 
     (* Option B Joint Appraisal: Cryptographically bind PKI SAN to attested TEE measurements *)
 
-    if (WID,dev_status,evidenceAttr,eat_nonce) = (ID_S,dev_statusRef,workloadAttr,sessionNonce) then   
+    if (WID,dev_status,eat_nonce) = (ID_S,dev_statusRef,sessionNonce) then   
     (* Authenticate & authorize: Cross-link manifest identity with verified X.509 cert subject *)
-    (* Corroborate: actual TEE runtime measurement matches golden reference *)
-    (* Validate: hardware provenance attributes satisfy required policy *)
+    (* Validate: actual TEE runtime measurement matches golden reference *)
     (* Freshness: token was generated for this exact TLS handshake context *)
 
     event ClientAcceptsProvenance(cr, sr, evidenceAttr, pubKAK);

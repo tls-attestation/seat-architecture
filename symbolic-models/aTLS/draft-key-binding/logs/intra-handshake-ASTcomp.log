@@ -12,1226 +12,1220 @@ Process 0 (that is, the initial process):
 (
     {11}!
     {12}let privCA_1: privkey = privCA in
-    {13}new privAK: privkey;
-    {14}let pubAK: pubkey = pk(privAK) in
-    {15}out(io, pubAK);
-    {16}new UEID: identity;
-    {17}out(io, UEID);
-    {18}if (idOption = OptionA) then
+    {13}in(io, apiAttr: attribute);
+    {14}new privAK: privkey;
+    {15}let pubAK: pubkey = pk(privAK) in
+    {16}out(io, pubAK);
+    {17}new UEID: identity;
+    {18}out(io, UEID);
+    {19}if (idOption = OptionA) then
     (
-        {19}!
-        {20}new launchConfig: config;
-        {21}let trustedConf: bitstring = (launchConfig,TrustedNonExportable) in
-        {22}let dev_statusRef: measurements = build_measurement(base_os,trustedConf) in
+        {20}!
+        {21}new launchConfig: config;
+        {22}let dev_statusRef: measurements = calculate_measurements(base_os,(launchConfig,apiAttr)) in
         {23}out(io, dev_statusRef);
-        {24}let untrustConf: bitstring = (launchConfig,ExternalOrUntrusted) in
-        {25}let other_TenantsRef: measurements = build_measurement(base_os,untrustConf) in
-        {26}out(io, other_TenantsRef);
-        {27}new privKAK: privkey;
-        {28}let pubKAK: pubkey = pk(privKAK) in
-        {29}out(io, pubKAK);
-        {30}!
-        {31}new privTSK: privkey;
-        {32}let pubTSK: pubkey = pk(privTSK) in
-        {33}let ID_S: identity = dev2id(dev_statusRef) in
-        {34}out(io, (ID_S,pubTSK));
-        {35}event ProvisionedTargetEnv(ID_S,pubAK,pubTSK,dev_statusRef);
-        {36}insert agent_keys(UEID,dev_statusRef,privTSK,pubTSK,privAK,pubAK,privKAK,pubKAK)
+        {24}new privKAK: privkey;
+        {25}let pubKAK: pubkey = pk(privKAK) in
+        {26}out(io, pubKAK);
+        {27}!
+        {28}new privTSK: privkey;
+        {29}let pubTSK: pubkey = pk(privTSK) in
+        {30}let ID_S: identity = dev2id(dev_statusRef) in
+        {31}out(io, (ID_S,pubTSK));
+        {32}event ProvisionedTargetEnv(ID_S,pubAK,pubTSK,dev_statusRef);
+        {33}insert agent_keys(UEID,dev_statusRef,privTSK,pubTSK,privAK,pubAK,privKAK,pubKAK)
     )
     else
-        {37}if (idOption = OptionB) then
-        {38}!
-        {39}new ID_S_1: identity;
-        {40}out(io, ID_S_1);
-        {41}new launchConfig_1: config;
-        {42}let trustedConf_1: bitstring = (launchConfig_1,TrustedNonExportable) in
-        {43}let dev_statusRef_1: measurements = build_measurement(base_os,trustedConf_1) in
-        {44}out(io, dev_statusRef_1);
-        {45}let untrustConf_1: bitstring = (launchConfig_1,ExternalOrUntrusted) in
-        {46}let other_TenantsRef_1: measurements = build_measurement(base_os,untrustConf_1) in
-        {47}out(io, other_TenantsRef_1);
-        {48}new privKAK_1: privkey;
-        {49}let pubKAK_1: pubkey = pk(privKAK_1) in
-        {50}out(io, pubKAK_1);
-        {51}!
-        {52}new privTSK_1: privkey;
-        {53}let pubTSK_1: pubkey = pk(privTSK_1) in
-        {54}out(io, pubTSK_1);
-        {55}event ProvisionedTargetEnv(ID_S_1,pubAK,pubTSK_1,dev_statusRef_1);
-        {56}insert agent_keys(UEID,dev_statusRef_1,privTSK_1,pubTSK_1,privAK,pubAK,privKAK_1,pubKAK_1);
-        {57}let ID_S_2: identity = ID_S_1 in
-        {58}let CA_sig: bitstring = sign(privCA_1,(ID_S_2,pubTSK_1)) in
-        {59}let server_cert: bitstring = ((ID_S_2,pubTSK_1),CA_sig) in
-        {60}event CSRSigned(ID_S_2,pubTSK_1);
-        {61}out(io, server_cert)
+        {34}if (idOption = OptionB) then
+        {35}!
+        {36}new ID_S_1: identity;
+        {37}out(io, ID_S_1);
+        {38}new launchConfig_1: config;
+        {39}let dev_statusRef_1: measurements = calculate_measurements(base_os,(launchConfig_1,apiAttr)) in
+        {40}out(io, dev_statusRef_1);
+        {41}new privKAK_1: privkey;
+        {42}let pubKAK_1: pubkey = pk(privKAK_1) in
+        {43}out(io, pubKAK_1);
+        {44}!
+        {45}new privTSK_1: privkey;
+        {46}let pubTSK_1: pubkey = pk(privTSK_1) in
+        {47}out(io, pubTSK_1);
+        {48}event ProvisionedTargetEnv(ID_S_1,pubAK,pubTSK_1,dev_statusRef_1);
+        {49}insert agent_keys(UEID,dev_statusRef_1,privTSK_1,pubTSK_1,privAK,pubAK,privKAK_1,pubKAK_1);
+        {50}let ID_S_2: identity = ID_S_1 in
+        {51}let CA_sig: bitstring = sign(privCA_1,(ID_S_2,pubTSK_1)) in
+        {52}let server_cert: bitstring = ((ID_S_2,pubTSK_1),CA_sig) in
+        {53}event CSRSigned(ID_S_2,pubTSK_1);
+        {54}out(io, server_cert)
 ) | (
-    {62}!
-    {63}let privCSP_1: privkey = privCSP in
-    {70}get agent_keys(UEID_1: identity,ignored_v: measurements,ignored_v_1: privkey,ignored_v_2: pubkey,privAK_1: privkey,pubAK_1: pubkey,ignored_v_3: privkey,ignored_v_4: pubkey) in
-    {64}let UEID_2: identity = NULL_ID in
-    {65}let triple: bitstring = AttestKeyTriple(UEID_2,pubAK_1) in
-    {66}let csp_sig: bitstring = sign(privCSP_1,triple) in
-    {67}let endorsements: bitstring = (triple,csp_sig) in
-    {68}event EndorsementsIssued(UEID_2,pubAK_1);
-    {69}out(io, endorsements)
+    {55}!
+    {56}let privCSP_1: privkey = privCSP in
+    {63}get agent_keys(UEID_1: identity,ignored_v: measurements,ignored_v_1: privkey,ignored_v_2: pubkey,privAK_1: privkey,pubAK_1: pubkey,ignored_v_3: privkey,ignored_v_4: pubkey) in
+    {57}let UEID_2: identity = NULL_ID in
+    {58}let triple: bitstring = AttestKeyTriple(UEID_2,pubAK_1) in
+    {59}let csp_sig: bitstring = sign(privCSP_1,triple) in
+    {60}let endorsements: bitstring = (triple,csp_sig) in
+    {61}event EndorsementsIssued(UEID_2,pubAK_1);
+    {62}out(io, endorsements)
 ) | (
-    {71}!
-    {72}let privRVP_1: privkey = privRVP in
-    {91}get agent_keys(ignored_v_5: identity,dev_statusRef_2: measurements,privTSK_2: privkey,pubTSK_2: pubkey,ignored_v_6: privkey,pubAK_2: pubkey,ignored_v_7: privkey,ignored_v_8: pubkey) in
-    {73}let workloadAttr: attribute = TrustedNonExportable in
-    {74}if (idOption = OptionA) then
+    {64}!
+    {65}let privRVP_1: privkey = privRVP in
+    {66}in(io, runtime_ref: measurements);
+    {67}if (meas2attr(runtime_ref) = TrustedNonExportable) then
+    {68}let dev_statusRef_2: measurements = runtime_ref in
+    {86}get agent_keys(ignored_v_5: identity,=dev_statusRef_2,privTSK_2: privkey,pubTSK_2: pubkey,ignored_v_6: privkey,pubAK_2: pubkey,ignored_v_7: privkey,ignored_v_8: pubkey) in
+    {69}if (idOption = OptionA) then
     (
-        {75}let ID_S_3: identity = dev2id(dev_statusRef_2) in
-        {76}let triple_1: bitstring = RefValTriple(ID_S_3,dev_statusRef_2,workloadAttr) in
-        {77}let rvp_sig: bitstring = sign(privRVP_1,triple_1) in
-        {78}let manifest: bitstring = (triple_1,rvp_sig) in
-        {79}event IdentityManifestIssued(ID_S_3,dev_statusRef_2);
-        {80}out(io, manifest)
+        {70}let ID_S_3: identity = dev2id(dev_statusRef_2) in
+        {71}let tuple: bitstring = RefValTuple(ID_S_3,dev_statusRef_2) in
+        {72}let rvp_sig: bitstring = sign(privRVP_1,tuple) in
+        {73}let manifest: bitstring = (tuple,rvp_sig) in
+        {74}event IdentityManifestIssued(ID_S_3,dev_statusRef_2);
+        {75}out(io, manifest)
     )
     else
-        {81}if (idOption = OptionB) then
-        {82}in(io, server_cert_1: bitstring);
-        {83}let (id_pub_pair: bitstring,sig1: bitstring) = server_cert_1 in
-        {84}let (ID_S_4: identity,=pubTSK_2) = id_pub_pair in
-        {85}if (verify(pubCA,id_pub_pair,sig1) = true) then
-        {86}let triple_2: bitstring = RefValTriple(ID_S_4,dev_statusRef_2,workloadAttr) in
-        {87}let rvp_sig_1: bitstring = sign(privRVP_1,triple_2) in
-        {88}let manifest_1: bitstring = (triple_2,rvp_sig_1) in
-        {89}event IdentityManifestIssued(ID_S_4,dev_statusRef_2);
-        {90}out(io, manifest_1)
+        {76}if (idOption = OptionB) then
+        {77}in(io, server_cert_1: bitstring);
+        {78}let (id_pub_pair: bitstring,sig1: bitstring) = server_cert_1 in
+        {79}let (ID_S_4: identity,=pubTSK_2) = id_pub_pair in
+        {80}if (verify(pubCA,id_pub_pair,sig1) = true) then
+        {81}let tuple_1: bitstring = RefValTuple(ID_S_4,dev_statusRef_2) in
+        {82}let rvp_sig_1: bitstring = sign(privRVP_1,tuple_1) in
+        {83}let manifest_1: bitstring = (tuple_1,rvp_sig_1) in
+        {84}event IdentityManifestIssued(ID_S_4,dev_statusRef_2);
+        {85}out(io, manifest_1)
 ) | (
-    {92}!
-    {93}new ID_C: identity;
-    {94}if (idOption = OptionA) then
+    {87}!
+    {88}new ID_C: identity;
+    {89}if (idOption = OptionA) then
     (
-        {95}!
-        {96}in(io, TargetWorkload: measurements);
-        {97}let ID_S_5: identity = dev2id(TargetWorkload) in
-        {98}!
-        {99}let ID_C_1: identity = ID_C in
-        {100}in(io, (TargetHost: identity,ioffer: params));
-        {101}let nego(=aTLS,MLKEM_13_C(ka: kem_alg,eee: kem_pub),hash_algo: hash_alg,ev_type: ev_typ) = ioffer in
-        {102}new dk: kem_priv;
-        {103}let ek: kem_pub = kem_pk(dk) in
-        {104}let (dk_1: kem_priv,ek_1: kem_pub) = (dk,ek) in
-        {105}let offer: params = nego(aTLS,MLKEM_13_C(ka,ek_1),hash_algo,ev_type) in
-        {106}new cr: random;
-        {107}let ch: msg = CH(cr,offer,TargetHost) in
-        {108}let psk: preSharedKey = NoPSK in
-        {109}let salt: bitstring = zero in
-        {110}let ikm: bitstring = catch-fail(psk2b(psk)) in
-        {111}let v: bool = not-caught-fail(ikm) in
-        {112}let es: bitstring = catch-fail((if v then hmac(StrongHash,salt,ikm) else fail-any_type)) in
-        {113}let v_1: bool = not-caught-fail(es) in
-        {114}let l: label = (if v_1 then tls13_resumption_psk_binder_key else caught-fail) in
-        {115}let m: bitstring = (if v_1 then zero else caught-fail) in
-        {116}let c: bitstring = (if v_1 then catch-fail(hash(StrongHash,m)) else caught-fail) in
-        {117}let v_2: bool = not-caught-fail(c) in
-        {118}let kb: bitstring = (if v_1 then catch-fail((if v_2 then hmac(StrongHash,es,(l,c)) else fail-any_type)) else caught-fail) in
-        {119}let v_3: bool = not-caught-fail(kb) in
-        {120}let l_1: label = (if v_3 then tls13_client_early_traffic_secret else caught-fail) in
-        {121}let c_1: bitstring = (if v_3 then catch-fail(hash(StrongHash,ch)) else caught-fail) in
-        {122}let v_4: bool = not-caught-fail(c_1) in
-        {123}let atsc0: bitstring = (if v_3 then catch-fail((if v_4 then hmac(StrongHash,es,(l_1,c_1)) else fail-any_type)) else caught-fail) in
-        {124}let v_5: bool = not-caught-fail(atsc0) in
-        {125}let l_2: label = (if v_5 then tls13_key else caught-fail) in
-        {126}let c_2: bitstring = (if v_5 then zero else caught-fail) in
-        {127}let kc0: bitstring = (if v_5 then catch-fail(hmac(StrongHash,atsc0,(l_2,c_2))) else caught-fail) in
-        {128}let v_6: bool = not-caught-fail(kc0) in
-        {129}let l_3: label = (if v_6 then tls13_early_exporter_master_secret else caught-fail) in
-        {130}let c_3: bitstring = (if v_6 then catch-fail(hash(StrongHash,ch)) else caught-fail) in
-        {131}let v_7: bool = not-caught-fail(c_3) in
-        {132}let ems0: bitstring = (if v_6 then catch-fail((if v_7 then hmac(StrongHash,es,(l_3,c_3)) else fail-any_type)) else caught-fail) in
-        {133}let v_8: bool = not-caught-fail(ems0) in
-        {134}let (es_1: bitstring,kb_1: mac_key,kc0_1: ae_key,ems0_1: bitstring) = (if v_1 then (if v_3 then (if v_5 then (if v_6 then (if v_8 then (es,kb,b2ae(kc0),ems0) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {135}event ClientOffersHash(cr,hash_algo);
-        {136}event ClientOffersKEX(cr,MLKEM_13_C(ka,ek_1));
-        {137}event ClientOffersEvType(cr,ev_type);
-        {138}out(io, ch);
-        {139}in(io, SH(sr: random,mode: params));
-        {140}let nego(=aTLS,MLKEM_13_S(=ka,ciph: kem_ct),shash_algo: hash_alg,sev_type: ev_typ) = mode in
-        {141}event ClientAcceptsKEM(cr,ka);
-        {142}event ClientAcceptsHash(cr,shash_algo);
-        {143}let log_SH: bitstring = (ch,SH(sr,mode)) in
-        {144}let kem_ss: bitstring = kem_decap(ka,dk_1,ciph) in
-        {145}let l_4: label = tls13_derived in
-        {146}let m_1: bitstring = zero in
-        {147}let c_4: bitstring = catch-fail(hash(StrongHash,m_1)) in
-        {148}let v_9: bool = not-caught-fail(c_4) in
-        {149}let salt1: bitstring = catch-fail((if v_9 then hmac(StrongHash,es_1,(l_4,c_4)) else fail-any_type)) in
-        {150}let v_10: bool = not-caught-fail(salt1) in
-        {151}let hs: bitstring = (if v_10 then catch-fail(hmac(StrongHash,salt1,kem_ss)) else caught-fail) in
-        {152}let v_11: bool = not-caught-fail(hs) in
-        {153}let l_5: label = (if v_11 then tls13_client_handshake_traffic_secret else caught-fail) in
-        {154}let c_5: bitstring = (if v_11 then catch-fail(hash(StrongHash,log_SH)) else caught-fail) in
-        {155}let v_12: bool = not-caught-fail(c_5) in
-        {156}let htsc: bitstring = (if v_11 then catch-fail((if v_12 then hmac(StrongHash,hs,(l_5,c_5)) else fail-any_type)) else caught-fail) in
-        {157}let v_13: bool = not-caught-fail(htsc) in
-        {158}let l_6: label = (if v_13 then tls13_server_handshake_traffic_secret else caught-fail) in
-        {159}let c_6: bitstring = (if v_13 then catch-fail(hash(StrongHash,log_SH)) else caught-fail) in
-        {160}let v_14: bool = not-caught-fail(c_6) in
-        {161}let htss: bitstring = (if v_13 then catch-fail((if v_14 then hmac(StrongHash,hs,(l_6,c_6)) else fail-any_type)) else caught-fail) in
-        {162}let v_15: bool = not-caught-fail(htss) in
-        {163}let l_7: label = (if v_15 then tls13_key else caught-fail) in
-        {164}let c_7: bitstring = (if v_15 then zero else caught-fail) in
-        {165}let kch: bitstring = (if v_15 then catch-fail(hmac(StrongHash,htsc,(l_7,c_7))) else caught-fail) in
-        {166}let v_16: bool = not-caught-fail(kch) in
-        {167}let l_8: label = (if v_16 then tls13_key else caught-fail) in
-        {168}let c_8: bitstring = (if v_16 then zero else caught-fail) in
-        {169}let ksh: bitstring = (if v_16 then catch-fail(hmac(StrongHash,htss,(l_8,c_8))) else caught-fail) in
-        {170}let v_17: bool = not-caught-fail(ksh) in
-        {171}let l_9: label = (if v_17 then tls13_finished else caught-fail) in
-        {172}let c_9: bitstring = (if v_17 then zero else caught-fail) in
-        {173}let kcm: bitstring = (if v_17 then catch-fail(hmac(StrongHash,htsc,(l_9,c_9))) else caught-fail) in
-        {174}let v_18: bool = not-caught-fail(kcm) in
-        {175}let l_10: label = (if v_18 then tls13_finished else caught-fail) in
-        {176}let c_10: bitstring = (if v_18 then zero else caught-fail) in
-        {177}let ksm: bitstring = (if v_18 then catch-fail(hmac(StrongHash,htss,(l_10,c_10))) else caught-fail) in
-        {178}let v_19: bool = not-caught-fail(ksm) in
-        {179}let (hs_1: bitstring,kch_1: ae_key,ksh_1: ae_key,kcm_1: mac_key,ksm_1: mac_key) = (if v_10 then (if v_11 then (if v_13 then (if v_15 then (if v_16 then (if v_17 then (if v_18 then (if v_19 then (hs,b2ae(kch),b2ae(ksh),kcm,ksm) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {180}in(io, CRT(crt_msg: bitstring));
-        {181}let log_CRT: bitstring = (log_SH,CRT(crt_msg)) in
-        {182}let (cmw: bitstring,server_cert_2: bitstring) = crt_msg in
-        {183}let (id_pub_pair_1: bitstring,sig1_1: bitstring) = server_cert_2 in
-        {184}let (cert_subject: identity,pubTSK_3: pubkey) = id_pub_pair_1 in
-        {185}let sessionNonce: bitstring = hash(StrongHash,(log_SH,pubTSK_3)) in
-        {186}let cr_1: random = cr in
-        {187}let req_msg: msg = CRT(Nil) in
-        {188}let ea_cert: bitstring = Nil in
-        {189}let ea_sg: bitstring = Nil in
-        {190}let ea_mac: bitstring = Nil in
-        {191}let ems: bitstring = Nil in
-        {192}let ks: ae_key = b2ae(Nil) in
-        {193}let kc: ae_key = b2ae(Nil) in
-        {194}let rms: bitstring = Nil in
-        {195}let req_ctx: bitstring = Nil in
-        {196}let (pat: bitstring,kat: bitstring) = cmw in
-        {197}in(io, (manifest_2: bitstring,endorsements_1: bitstring));
-        {198}let (comid_csp: bitstring,sig_csp: bitstring) = endorsements_1 in
-        {199}if (verify(pubCSP,comid_csp,sig_csp) = true) then
-        {200}let AttestKeyTriple(=NULL_ID,pubAK_3: pubkey) = comid_csp in
-        {201}event ClientIdentityOption(idOption);
-        {202}in(io, timingOption: attestation_option);
-        {203}if (idOption = OptionA) then
+        {90}!
+        {91}in(io, TargetWorkload: measurements);
+        {92}let ID_S_5: identity = dev2id(TargetWorkload) in
+        {93}event ClientTargetWorkload(ID_C,ID_S_5);
+        {94}!
+        {95}let ID_C_1: identity = ID_C in
+        {96}in(io, (TargetHost: identity,ioffer: params));
+        {97}let nego(=aTLS,MLKEM_13_C(ka: kem_alg,eee: kem_pub),hash_algo: hash_alg,ev_type: ev_typ) = ioffer in
+        {98}new dk: kem_priv;
+        {99}let ek: kem_pub = kem_pk(dk) in
+        {100}let (dk_1: kem_priv,ek_1: kem_pub) = (dk,ek) in
+        {101}let offer: params = nego(aTLS,MLKEM_13_C(ka,ek_1),hash_algo,ev_type) in
+        {102}new cr: random;
+        {103}let ch: msg = CH(cr,offer,TargetHost) in
+        {104}let psk: preSharedKey = NoPSK in
+        {105}let salt: bitstring = zero in
+        {106}let ikm: bitstring = catch-fail(psk2b(psk)) in
+        {107}let v: bool = not-caught-fail(ikm) in
+        {108}let es: bitstring = catch-fail((if v then hmac(StrongHash,salt,ikm) else fail-any_type)) in
+        {109}let v_1: bool = not-caught-fail(es) in
+        {110}let l: label = (if v_1 then tls13_resumption_psk_binder_key else caught-fail) in
+        {111}let m: bitstring = (if v_1 then zero else caught-fail) in
+        {112}let c: bitstring = (if v_1 then catch-fail(hash(StrongHash,m)) else caught-fail) in
+        {113}let v_2: bool = not-caught-fail(c) in
+        {114}let kb: bitstring = (if v_1 then catch-fail((if v_2 then hmac(StrongHash,es,(l,c)) else fail-any_type)) else caught-fail) in
+        {115}let v_3: bool = not-caught-fail(kb) in
+        {116}let l_1: label = (if v_3 then tls13_client_early_traffic_secret else caught-fail) in
+        {117}let c_1: bitstring = (if v_3 then catch-fail(hash(StrongHash,ch)) else caught-fail) in
+        {118}let v_4: bool = not-caught-fail(c_1) in
+        {119}let atsc0: bitstring = (if v_3 then catch-fail((if v_4 then hmac(StrongHash,es,(l_1,c_1)) else fail-any_type)) else caught-fail) in
+        {120}let v_5: bool = not-caught-fail(atsc0) in
+        {121}let l_2: label = (if v_5 then tls13_key else caught-fail) in
+        {122}let c_2: bitstring = (if v_5 then zero else caught-fail) in
+        {123}let kc0: bitstring = (if v_5 then catch-fail(hmac(StrongHash,atsc0,(l_2,c_2))) else caught-fail) in
+        {124}let v_6: bool = not-caught-fail(kc0) in
+        {125}let l_3: label = (if v_6 then tls13_early_exporter_master_secret else caught-fail) in
+        {126}let c_3: bitstring = (if v_6 then catch-fail(hash(StrongHash,ch)) else caught-fail) in
+        {127}let v_7: bool = not-caught-fail(c_3) in
+        {128}let ems0: bitstring = (if v_6 then catch-fail((if v_7 then hmac(StrongHash,es,(l_3,c_3)) else fail-any_type)) else caught-fail) in
+        {129}let v_8: bool = not-caught-fail(ems0) in
+        {130}let (es_1: bitstring,kb_1: mac_key,kc0_1: ae_key,ems0_1: bitstring) = (if v_1 then (if v_3 then (if v_5 then (if v_6 then (if v_8 then (es,kb,b2ae(kc0),ems0) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {131}event ClientOffersHash(cr,hash_algo);
+        {132}event ClientOffersKEX(cr,MLKEM_13_C(ka,ek_1));
+        {133}event ClientOffersEvType(cr,ev_type);
+        {134}out(io, ch);
+        {135}in(io, SH(sr: random,mode: params));
+        {136}let nego(=aTLS,MLKEM_13_S(=ka,ciph: kem_ct),shash_algo: hash_alg,sev_type: ev_typ) = mode in
+        {137}event ClientAcceptsKEM(cr,ka);
+        {138}event ClientAcceptsHash(cr,shash_algo);
+        {139}let log_SH: bitstring = (ch,SH(sr,mode)) in
+        {140}let kem_ss: bitstring = kem_decap(ka,dk_1,ciph) in
+        {141}let l_4: label = tls13_derived in
+        {142}let m_1: bitstring = zero in
+        {143}let c_4: bitstring = catch-fail(hash(StrongHash,m_1)) in
+        {144}let v_9: bool = not-caught-fail(c_4) in
+        {145}let salt1: bitstring = catch-fail((if v_9 then hmac(StrongHash,es_1,(l_4,c_4)) else fail-any_type)) in
+        {146}let v_10: bool = not-caught-fail(salt1) in
+        {147}let hs: bitstring = (if v_10 then catch-fail(hmac(StrongHash,salt1,kem_ss)) else caught-fail) in
+        {148}let v_11: bool = not-caught-fail(hs) in
+        {149}let l_5: label = (if v_11 then tls13_client_handshake_traffic_secret else caught-fail) in
+        {150}let c_5: bitstring = (if v_11 then catch-fail(hash(StrongHash,log_SH)) else caught-fail) in
+        {151}let v_12: bool = not-caught-fail(c_5) in
+        {152}let htsc: bitstring = (if v_11 then catch-fail((if v_12 then hmac(StrongHash,hs,(l_5,c_5)) else fail-any_type)) else caught-fail) in
+        {153}let v_13: bool = not-caught-fail(htsc) in
+        {154}let l_6: label = (if v_13 then tls13_server_handshake_traffic_secret else caught-fail) in
+        {155}let c_6: bitstring = (if v_13 then catch-fail(hash(StrongHash,log_SH)) else caught-fail) in
+        {156}let v_14: bool = not-caught-fail(c_6) in
+        {157}let htss: bitstring = (if v_13 then catch-fail((if v_14 then hmac(StrongHash,hs,(l_6,c_6)) else fail-any_type)) else caught-fail) in
+        {158}let v_15: bool = not-caught-fail(htss) in
+        {159}let l_7: label = (if v_15 then tls13_key else caught-fail) in
+        {160}let c_7: bitstring = (if v_15 then zero else caught-fail) in
+        {161}let kch: bitstring = (if v_15 then catch-fail(hmac(StrongHash,htsc,(l_7,c_7))) else caught-fail) in
+        {162}let v_16: bool = not-caught-fail(kch) in
+        {163}let l_8: label = (if v_16 then tls13_key else caught-fail) in
+        {164}let c_8: bitstring = (if v_16 then zero else caught-fail) in
+        {165}let ksh: bitstring = (if v_16 then catch-fail(hmac(StrongHash,htss,(l_8,c_8))) else caught-fail) in
+        {166}let v_17: bool = not-caught-fail(ksh) in
+        {167}let l_9: label = (if v_17 then tls13_finished else caught-fail) in
+        {168}let c_9: bitstring = (if v_17 then zero else caught-fail) in
+        {169}let kcm: bitstring = (if v_17 then catch-fail(hmac(StrongHash,htsc,(l_9,c_9))) else caught-fail) in
+        {170}let v_18: bool = not-caught-fail(kcm) in
+        {171}let l_10: label = (if v_18 then tls13_finished else caught-fail) in
+        {172}let c_10: bitstring = (if v_18 then zero else caught-fail) in
+        {173}let ksm: bitstring = (if v_18 then catch-fail(hmac(StrongHash,htss,(l_10,c_10))) else caught-fail) in
+        {174}let v_19: bool = not-caught-fail(ksm) in
+        {175}let (hs_1: bitstring,kch_1: ae_key,ksh_1: ae_key,kcm_1: mac_key,ksm_1: mac_key) = (if v_10 then (if v_11 then (if v_13 then (if v_15 then (if v_16 then (if v_17 then (if v_18 then (if v_19 then (hs,b2ae(kch),b2ae(ksh),kcm,ksm) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {176}in(io, CRT(crt_msg: bitstring));
+        {177}let log_CRT: bitstring = (log_SH,CRT(crt_msg)) in
+        {178}let (cmw: bitstring,server_cert_2: bitstring) = crt_msg in
+        {179}let (id_pub_pair_1: bitstring,sig1_1: bitstring) = server_cert_2 in
+        {180}let (cert_subject: identity,pubTSK_3: pubkey) = id_pub_pair_1 in
+        {181}let sessionNonce: bitstring = hash(StrongHash,(log_SH,pubTSK_3)) in
+        {182}let cr_1: random = cr in
+        {183}let req_msg: msg = CRT(Nil) in
+        {184}let ea_cert: bitstring = Nil in
+        {185}let ea_sg: bitstring = Nil in
+        {186}let ea_mac: bitstring = Nil in
+        {187}let ems: bitstring = Nil in
+        {188}let ks: ae_key = b2ae(Nil) in
+        {189}let kc: ae_key = b2ae(Nil) in
+        {190}let rms: bitstring = Nil in
+        {191}let req_ctx: bitstring = Nil in
+        {192}let (pat: bitstring,kat: bitstring) = cmw in
+        {193}in(io, (manifest_2: bitstring,endorsements_1: bitstring));
+        {194}let (comid_csp: bitstring,sig_csp: bitstring) = endorsements_1 in
+        {195}if (verify(pubCSP,comid_csp,sig_csp) = true) then
+        {196}let AttestKeyTriple(=NULL_ID,pubAK_3: pubkey) = comid_csp in
+        {197}event ClientIdentityOption(idOption);
+        {198}in(io, timingOption: attestation_option);
+        {199}if (idOption = OptionA) then
         (
-            {204}let dev_status: measurements = id2dev(ID_S_5) in
-            {205}let (comid_rvp: bitstring,sig_rvp: bitstring) = manifest_2 in
-            {206}if (verify(pubRVP,comid_rvp,sig_rvp) = true) then
-            {207}let RefValTriple(workloadID: identity,dev_statusRef_3: measurements,workloadAttr_1: attribute) = comid_rvp in
-            {208}let (pat_claims: bitstring,ae_sig: bitstring) = pat in
-            {209}let eat_pat_profile(pubKAK_2: pubkey,evidenceAttr: attribute,=dev_statusRef_3,eat_nonce: bitstring) = pat_claims in
-            {210}let cdata: bitstring = (StrongHash,pat_claims) in
-            {211}if (verify(pubAK_3,(dev_statusRef_3,cdata),ae_sig) = true) then
-            {212}let (kat_claims: bitstring,kat_sig: bitstring) = kat in
-            {213}let eat_kat_profile(=pubTSK_3,=evidenceAttr,=eat_nonce) = kat_claims in
-            {214}if (verify(pubKAK_2,kat_claims,kat_sig) = true) then
-            {215}if (ID_S_5 = workloadID) then
-            {216}if (ID_S_5 = dev2id(dev_statusRef_3)) then
-            {217}if (dev_status = dev_statusRef_3) then
-            {218}if (evidenceAttr = workloadAttr_1) then
-            {219}if (eat_nonce = sessionNonce) then
-            {220}event ClientAcceptsProvenance(cr_1,sr,evidenceAttr,pubKAK_2);
-            {221}if (timingOption = Intra) then
+            {200}let dev_status: measurements = id2dev(ID_S_5) in
+            {201}let (comid_rvp: bitstring,sig_rvp: bitstring) = manifest_2 in
+            {202}if (verify(pubRVP,comid_rvp,sig_rvp) = true) then
+            {203}let RefValTuple(workloadID: identity,dev_statusRef_3: measurements) = comid_rvp in
+            {204}let (pat_claims: bitstring,ae_sig: bitstring) = pat in
+            {205}let eat_pat_profile(pubKAK_2: pubkey,evidenceAttr: attribute,=dev_statusRef_3,eat_nonce: bitstring) = pat_claims in
+            {206}let cdata: bitstring = (StrongHash,pat_claims) in
+            {207}if (verify(pubAK_3,(dev_statusRef_3,cdata),ae_sig) = true) then
+            {208}let (kat_claims: bitstring,kat_sig: bitstring) = kat in
+            {209}let eat_kat_profile(=pubTSK_3,=evidenceAttr,=eat_nonce) = kat_claims in
+            {210}if (verify(pubKAK_2,kat_claims,kat_sig) = true) then
+            {211}if (ID_S_5 = workloadID) then
+            {212}if (ID_S_5 = dev2id(dev_statusRef_3)) then
+            {213}if (dev_status = dev_statusRef_3) then
+            {214}if (eat_nonce = sessionNonce) then
+            {215}event ClientAcceptsProvenance(cr_1,sr,evidenceAttr,pubKAK_2);
+            {216}if (timingOption = Intra) then
             (
-                {222}event AttestationTimingWindow(timingOption);
-                {223}in(io, CV(sg: bitstring));
-                {224}if (verify(pubTSK_3,hash(shash_algo,log_CRT),sg) = true) then
-                {225}event Accepted(cmw);
-                {226}event Appraised(log_SH);
-                {227}event AcceptedRdata(dev_status);
-                {228}let log_CV: bitstring = (log_CRT,CV(sg)) in
-                {229}in(io, FIN(m1: bitstring));
-                {230}if (m1 = hmac(StrongHash,ksm_1,log_CV)) then
-                {231}let log_SFIN: bitstring = (log_CV,FIN(m1)) in
-                {232}let l_11: label = tls13_derived in
-                {233}let m_2: bitstring = zero in
-                {234}let c_11: bitstring = catch-fail(hash(StrongHash,m_2)) in
-                {235}let v_20: bool = not-caught-fail(c_11) in
-                {236}let salt2: bitstring = catch-fail((if v_20 then hmac(StrongHash,hs_1,(l_11,c_11)) else fail-any_type)) in
-                {237}let v_21: bool = not-caught-fail(salt2) in
-                {238}let ikm_1: bitstring = (if v_21 then zero else caught-fail) in
-                {239}let ms: bitstring = (if v_21 then catch-fail(hmac(StrongHash,salt2,ikm_1)) else caught-fail) in
-                {240}let v_22: bool = not-caught-fail(ms) in
-                {241}let l_12: label = (if v_22 then tls13_client_application_traffic_secret else caught-fail) in
-                {242}let c_12: bitstring = (if v_22 then catch-fail(hash(StrongHash,log_SFIN)) else caught-fail) in
-                {243}let v_23: bool = not-caught-fail(c_12) in
-                {244}let atsc: bitstring = (if v_22 then catch-fail((if v_23 then hmac(StrongHash,ms,(l_12,c_12)) else fail-any_type)) else caught-fail) in
-                {245}let v_24: bool = not-caught-fail(atsc) in
-                {246}let l_13: label = (if v_24 then tls13_server_application_traffic_secret else caught-fail) in
-                {247}let c_13: bitstring = (if v_24 then catch-fail(hash(StrongHash,log_SFIN)) else caught-fail) in
-                {248}let v_25: bool = not-caught-fail(c_13) in
-                {249}let atss: bitstring = (if v_24 then catch-fail((if v_25 then hmac(StrongHash,ms,(l_13,c_13)) else fail-any_type)) else caught-fail) in
-                {250}let v_26: bool = not-caught-fail(atss) in
-                {251}let l_14: label = (if v_26 then tls13_key else caught-fail) in
-                {252}let c_14: bitstring = (if v_26 then zero else caught-fail) in
-                {253}let kc_1: bitstring = (if v_26 then catch-fail(hmac(StrongHash,atsc,(l_14,c_14))) else caught-fail) in
-                {254}let v_27: bool = not-caught-fail(kc_1) in
-                {255}let l_15: label = (if v_27 then tls13_key else caught-fail) in
-                {256}let c_15: bitstring = (if v_27 then zero else caught-fail) in
-                {257}let ks_1: bitstring = (if v_27 then catch-fail(hmac(StrongHash,atss,(l_15,c_15))) else caught-fail) in
-                {258}let v_28: bool = not-caught-fail(ks_1) in
-                {259}let l_16: label = (if v_28 then tls13_exporter_master_secret else caught-fail) in
-                {260}let c_16: bitstring = (if v_28 then catch-fail(hash(StrongHash,log_SFIN)) else caught-fail) in
-                {261}let v_29: bool = not-caught-fail(c_16) in
-                {262}let ems_1: bitstring = (if v_28 then catch-fail((if v_29 then hmac(StrongHash,ms,(l_16,c_16)) else fail-any_type)) else caught-fail) in
-                {263}let v_30: bool = not-caught-fail(ems_1) in
-                {264}let (ms_1: bitstring,kc_2: ae_key,ks_2: ae_key,ems_2: bitstring) = (if v_21 then (if v_22 then (if v_24 then (if v_26 then (if v_27 then (if v_28 then (if v_30 then (ms,b2ae(kc_1),b2ae(ks_1),ems_1) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-                {265}let m2: bitstring = hmac(StrongHash,kcm_1,log_SFIN) in
-                {266}let log_CFIN: bitstring = (log_SFIN,FIN(m2)) in
-                {267}let l_17: label = tls13_resumption_master_secret in
-                {268}let c_17: bitstring = catch-fail(hash(StrongHash,log_CFIN)) in
-                {269}let v_31: bool = not-caught-fail(c_17) in
-                {270}let rms_1: bitstring = (if v_31 then hmac(StrongHash,ms_1,(l_17,c_17)) else fail-any_type) in
-                {271}event ClientFin1WayAgr(ID_S_5,pubTSK_3,psk,offer,mode,kc_2,ks_2,ems_2,rms_1);
-                {272}event ClientFinRecentAgr(ID_S_5,ID_C_1,pubTSK_3,psk,offer,mode,kc_2,ks_2,ems_2,rms_1,cr_1,sr);
-                {273}event ClientConn(cmw);
-                {274}event ClientComp(ID_S_5,psk,offer,mode,kc_2,ks_2,ems_2,rms_1,cr_1,sr,pubTSK_3,dev_statusRef_3);
-                {275}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_2,pubTSK_3,pubRVP,dev_statusRef_3,cmw);
-                {276}event ClientID(ID_S_5,kem_ss);
-                {277}event ClientStateEvKc(cmw,kc_2);
-                {278}event ClientStateEvKch(cmw,kch_1);
-                {279}event ClientStateEv(cmw,kem_ss);
-                {280}event ClientFinished(pubTSK_3,psk,cr_1,sr,offer,mode,kc_2,ks_2,ems_2,rms_1);
-                {281}out(io, FIN(m2));
-                {282}in(io, app_msg_enc: bitstring);
-                {283}let app_msg_s: bitstring = ph_read(app_msg_enc,ks_2) in
-                {284}let req_ctx_1: bitstring = cr_1 in
-                {285}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_2,cr_1,sr,req_ctx_1,ems_2,ks_2,kc_2,dev_statusRef_3,app_msg_s)
+                {217}event AttestationTimingWindow(timingOption);
+                {218}in(io, CV(sg: bitstring));
+                {219}if (verify(pubTSK_3,hash(shash_algo,log_CRT),sg) = true) then
+                {220}event Accepted(cmw);
+                {221}event Appraised(log_SH);
+                {222}event AcceptedRdata(dev_status);
+                {223}let log_CV: bitstring = (log_CRT,CV(sg)) in
+                {224}in(io, FIN(m1: bitstring));
+                {225}if (m1 = hmac(StrongHash,ksm_1,log_CV)) then
+                {226}let log_SFIN: bitstring = (log_CV,FIN(m1)) in
+                {227}let l_11: label = tls13_derived in
+                {228}let m_2: bitstring = zero in
+                {229}let c_11: bitstring = catch-fail(hash(StrongHash,m_2)) in
+                {230}let v_20: bool = not-caught-fail(c_11) in
+                {231}let salt2: bitstring = catch-fail((if v_20 then hmac(StrongHash,hs_1,(l_11,c_11)) else fail-any_type)) in
+                {232}let v_21: bool = not-caught-fail(salt2) in
+                {233}let ikm_1: bitstring = (if v_21 then zero else caught-fail) in
+                {234}let ms: bitstring = (if v_21 then catch-fail(hmac(StrongHash,salt2,ikm_1)) else caught-fail) in
+                {235}let v_22: bool = not-caught-fail(ms) in
+                {236}let l_12: label = (if v_22 then tls13_client_application_traffic_secret else caught-fail) in
+                {237}let c_12: bitstring = (if v_22 then catch-fail(hash(StrongHash,log_SFIN)) else caught-fail) in
+                {238}let v_23: bool = not-caught-fail(c_12) in
+                {239}let atsc: bitstring = (if v_22 then catch-fail((if v_23 then hmac(StrongHash,ms,(l_12,c_12)) else fail-any_type)) else caught-fail) in
+                {240}let v_24: bool = not-caught-fail(atsc) in
+                {241}let l_13: label = (if v_24 then tls13_server_application_traffic_secret else caught-fail) in
+                {242}let c_13: bitstring = (if v_24 then catch-fail(hash(StrongHash,log_SFIN)) else caught-fail) in
+                {243}let v_25: bool = not-caught-fail(c_13) in
+                {244}let atss: bitstring = (if v_24 then catch-fail((if v_25 then hmac(StrongHash,ms,(l_13,c_13)) else fail-any_type)) else caught-fail) in
+                {245}let v_26: bool = not-caught-fail(atss) in
+                {246}let l_14: label = (if v_26 then tls13_key else caught-fail) in
+                {247}let c_14: bitstring = (if v_26 then zero else caught-fail) in
+                {248}let kc_1: bitstring = (if v_26 then catch-fail(hmac(StrongHash,atsc,(l_14,c_14))) else caught-fail) in
+                {249}let v_27: bool = not-caught-fail(kc_1) in
+                {250}let l_15: label = (if v_27 then tls13_key else caught-fail) in
+                {251}let c_15: bitstring = (if v_27 then zero else caught-fail) in
+                {252}let ks_1: bitstring = (if v_27 then catch-fail(hmac(StrongHash,atss,(l_15,c_15))) else caught-fail) in
+                {253}let v_28: bool = not-caught-fail(ks_1) in
+                {254}let l_16: label = (if v_28 then tls13_exporter_master_secret else caught-fail) in
+                {255}let c_16: bitstring = (if v_28 then catch-fail(hash(StrongHash,log_SFIN)) else caught-fail) in
+                {256}let v_29: bool = not-caught-fail(c_16) in
+                {257}let ems_1: bitstring = (if v_28 then catch-fail((if v_29 then hmac(StrongHash,ms,(l_16,c_16)) else fail-any_type)) else caught-fail) in
+                {258}let v_30: bool = not-caught-fail(ems_1) in
+                {259}let (ms_1: bitstring,kc_2: ae_key,ks_2: ae_key,ems_2: bitstring) = (if v_21 then (if v_22 then (if v_24 then (if v_26 then (if v_27 then (if v_28 then (if v_30 then (ms,b2ae(kc_1),b2ae(ks_1),ems_1) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+                {260}let m2: bitstring = hmac(StrongHash,kcm_1,log_SFIN) in
+                {261}let log_CFIN: bitstring = (log_SFIN,FIN(m2)) in
+                {262}let l_17: label = tls13_resumption_master_secret in
+                {263}let c_17: bitstring = catch-fail(hash(StrongHash,log_CFIN)) in
+                {264}let v_31: bool = not-caught-fail(c_17) in
+                {265}let rms_1: bitstring = (if v_31 then hmac(StrongHash,ms_1,(l_17,c_17)) else fail-any_type) in
+                {266}event ClientFin1WayAgr(ID_S_5,pubTSK_3,psk,offer,mode,kc_2,ks_2,ems_2,rms_1);
+                {267}event ClientFinRecentAgr(ID_S_5,ID_C_1,pubTSK_3,psk,offer,mode,kc_2,ks_2,ems_2,rms_1,cr_1,sr);
+                {268}event ClientConn(cmw);
+                {269}event ClientComp(ID_S_5,psk,offer,mode,kc_2,ks_2,ems_2,rms_1,cr_1,sr,pubTSK_3,dev_statusRef_3);
+                {270}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_2,pubTSK_3,pubRVP,dev_statusRef_3,cmw);
+                {271}event ClientID(ID_S_5,kem_ss);
+                {272}event ClientStateEvKc(cmw,kc_2);
+                {273}event ClientStateEvKch(cmw,kch_1);
+                {274}event ClientStateEv(cmw,kem_ss);
+                {275}event ClientFinished(pubTSK_3,psk,cr_1,sr,offer,mode,kc_2,ks_2,ems_2,rms_1);
+                {276}out(io, FIN(m2));
+                {277}in(io, app_msg_enc: bitstring);
+                {278}let app_msg_s: bitstring = ph_read(app_msg_enc,ks_2) in
+                {279}let req_ctx_1: bitstring = cr_1 in
+                {280}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_2,cr_1,sr,req_ctx_1,ems_2,ks_2,kc_2,dev_statusRef_3,app_msg_s)
             )
             else
-                {286}if (timingOption = Post) then
-                {287}event AttestationTimingWindow(timingOption);
-                {288}let l_18: label = ea_server_hs_context in
-                {289}let context_value: bitstring = zero in
-                {290}let m_3: bitstring = zero in
-                {291}let c_18: bitstring = catch-fail(hash(StrongHash,m_3)) in
-                {292}let v_32: bool = not-caught-fail(c_18) in
-                {293}let s: bitstring = catch-fail((if v_32 then hmac(StrongHash,ems,(l_18,c_18)) else fail-any_type)) in
-                {294}let v_33: bool = not-caught-fail(s) in
-                {295}let l_19: label = (if v_33 then exporter_label else caught-fail) in
-                {296}let c_19: bitstring = (if v_33 then catch-fail(hash(StrongHash,context_value)) else caught-fail) in
-                {297}let v_34: bool = not-caught-fail(c_19) in
-                {298}let ea_hs_ctx: bitstring = (if v_33 then (if v_34 then hmac(StrongHash,s,(l_19,c_19)) else fail-any_type) else fail-any_type) in
-                {299}let log_EA_CRT: bitstring = (ea_hs_ctx,req_msg,CRT(ea_cert)) in
-                {300}if (verify(pubTSK_3,hash(shash_algo,(ea_cv_context,log_EA_CRT)),ea_sg) = true) then
-                {301}event Accepted(cmw);
-                {302}event Appraised(log_EA_CRT);
-                {303}event AcceptedRdata(dev_status);
-                {304}let log_EA_CV: bitstring = (log_EA_CRT,CV(ea_sg)) in
-                {305}let l_20: label = ea_server_fin_key in
-                {306}let context_value_1: bitstring = zero in
-                {307}let m_4: bitstring = zero in
-                {308}let c_20: bitstring = catch-fail(hash(StrongHash,m_4)) in
-                {309}let v_35: bool = not-caught-fail(c_20) in
-                {310}let s_1: bitstring = catch-fail((if v_35 then hmac(StrongHash,ems,(l_20,c_20)) else fail-any_type)) in
-                {311}let v_36: bool = not-caught-fail(s_1) in
-                {312}let l_21: label = (if v_36 then exporter_label else caught-fail) in
-                {313}let c_21: bitstring = (if v_36 then catch-fail(hash(StrongHash,context_value_1)) else caught-fail) in
-                {314}let v_37: bool = not-caught-fail(c_21) in
-                {315}let ea_fin: bitstring = (if v_36 then (if v_37 then hmac(StrongHash,s_1,(l_21,c_21)) else fail-any_type) else fail-any_type) in
-                {316}if (ea_mac = hmac(StrongHash,ea_fin,log_EA_CV)) then
-                {317}event ClientConn(cmw);
-                {318}event ClientComp(ID_S_5,psk,offer,mode,kc,ks,ems,rms,cr_1,sr,pubTSK_3,dev_status);
-                {319}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_2,pubTSK_3,pubRVP,dev_status,cmw);
-                {320}event ClientID(ID_S_5,kem_ss);
-                {321}event ClientStateEvKc(cmw,kc);
-                {322}event ClientStateEvKch(cmw,kch_1);
-                {323}event ClientStateEv(cmw,kem_ss);
-                {324}in(io, app_msg_enc_1: bitstring);
-                {325}let app_msg_s_1: bitstring = ph_read(app_msg_enc_1,ks) in
-                {326}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_2,cr_1,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s_1)
+                {281}if (timingOption = Post) then
+                {282}event AttestationTimingWindow(timingOption);
+                {283}let l_18: label = ea_server_hs_context in
+                {284}let context_value: bitstring = zero in
+                {285}let m_3: bitstring = zero in
+                {286}let c_18: bitstring = catch-fail(hash(StrongHash,m_3)) in
+                {287}let v_32: bool = not-caught-fail(c_18) in
+                {288}let s: bitstring = catch-fail((if v_32 then hmac(StrongHash,ems,(l_18,c_18)) else fail-any_type)) in
+                {289}let v_33: bool = not-caught-fail(s) in
+                {290}let l_19: label = (if v_33 then exporter_label else caught-fail) in
+                {291}let c_19: bitstring = (if v_33 then catch-fail(hash(StrongHash,context_value)) else caught-fail) in
+                {292}let v_34: bool = not-caught-fail(c_19) in
+                {293}let ea_hs_ctx: bitstring = (if v_33 then (if v_34 then hmac(StrongHash,s,(l_19,c_19)) else fail-any_type) else fail-any_type) in
+                {294}let log_EA_CRT: bitstring = (ea_hs_ctx,req_msg,CRT(ea_cert)) in
+                {295}if (verify(pubTSK_3,hash(shash_algo,(ea_cv_context,log_EA_CRT)),ea_sg) = true) then
+                {296}event Accepted(cmw);
+                {297}event Appraised(log_EA_CRT);
+                {298}event AcceptedRdata(dev_status);
+                {299}let log_EA_CV: bitstring = (log_EA_CRT,CV(ea_sg)) in
+                {300}let l_20: label = ea_server_fin_key in
+                {301}let context_value_1: bitstring = zero in
+                {302}let m_4: bitstring = zero in
+                {303}let c_20: bitstring = catch-fail(hash(StrongHash,m_4)) in
+                {304}let v_35: bool = not-caught-fail(c_20) in
+                {305}let s_1: bitstring = catch-fail((if v_35 then hmac(StrongHash,ems,(l_20,c_20)) else fail-any_type)) in
+                {306}let v_36: bool = not-caught-fail(s_1) in
+                {307}let l_21: label = (if v_36 then exporter_label else caught-fail) in
+                {308}let c_21: bitstring = (if v_36 then catch-fail(hash(StrongHash,context_value_1)) else caught-fail) in
+                {309}let v_37: bool = not-caught-fail(c_21) in
+                {310}let ea_fin: bitstring = (if v_36 then (if v_37 then hmac(StrongHash,s_1,(l_21,c_21)) else fail-any_type) else fail-any_type) in
+                {311}if (ea_mac = hmac(StrongHash,ea_fin,log_EA_CV)) then
+                {312}event ClientConn(cmw);
+                {313}event ClientComp(ID_S_5,psk,offer,mode,kc,ks,ems,rms,cr_1,sr,pubTSK_3,dev_status);
+                {314}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_2,pubTSK_3,pubRVP,dev_status,cmw);
+                {315}event ClientID(ID_S_5,kem_ss);
+                {316}event ClientStateEvKc(cmw,kc);
+                {317}event ClientStateEvKch(cmw,kch_1);
+                {318}event ClientStateEv(cmw,kem_ss);
+                {319}in(io, app_msg_enc_1: bitstring);
+                {320}let app_msg_s_1: bitstring = ph_read(app_msg_enc_1,ks) in
+                {321}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_2,cr_1,sr,req_ctx,ems,ks,kc,dev_status,app_msg_s_1)
         )
         else
-            {327}if (idOption = OptionB) then
-            {328}let (id_pub_pair_2: bitstring,sig_ca: bitstring) = server_cert_2 in
-            {329}let (cert_subject_1: identity,=pubTSK_3) = id_pub_pair_2 in
-            {330}if (verify(pubCA,id_pub_pair_2,sig_ca) = true) then
-            {331}if (TargetHost = ID_S_5) then
-            {332}if (ID_S_5 = cert_subject_1) then
-            {333}let (comid_rvp_1: bitstring,sig_rvp_1: bitstring) = manifest_2 in
-            {334}if (verify(pubRVP,comid_rvp_1,sig_rvp_1) = true) then
-            {335}let RefValTriple(WID: identity,dev_statusRef_4: measurements,workloadAttr_2: attribute) = comid_rvp_1 in
-            {336}let (pat_claims_1: bitstring,pat_sig: bitstring) = pat in
-            {337}let eat_pat_profile(pubKAK_3: pubkey,evidenceAttr_1: attribute,dev_status_1: measurements,eat_nonce_1: bitstring) = pat_claims_1 in
-            {338}let cdata_1: bitstring = (StrongHash,pat_claims_1) in
-            {339}if (verify(pubAK_3,(dev_status_1,cdata_1),pat_sig) = true) then
-            {340}let (kat_claims_1: bitstring,kat_sig_1: bitstring) = kat in
-            {341}let eat_kat_profile(=pubTSK_3,=evidenceAttr_1,=eat_nonce_1) = kat_claims_1 in
-            {342}if (verify(pubKAK_3,kat_claims_1,kat_sig_1) = true) then
-            {343}if ((WID,dev_status_1,evidenceAttr_1,eat_nonce_1) = (ID_S_5,dev_statusRef_4,workloadAttr_2,sessionNonce)) then
-            {344}event ClientAcceptsProvenance(cr_1,sr,evidenceAttr_1,pubKAK_3);
-            {345}if (timingOption = Intra) then
+            {322}if (idOption = OptionB) then
+            {323}let (id_pub_pair_2: bitstring,sig_ca: bitstring) = server_cert_2 in
+            {324}let (cert_subject_1: identity,=pubTSK_3) = id_pub_pair_2 in
+            {325}if (verify(pubCA,id_pub_pair_2,sig_ca) = true) then
+            {326}if (TargetHost = ID_S_5) then
+            {327}if (ID_S_5 = cert_subject_1) then
+            {328}let (comid_rvp_1: bitstring,sig_rvp_1: bitstring) = manifest_2 in
+            {329}if (verify(pubRVP,comid_rvp_1,sig_rvp_1) = true) then
+            {330}let RefValTuple(WID: identity,dev_statusRef_4: measurements) = comid_rvp_1 in
+            {331}let (pat_claims_1: bitstring,pat_sig: bitstring) = pat in
+            {332}let eat_pat_profile(pubKAK_3: pubkey,evidenceAttr_1: attribute,dev_status_1: measurements,eat_nonce_1: bitstring) = pat_claims_1 in
+            {333}let cdata_1: bitstring = (StrongHash,pat_claims_1) in
+            {334}if (verify(pubAK_3,(dev_status_1,cdata_1),pat_sig) = true) then
+            {335}let (kat_claims_1: bitstring,kat_sig_1: bitstring) = kat in
+            {336}let eat_kat_profile(=pubTSK_3,=evidenceAttr_1,=eat_nonce_1) = kat_claims_1 in
+            {337}if (verify(pubKAK_3,kat_claims_1,kat_sig_1) = true) then
+            {338}if ((WID,dev_status_1,eat_nonce_1) = (ID_S_5,dev_statusRef_4,sessionNonce)) then
+            {339}event ClientAcceptsProvenance(cr_1,sr,evidenceAttr_1,pubKAK_3);
+            {340}if (timingOption = Intra) then
             (
-                {346}event AttestationTimingWindow(timingOption);
-                {347}in(io, CV(sg_1: bitstring));
-                {348}if (verify(pubTSK_3,hash(shash_algo,log_CRT),sg_1) = true) then
-                {349}event Accepted(cmw);
-                {350}event Appraised(log_SH);
-                {351}event AcceptedRdata(dev_status_1);
-                {352}let log_CV_1: bitstring = (log_CRT,CV(sg_1)) in
-                {353}in(io, FIN(m1_1: bitstring));
-                {354}if (m1_1 = hmac(StrongHash,ksm_1,log_CV_1)) then
-                {355}let log_SFIN_1: bitstring = (log_CV_1,FIN(m1_1)) in
-                {356}let l_22: label = tls13_derived in
-                {357}let m_5: bitstring = zero in
-                {358}let c_22: bitstring = catch-fail(hash(StrongHash,m_5)) in
-                {359}let v_38: bool = not-caught-fail(c_22) in
-                {360}let salt2_1: bitstring = catch-fail((if v_38 then hmac(StrongHash,hs_1,(l_22,c_22)) else fail-any_type)) in
-                {361}let v_39: bool = not-caught-fail(salt2_1) in
-                {362}let ikm_2: bitstring = (if v_39 then zero else caught-fail) in
-                {363}let ms_2: bitstring = (if v_39 then catch-fail(hmac(StrongHash,salt2_1,ikm_2)) else caught-fail) in
-                {364}let v_40: bool = not-caught-fail(ms_2) in
-                {365}let l_23: label = (if v_40 then tls13_client_application_traffic_secret else caught-fail) in
-                {366}let c_23: bitstring = (if v_40 then catch-fail(hash(StrongHash,log_SFIN_1)) else caught-fail) in
-                {367}let v_41: bool = not-caught-fail(c_23) in
-                {368}let atsc_1: bitstring = (if v_40 then catch-fail((if v_41 then hmac(StrongHash,ms_2,(l_23,c_23)) else fail-any_type)) else caught-fail) in
-                {369}let v_42: bool = not-caught-fail(atsc_1) in
-                {370}let l_24: label = (if v_42 then tls13_server_application_traffic_secret else caught-fail) in
-                {371}let c_24: bitstring = (if v_42 then catch-fail(hash(StrongHash,log_SFIN_1)) else caught-fail) in
-                {372}let v_43: bool = not-caught-fail(c_24) in
-                {373}let atss_1: bitstring = (if v_42 then catch-fail((if v_43 then hmac(StrongHash,ms_2,(l_24,c_24)) else fail-any_type)) else caught-fail) in
-                {374}let v_44: bool = not-caught-fail(atss_1) in
-                {375}let l_25: label = (if v_44 then tls13_key else caught-fail) in
-                {376}let c_25: bitstring = (if v_44 then zero else caught-fail) in
-                {377}let kc_3: bitstring = (if v_44 then catch-fail(hmac(StrongHash,atsc_1,(l_25,c_25))) else caught-fail) in
-                {378}let v_45: bool = not-caught-fail(kc_3) in
-                {379}let l_26: label = (if v_45 then tls13_key else caught-fail) in
-                {380}let c_26: bitstring = (if v_45 then zero else caught-fail) in
-                {381}let ks_3: bitstring = (if v_45 then catch-fail(hmac(StrongHash,atss_1,(l_26,c_26))) else caught-fail) in
-                {382}let v_46: bool = not-caught-fail(ks_3) in
-                {383}let l_27: label = (if v_46 then tls13_exporter_master_secret else caught-fail) in
-                {384}let c_27: bitstring = (if v_46 then catch-fail(hash(StrongHash,log_SFIN_1)) else caught-fail) in
-                {385}let v_47: bool = not-caught-fail(c_27) in
-                {386}let ems_3: bitstring = (if v_46 then catch-fail((if v_47 then hmac(StrongHash,ms_2,(l_27,c_27)) else fail-any_type)) else caught-fail) in
-                {387}let v_48: bool = not-caught-fail(ems_3) in
-                {388}let (ms_3: bitstring,kc_4: ae_key,ks_4: ae_key,ems_4: bitstring) = (if v_39 then (if v_40 then (if v_42 then (if v_44 then (if v_45 then (if v_46 then (if v_48 then (ms_2,b2ae(kc_3),b2ae(ks_3),ems_3) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-                {389}let m2_1: bitstring = hmac(StrongHash,kcm_1,log_SFIN_1) in
-                {390}let log_CFIN_1: bitstring = (log_SFIN_1,FIN(m2_1)) in
-                {391}let l_28: label = tls13_resumption_master_secret in
-                {392}let c_28: bitstring = catch-fail(hash(StrongHash,log_CFIN_1)) in
-                {393}let v_49: bool = not-caught-fail(c_28) in
-                {394}let rms_2: bitstring = (if v_49 then hmac(StrongHash,ms_3,(l_28,c_28)) else fail-any_type) in
-                {395}event ClientFin1WayAgr(ID_S_5,pubTSK_3,psk,offer,mode,kc_4,ks_4,ems_4,rms_2);
-                {396}event ClientFinRecentAgr(ID_S_5,ID_C_1,pubTSK_3,psk,offer,mode,kc_4,ks_4,ems_4,rms_2,cr_1,sr);
-                {397}event ClientConn(cmw);
-                {398}event ClientComp(ID_S_5,psk,offer,mode,kc_4,ks_4,ems_4,rms_2,cr_1,sr,pubTSK_3,dev_statusRef_4);
-                {399}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_3,pubTSK_3,pubRVP,dev_statusRef_4,cmw);
-                {400}event ClientID(ID_S_5,kem_ss);
-                {401}event ClientStateEvKc(cmw,kc_4);
-                {402}event ClientStateEvKch(cmw,kch_1);
-                {403}event ClientStateEv(cmw,kem_ss);
-                {404}event ClientFinished(pubTSK_3,psk,cr_1,sr,offer,mode,kc_4,ks_4,ems_4,rms_2);
-                {405}out(io, FIN(m2_1));
-                {406}in(io, app_msg_enc_2: bitstring);
-                {407}let app_msg_s_2: bitstring = ph_read(app_msg_enc_2,ks_4) in
-                {408}let req_ctx_2: bitstring = cr_1 in
-                {409}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_3,cr_1,sr,req_ctx_2,ems_4,ks_4,kc_4,dev_statusRef_4,app_msg_s_2)
+                {341}event AttestationTimingWindow(timingOption);
+                {342}in(io, CV(sg_1: bitstring));
+                {343}if (verify(pubTSK_3,hash(shash_algo,log_CRT),sg_1) = true) then
+                {344}event Accepted(cmw);
+                {345}event Appraised(log_SH);
+                {346}event AcceptedRdata(dev_status_1);
+                {347}let log_CV_1: bitstring = (log_CRT,CV(sg_1)) in
+                {348}in(io, FIN(m1_1: bitstring));
+                {349}if (m1_1 = hmac(StrongHash,ksm_1,log_CV_1)) then
+                {350}let log_SFIN_1: bitstring = (log_CV_1,FIN(m1_1)) in
+                {351}let l_22: label = tls13_derived in
+                {352}let m_5: bitstring = zero in
+                {353}let c_22: bitstring = catch-fail(hash(StrongHash,m_5)) in
+                {354}let v_38: bool = not-caught-fail(c_22) in
+                {355}let salt2_1: bitstring = catch-fail((if v_38 then hmac(StrongHash,hs_1,(l_22,c_22)) else fail-any_type)) in
+                {356}let v_39: bool = not-caught-fail(salt2_1) in
+                {357}let ikm_2: bitstring = (if v_39 then zero else caught-fail) in
+                {358}let ms_2: bitstring = (if v_39 then catch-fail(hmac(StrongHash,salt2_1,ikm_2)) else caught-fail) in
+                {359}let v_40: bool = not-caught-fail(ms_2) in
+                {360}let l_23: label = (if v_40 then tls13_client_application_traffic_secret else caught-fail) in
+                {361}let c_23: bitstring = (if v_40 then catch-fail(hash(StrongHash,log_SFIN_1)) else caught-fail) in
+                {362}let v_41: bool = not-caught-fail(c_23) in
+                {363}let atsc_1: bitstring = (if v_40 then catch-fail((if v_41 then hmac(StrongHash,ms_2,(l_23,c_23)) else fail-any_type)) else caught-fail) in
+                {364}let v_42: bool = not-caught-fail(atsc_1) in
+                {365}let l_24: label = (if v_42 then tls13_server_application_traffic_secret else caught-fail) in
+                {366}let c_24: bitstring = (if v_42 then catch-fail(hash(StrongHash,log_SFIN_1)) else caught-fail) in
+                {367}let v_43: bool = not-caught-fail(c_24) in
+                {368}let atss_1: bitstring = (if v_42 then catch-fail((if v_43 then hmac(StrongHash,ms_2,(l_24,c_24)) else fail-any_type)) else caught-fail) in
+                {369}let v_44: bool = not-caught-fail(atss_1) in
+                {370}let l_25: label = (if v_44 then tls13_key else caught-fail) in
+                {371}let c_25: bitstring = (if v_44 then zero else caught-fail) in
+                {372}let kc_3: bitstring = (if v_44 then catch-fail(hmac(StrongHash,atsc_1,(l_25,c_25))) else caught-fail) in
+                {373}let v_45: bool = not-caught-fail(kc_3) in
+                {374}let l_26: label = (if v_45 then tls13_key else caught-fail) in
+                {375}let c_26: bitstring = (if v_45 then zero else caught-fail) in
+                {376}let ks_3: bitstring = (if v_45 then catch-fail(hmac(StrongHash,atss_1,(l_26,c_26))) else caught-fail) in
+                {377}let v_46: bool = not-caught-fail(ks_3) in
+                {378}let l_27: label = (if v_46 then tls13_exporter_master_secret else caught-fail) in
+                {379}let c_27: bitstring = (if v_46 then catch-fail(hash(StrongHash,log_SFIN_1)) else caught-fail) in
+                {380}let v_47: bool = not-caught-fail(c_27) in
+                {381}let ems_3: bitstring = (if v_46 then catch-fail((if v_47 then hmac(StrongHash,ms_2,(l_27,c_27)) else fail-any_type)) else caught-fail) in
+                {382}let v_48: bool = not-caught-fail(ems_3) in
+                {383}let (ms_3: bitstring,kc_4: ae_key,ks_4: ae_key,ems_4: bitstring) = (if v_39 then (if v_40 then (if v_42 then (if v_44 then (if v_45 then (if v_46 then (if v_48 then (ms_2,b2ae(kc_3),b2ae(ks_3),ems_3) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+                {384}let m2_1: bitstring = hmac(StrongHash,kcm_1,log_SFIN_1) in
+                {385}let log_CFIN_1: bitstring = (log_SFIN_1,FIN(m2_1)) in
+                {386}let l_28: label = tls13_resumption_master_secret in
+                {387}let c_28: bitstring = catch-fail(hash(StrongHash,log_CFIN_1)) in
+                {388}let v_49: bool = not-caught-fail(c_28) in
+                {389}let rms_2: bitstring = (if v_49 then hmac(StrongHash,ms_3,(l_28,c_28)) else fail-any_type) in
+                {390}event ClientFin1WayAgr(ID_S_5,pubTSK_3,psk,offer,mode,kc_4,ks_4,ems_4,rms_2);
+                {391}event ClientFinRecentAgr(ID_S_5,ID_C_1,pubTSK_3,psk,offer,mode,kc_4,ks_4,ems_4,rms_2,cr_1,sr);
+                {392}event ClientConn(cmw);
+                {393}event ClientComp(ID_S_5,psk,offer,mode,kc_4,ks_4,ems_4,rms_2,cr_1,sr,pubTSK_3,dev_statusRef_4);
+                {394}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_3,pubTSK_3,pubRVP,dev_statusRef_4,cmw);
+                {395}event ClientID(ID_S_5,kem_ss);
+                {396}event ClientStateEvKc(cmw,kc_4);
+                {397}event ClientStateEvKch(cmw,kch_1);
+                {398}event ClientStateEv(cmw,kem_ss);
+                {399}event ClientFinished(pubTSK_3,psk,cr_1,sr,offer,mode,kc_4,ks_4,ems_4,rms_2);
+                {400}out(io, FIN(m2_1));
+                {401}in(io, app_msg_enc_2: bitstring);
+                {402}let app_msg_s_2: bitstring = ph_read(app_msg_enc_2,ks_4) in
+                {403}let req_ctx_2: bitstring = cr_1 in
+                {404}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_3,cr_1,sr,req_ctx_2,ems_4,ks_4,kc_4,dev_statusRef_4,app_msg_s_2)
             )
             else
-                {410}if (timingOption = Post) then
-                {411}event AttestationTimingWindow(timingOption);
-                {412}let l_29: label = ea_server_hs_context in
-                {413}let context_value_2: bitstring = zero in
-                {414}let m_6: bitstring = zero in
-                {415}let c_29: bitstring = catch-fail(hash(StrongHash,m_6)) in
-                {416}let v_50: bool = not-caught-fail(c_29) in
-                {417}let s_2: bitstring = catch-fail((if v_50 then hmac(StrongHash,ems,(l_29,c_29)) else fail-any_type)) in
-                {418}let v_51: bool = not-caught-fail(s_2) in
-                {419}let l_30: label = (if v_51 then exporter_label else caught-fail) in
-                {420}let c_30: bitstring = (if v_51 then catch-fail(hash(StrongHash,context_value_2)) else caught-fail) in
-                {421}let v_52: bool = not-caught-fail(c_30) in
-                {422}let ea_hs_ctx_1: bitstring = (if v_51 then (if v_52 then hmac(StrongHash,s_2,(l_30,c_30)) else fail-any_type) else fail-any_type) in
-                {423}let log_EA_CRT_1: bitstring = (ea_hs_ctx_1,req_msg,CRT(ea_cert)) in
-                {424}if (verify(pubTSK_3,hash(shash_algo,(ea_cv_context,log_EA_CRT_1)),ea_sg) = true) then
-                {425}event Accepted(cmw);
-                {426}event Appraised(log_EA_CRT_1);
-                {427}event AcceptedRdata(dev_status_1);
-                {428}let log_EA_CV_1: bitstring = (log_EA_CRT_1,CV(ea_sg)) in
-                {429}let l_31: label = ea_server_fin_key in
-                {430}let context_value_3: bitstring = zero in
-                {431}let m_7: bitstring = zero in
-                {432}let c_31: bitstring = catch-fail(hash(StrongHash,m_7)) in
-                {433}let v_53: bool = not-caught-fail(c_31) in
-                {434}let s_3: bitstring = catch-fail((if v_53 then hmac(StrongHash,ems,(l_31,c_31)) else fail-any_type)) in
-                {435}let v_54: bool = not-caught-fail(s_3) in
-                {436}let l_32: label = (if v_54 then exporter_label else caught-fail) in
-                {437}let c_32: bitstring = (if v_54 then catch-fail(hash(StrongHash,context_value_3)) else caught-fail) in
-                {438}let v_55: bool = not-caught-fail(c_32) in
-                {439}let ea_fin_1: bitstring = (if v_54 then (if v_55 then hmac(StrongHash,s_3,(l_32,c_32)) else fail-any_type) else fail-any_type) in
-                {440}if (ea_mac = hmac(StrongHash,ea_fin_1,log_EA_CV_1)) then
-                {441}event ClientConn(cmw);
-                {442}event ClientComp(ID_S_5,psk,offer,mode,kc,ks,ems,rms,cr_1,sr,pubTSK_3,dev_status_1);
-                {443}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_3,pubTSK_3,pubRVP,dev_status_1,cmw);
-                {444}event ClientID(ID_S_5,kem_ss);
-                {445}event ClientStateEvKc(cmw,kc);
-                {446}event ClientStateEvKch(cmw,kch_1);
-                {447}event ClientStateEv(cmw,kem_ss);
-                {448}in(io, app_msg_enc_3: bitstring);
-                {449}let app_msg_s_3: bitstring = ph_read(app_msg_enc_3,ks) in
-                {450}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_3,cr_1,sr,req_ctx,ems,ks,kc,dev_status_1,app_msg_s_3)
+                {405}if (timingOption = Post) then
+                {406}event AttestationTimingWindow(timingOption);
+                {407}let l_29: label = ea_server_hs_context in
+                {408}let context_value_2: bitstring = zero in
+                {409}let m_6: bitstring = zero in
+                {410}let c_29: bitstring = catch-fail(hash(StrongHash,m_6)) in
+                {411}let v_50: bool = not-caught-fail(c_29) in
+                {412}let s_2: bitstring = catch-fail((if v_50 then hmac(StrongHash,ems,(l_29,c_29)) else fail-any_type)) in
+                {413}let v_51: bool = not-caught-fail(s_2) in
+                {414}let l_30: label = (if v_51 then exporter_label else caught-fail) in
+                {415}let c_30: bitstring = (if v_51 then catch-fail(hash(StrongHash,context_value_2)) else caught-fail) in
+                {416}let v_52: bool = not-caught-fail(c_30) in
+                {417}let ea_hs_ctx_1: bitstring = (if v_51 then (if v_52 then hmac(StrongHash,s_2,(l_30,c_30)) else fail-any_type) else fail-any_type) in
+                {418}let log_EA_CRT_1: bitstring = (ea_hs_ctx_1,req_msg,CRT(ea_cert)) in
+                {419}if (verify(pubTSK_3,hash(shash_algo,(ea_cv_context,log_EA_CRT_1)),ea_sg) = true) then
+                {420}event Accepted(cmw);
+                {421}event Appraised(log_EA_CRT_1);
+                {422}event AcceptedRdata(dev_status_1);
+                {423}let log_EA_CV_1: bitstring = (log_EA_CRT_1,CV(ea_sg)) in
+                {424}let l_31: label = ea_server_fin_key in
+                {425}let context_value_3: bitstring = zero in
+                {426}let m_7: bitstring = zero in
+                {427}let c_31: bitstring = catch-fail(hash(StrongHash,m_7)) in
+                {428}let v_53: bool = not-caught-fail(c_31) in
+                {429}let s_3: bitstring = catch-fail((if v_53 then hmac(StrongHash,ems,(l_31,c_31)) else fail-any_type)) in
+                {430}let v_54: bool = not-caught-fail(s_3) in
+                {431}let l_32: label = (if v_54 then exporter_label else caught-fail) in
+                {432}let c_32: bitstring = (if v_54 then catch-fail(hash(StrongHash,context_value_3)) else caught-fail) in
+                {433}let v_55: bool = not-caught-fail(c_32) in
+                {434}let ea_fin_1: bitstring = (if v_54 then (if v_55 then hmac(StrongHash,s_3,(l_32,c_32)) else fail-any_type) else fail-any_type) in
+                {435}if (ea_mac = hmac(StrongHash,ea_fin_1,log_EA_CV_1)) then
+                {436}event ClientConn(cmw);
+                {437}event ClientComp(ID_S_5,psk,offer,mode,kc,ks,ems,rms,cr_1,sr,pubTSK_3,dev_status_1);
+                {438}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_3,pubKAK_3,pubTSK_3,pubRVP,dev_status_1,cmw);
+                {439}event ClientID(ID_S_5,kem_ss);
+                {440}event ClientStateEvKc(cmw,kc);
+                {441}event ClientStateEvKch(cmw,kch_1);
+                {442}event ClientStateEv(cmw,kem_ss);
+                {443}in(io, app_msg_enc_3: bitstring);
+                {444}let app_msg_s_3: bitstring = ph_read(app_msg_enc_3,ks) in
+                {445}event ClientReceivesAppData(ID_S_5,pubTSK_3,pubKAK_3,cr_1,sr,req_ctx,ems,ks,kc,dev_status_1,app_msg_s_3)
     )
     else
-        {451}if (idOption = OptionB) then
-        {452}!
-        {453}in(io, TargetHost_1: identity);
-        {454}let ID_S_6: identity = TargetHost_1 in
-        {455}!
-        {456}let ID_C_2: identity = ID_C in
-        {457}in(io, (TargetHost_2: identity,ioffer_1: params));
-        {458}let nego(=aTLS,MLKEM_13_C(ka_1: kem_alg,eee_1: kem_pub),hash_algo_1: hash_alg,ev_type_1: ev_typ) = ioffer_1 in
-        {459}new dk_2: kem_priv;
-        {460}let ek_2: kem_pub = kem_pk(dk_2) in
-        {461}let (dk_3: kem_priv,ek_3: kem_pub) = (dk_2,ek_2) in
-        {462}let offer_1: params = nego(aTLS,MLKEM_13_C(ka_1,ek_3),hash_algo_1,ev_type_1) in
-        {463}new cr_2: random;
-        {464}let ch_1: msg = CH(cr_2,offer_1,TargetHost_2) in
-        {465}let psk_1: preSharedKey = NoPSK in
-        {466}let salt_1: bitstring = zero in
-        {467}let ikm_3: bitstring = catch-fail(psk2b(psk_1)) in
-        {468}let v_56: bool = not-caught-fail(ikm_3) in
-        {469}let es_2: bitstring = catch-fail((if v_56 then hmac(StrongHash,salt_1,ikm_3) else fail-any_type)) in
-        {470}let v_57: bool = not-caught-fail(es_2) in
-        {471}let l_33: label = (if v_57 then tls13_resumption_psk_binder_key else caught-fail) in
-        {472}let m_8: bitstring = (if v_57 then zero else caught-fail) in
-        {473}let c_33: bitstring = (if v_57 then catch-fail(hash(StrongHash,m_8)) else caught-fail) in
-        {474}let v_58: bool = not-caught-fail(c_33) in
-        {475}let kb_2: bitstring = (if v_57 then catch-fail((if v_58 then hmac(StrongHash,es_2,(l_33,c_33)) else fail-any_type)) else caught-fail) in
-        {476}let v_59: bool = not-caught-fail(kb_2) in
-        {477}let l_34: label = (if v_59 then tls13_client_early_traffic_secret else caught-fail) in
-        {478}let c_34: bitstring = (if v_59 then catch-fail(hash(StrongHash,ch_1)) else caught-fail) in
-        {479}let v_60: bool = not-caught-fail(c_34) in
-        {480}let atsc0_1: bitstring = (if v_59 then catch-fail((if v_60 then hmac(StrongHash,es_2,(l_34,c_34)) else fail-any_type)) else caught-fail) in
-        {481}let v_61: bool = not-caught-fail(atsc0_1) in
-        {482}let l_35: label = (if v_61 then tls13_key else caught-fail) in
-        {483}let c_35: bitstring = (if v_61 then zero else caught-fail) in
-        {484}let kc0_2: bitstring = (if v_61 then catch-fail(hmac(StrongHash,atsc0_1,(l_35,c_35))) else caught-fail) in
-        {485}let v_62: bool = not-caught-fail(kc0_2) in
-        {486}let l_36: label = (if v_62 then tls13_early_exporter_master_secret else caught-fail) in
-        {487}let c_36: bitstring = (if v_62 then catch-fail(hash(StrongHash,ch_1)) else caught-fail) in
-        {488}let v_63: bool = not-caught-fail(c_36) in
-        {489}let ems0_2: bitstring = (if v_62 then catch-fail((if v_63 then hmac(StrongHash,es_2,(l_36,c_36)) else fail-any_type)) else caught-fail) in
-        {490}let v_64: bool = not-caught-fail(ems0_2) in
-        {491}let (es_3: bitstring,kb_3: mac_key,kc0_3: ae_key,ems0_3: bitstring) = (if v_57 then (if v_59 then (if v_61 then (if v_62 then (if v_64 then (es_2,kb_2,b2ae(kc0_2),ems0_2) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {492}event ClientOffersHash(cr_2,hash_algo_1);
-        {493}event ClientOffersKEX(cr_2,MLKEM_13_C(ka_1,ek_3));
-        {494}event ClientOffersEvType(cr_2,ev_type_1);
-        {495}out(io, ch_1);
-        {496}in(io, SH(sr_1: random,mode_1: params));
-        {497}let nego(=aTLS,MLKEM_13_S(=ka_1,ciph_1: kem_ct),shash_algo_1: hash_alg,sev_type_1: ev_typ) = mode_1 in
-        {498}event ClientAcceptsKEM(cr_2,ka_1);
-        {499}event ClientAcceptsHash(cr_2,shash_algo_1);
-        {500}let log_SH_1: bitstring = (ch_1,SH(sr_1,mode_1)) in
-        {501}let kem_ss_1: bitstring = kem_decap(ka_1,dk_3,ciph_1) in
-        {502}let l_37: label = tls13_derived in
-        {503}let m_9: bitstring = zero in
-        {504}let c_37: bitstring = catch-fail(hash(StrongHash,m_9)) in
-        {505}let v_65: bool = not-caught-fail(c_37) in
-        {506}let salt1_1: bitstring = catch-fail((if v_65 then hmac(StrongHash,es_3,(l_37,c_37)) else fail-any_type)) in
-        {507}let v_66: bool = not-caught-fail(salt1_1) in
-        {508}let hs_2: bitstring = (if v_66 then catch-fail(hmac(StrongHash,salt1_1,kem_ss_1)) else caught-fail) in
-        {509}let v_67: bool = not-caught-fail(hs_2) in
-        {510}let l_38: label = (if v_67 then tls13_client_handshake_traffic_secret else caught-fail) in
-        {511}let c_38: bitstring = (if v_67 then catch-fail(hash(StrongHash,log_SH_1)) else caught-fail) in
-        {512}let v_68: bool = not-caught-fail(c_38) in
-        {513}let htsc_1: bitstring = (if v_67 then catch-fail((if v_68 then hmac(StrongHash,hs_2,(l_38,c_38)) else fail-any_type)) else caught-fail) in
-        {514}let v_69: bool = not-caught-fail(htsc_1) in
-        {515}let l_39: label = (if v_69 then tls13_server_handshake_traffic_secret else caught-fail) in
-        {516}let c_39: bitstring = (if v_69 then catch-fail(hash(StrongHash,log_SH_1)) else caught-fail) in
-        {517}let v_70: bool = not-caught-fail(c_39) in
-        {518}let htss_1: bitstring = (if v_69 then catch-fail((if v_70 then hmac(StrongHash,hs_2,(l_39,c_39)) else fail-any_type)) else caught-fail) in
-        {519}let v_71: bool = not-caught-fail(htss_1) in
-        {520}let l_40: label = (if v_71 then tls13_key else caught-fail) in
-        {521}let c_40: bitstring = (if v_71 then zero else caught-fail) in
-        {522}let kch_2: bitstring = (if v_71 then catch-fail(hmac(StrongHash,htsc_1,(l_40,c_40))) else caught-fail) in
-        {523}let v_72: bool = not-caught-fail(kch_2) in
-        {524}let l_41: label = (if v_72 then tls13_key else caught-fail) in
-        {525}let c_41: bitstring = (if v_72 then zero else caught-fail) in
-        {526}let ksh_2: bitstring = (if v_72 then catch-fail(hmac(StrongHash,htss_1,(l_41,c_41))) else caught-fail) in
-        {527}let v_73: bool = not-caught-fail(ksh_2) in
-        {528}let l_42: label = (if v_73 then tls13_finished else caught-fail) in
-        {529}let c_42: bitstring = (if v_73 then zero else caught-fail) in
-        {530}let kcm_2: bitstring = (if v_73 then catch-fail(hmac(StrongHash,htsc_1,(l_42,c_42))) else caught-fail) in
-        {531}let v_74: bool = not-caught-fail(kcm_2) in
-        {532}let l_43: label = (if v_74 then tls13_finished else caught-fail) in
-        {533}let c_43: bitstring = (if v_74 then zero else caught-fail) in
-        {534}let ksm_2: bitstring = (if v_74 then catch-fail(hmac(StrongHash,htss_1,(l_43,c_43))) else caught-fail) in
-        {535}let v_75: bool = not-caught-fail(ksm_2) in
-        {536}let (hs_3: bitstring,kch_3: ae_key,ksh_3: ae_key,kcm_3: mac_key,ksm_3: mac_key) = (if v_66 then (if v_67 then (if v_69 then (if v_71 then (if v_72 then (if v_73 then (if v_74 then (if v_75 then (hs_2,b2ae(kch_2),b2ae(ksh_2),kcm_2,ksm_2) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {537}in(io, CRT(crt_msg_1: bitstring));
-        {538}let log_CRT_1: bitstring = (log_SH_1,CRT(crt_msg_1)) in
-        {539}let (cmw_1: bitstring,server_cert_3: bitstring) = crt_msg_1 in
-        {540}let (id_pub_pair_3: bitstring,sig1_2: bitstring) = server_cert_3 in
-        {541}let (cert_subject_2: identity,pubTSK_4: pubkey) = id_pub_pair_3 in
-        {542}let sessionNonce_1: bitstring = hash(StrongHash,(log_SH_1,pubTSK_4)) in
-        {543}let cr_3: random = cr_2 in
-        {544}let req_msg_1: msg = CRT(Nil) in
-        {545}let ea_cert_1: bitstring = Nil in
-        {546}let ea_sg_1: bitstring = Nil in
-        {547}let ea_mac_1: bitstring = Nil in
-        {548}let ems_5: bitstring = Nil in
-        {549}let ks_5: ae_key = b2ae(Nil) in
-        {550}let kc_5: ae_key = b2ae(Nil) in
-        {551}let rms_3: bitstring = Nil in
-        {552}let req_ctx_3: bitstring = Nil in
-        {553}let (pat_1: bitstring,kat_1: bitstring) = cmw_1 in
-        {554}in(io, (manifest_3: bitstring,endorsements_2: bitstring));
-        {555}let (comid_csp_1: bitstring,sig_csp_1: bitstring) = endorsements_2 in
-        {556}if (verify(pubCSP,comid_csp_1,sig_csp_1) = true) then
-        {557}let AttestKeyTriple(=NULL_ID,pubAK_4: pubkey) = comid_csp_1 in
-        {558}event ClientIdentityOption(idOption);
-        {559}in(io, timingOption_1: attestation_option);
-        {560}if (idOption = OptionA) then
+        {446}if (idOption = OptionB) then
+        {447}!
+        {448}in(io, TargetHost_1: identity);
+        {449}let ID_S_6: identity = TargetHost_1 in
+        {450}event ClientTargetWorkload(ID_C,ID_S_6);
+        {451}!
+        {452}let ID_C_2: identity = ID_C in
+        {453}in(io, (TargetHost_2: identity,ioffer_1: params));
+        {454}let nego(=aTLS,MLKEM_13_C(ka_1: kem_alg,eee_1: kem_pub),hash_algo_1: hash_alg,ev_type_1: ev_typ) = ioffer_1 in
+        {455}new dk_2: kem_priv;
+        {456}let ek_2: kem_pub = kem_pk(dk_2) in
+        {457}let (dk_3: kem_priv,ek_3: kem_pub) = (dk_2,ek_2) in
+        {458}let offer_1: params = nego(aTLS,MLKEM_13_C(ka_1,ek_3),hash_algo_1,ev_type_1) in
+        {459}new cr_2: random;
+        {460}let ch_1: msg = CH(cr_2,offer_1,TargetHost_2) in
+        {461}let psk_1: preSharedKey = NoPSK in
+        {462}let salt_1: bitstring = zero in
+        {463}let ikm_3: bitstring = catch-fail(psk2b(psk_1)) in
+        {464}let v_56: bool = not-caught-fail(ikm_3) in
+        {465}let es_2: bitstring = catch-fail((if v_56 then hmac(StrongHash,salt_1,ikm_3) else fail-any_type)) in
+        {466}let v_57: bool = not-caught-fail(es_2) in
+        {467}let l_33: label = (if v_57 then tls13_resumption_psk_binder_key else caught-fail) in
+        {468}let m_8: bitstring = (if v_57 then zero else caught-fail) in
+        {469}let c_33: bitstring = (if v_57 then catch-fail(hash(StrongHash,m_8)) else caught-fail) in
+        {470}let v_58: bool = not-caught-fail(c_33) in
+        {471}let kb_2: bitstring = (if v_57 then catch-fail((if v_58 then hmac(StrongHash,es_2,(l_33,c_33)) else fail-any_type)) else caught-fail) in
+        {472}let v_59: bool = not-caught-fail(kb_2) in
+        {473}let l_34: label = (if v_59 then tls13_client_early_traffic_secret else caught-fail) in
+        {474}let c_34: bitstring = (if v_59 then catch-fail(hash(StrongHash,ch_1)) else caught-fail) in
+        {475}let v_60: bool = not-caught-fail(c_34) in
+        {476}let atsc0_1: bitstring = (if v_59 then catch-fail((if v_60 then hmac(StrongHash,es_2,(l_34,c_34)) else fail-any_type)) else caught-fail) in
+        {477}let v_61: bool = not-caught-fail(atsc0_1) in
+        {478}let l_35: label = (if v_61 then tls13_key else caught-fail) in
+        {479}let c_35: bitstring = (if v_61 then zero else caught-fail) in
+        {480}let kc0_2: bitstring = (if v_61 then catch-fail(hmac(StrongHash,atsc0_1,(l_35,c_35))) else caught-fail) in
+        {481}let v_62: bool = not-caught-fail(kc0_2) in
+        {482}let l_36: label = (if v_62 then tls13_early_exporter_master_secret else caught-fail) in
+        {483}let c_36: bitstring = (if v_62 then catch-fail(hash(StrongHash,ch_1)) else caught-fail) in
+        {484}let v_63: bool = not-caught-fail(c_36) in
+        {485}let ems0_2: bitstring = (if v_62 then catch-fail((if v_63 then hmac(StrongHash,es_2,(l_36,c_36)) else fail-any_type)) else caught-fail) in
+        {486}let v_64: bool = not-caught-fail(ems0_2) in
+        {487}let (es_3: bitstring,kb_3: mac_key,kc0_3: ae_key,ems0_3: bitstring) = (if v_57 then (if v_59 then (if v_61 then (if v_62 then (if v_64 then (es_2,kb_2,b2ae(kc0_2),ems0_2) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {488}event ClientOffersHash(cr_2,hash_algo_1);
+        {489}event ClientOffersKEX(cr_2,MLKEM_13_C(ka_1,ek_3));
+        {490}event ClientOffersEvType(cr_2,ev_type_1);
+        {491}out(io, ch_1);
+        {492}in(io, SH(sr_1: random,mode_1: params));
+        {493}let nego(=aTLS,MLKEM_13_S(=ka_1,ciph_1: kem_ct),shash_algo_1: hash_alg,sev_type_1: ev_typ) = mode_1 in
+        {494}event ClientAcceptsKEM(cr_2,ka_1);
+        {495}event ClientAcceptsHash(cr_2,shash_algo_1);
+        {496}let log_SH_1: bitstring = (ch_1,SH(sr_1,mode_1)) in
+        {497}let kem_ss_1: bitstring = kem_decap(ka_1,dk_3,ciph_1) in
+        {498}let l_37: label = tls13_derived in
+        {499}let m_9: bitstring = zero in
+        {500}let c_37: bitstring = catch-fail(hash(StrongHash,m_9)) in
+        {501}let v_65: bool = not-caught-fail(c_37) in
+        {502}let salt1_1: bitstring = catch-fail((if v_65 then hmac(StrongHash,es_3,(l_37,c_37)) else fail-any_type)) in
+        {503}let v_66: bool = not-caught-fail(salt1_1) in
+        {504}let hs_2: bitstring = (if v_66 then catch-fail(hmac(StrongHash,salt1_1,kem_ss_1)) else caught-fail) in
+        {505}let v_67: bool = not-caught-fail(hs_2) in
+        {506}let l_38: label = (if v_67 then tls13_client_handshake_traffic_secret else caught-fail) in
+        {507}let c_38: bitstring = (if v_67 then catch-fail(hash(StrongHash,log_SH_1)) else caught-fail) in
+        {508}let v_68: bool = not-caught-fail(c_38) in
+        {509}let htsc_1: bitstring = (if v_67 then catch-fail((if v_68 then hmac(StrongHash,hs_2,(l_38,c_38)) else fail-any_type)) else caught-fail) in
+        {510}let v_69: bool = not-caught-fail(htsc_1) in
+        {511}let l_39: label = (if v_69 then tls13_server_handshake_traffic_secret else caught-fail) in
+        {512}let c_39: bitstring = (if v_69 then catch-fail(hash(StrongHash,log_SH_1)) else caught-fail) in
+        {513}let v_70: bool = not-caught-fail(c_39) in
+        {514}let htss_1: bitstring = (if v_69 then catch-fail((if v_70 then hmac(StrongHash,hs_2,(l_39,c_39)) else fail-any_type)) else caught-fail) in
+        {515}let v_71: bool = not-caught-fail(htss_1) in
+        {516}let l_40: label = (if v_71 then tls13_key else caught-fail) in
+        {517}let c_40: bitstring = (if v_71 then zero else caught-fail) in
+        {518}let kch_2: bitstring = (if v_71 then catch-fail(hmac(StrongHash,htsc_1,(l_40,c_40))) else caught-fail) in
+        {519}let v_72: bool = not-caught-fail(kch_2) in
+        {520}let l_41: label = (if v_72 then tls13_key else caught-fail) in
+        {521}let c_41: bitstring = (if v_72 then zero else caught-fail) in
+        {522}let ksh_2: bitstring = (if v_72 then catch-fail(hmac(StrongHash,htss_1,(l_41,c_41))) else caught-fail) in
+        {523}let v_73: bool = not-caught-fail(ksh_2) in
+        {524}let l_42: label = (if v_73 then tls13_finished else caught-fail) in
+        {525}let c_42: bitstring = (if v_73 then zero else caught-fail) in
+        {526}let kcm_2: bitstring = (if v_73 then catch-fail(hmac(StrongHash,htsc_1,(l_42,c_42))) else caught-fail) in
+        {527}let v_74: bool = not-caught-fail(kcm_2) in
+        {528}let l_43: label = (if v_74 then tls13_finished else caught-fail) in
+        {529}let c_43: bitstring = (if v_74 then zero else caught-fail) in
+        {530}let ksm_2: bitstring = (if v_74 then catch-fail(hmac(StrongHash,htss_1,(l_43,c_43))) else caught-fail) in
+        {531}let v_75: bool = not-caught-fail(ksm_2) in
+        {532}let (hs_3: bitstring,kch_3: ae_key,ksh_3: ae_key,kcm_3: mac_key,ksm_3: mac_key) = (if v_66 then (if v_67 then (if v_69 then (if v_71 then (if v_72 then (if v_73 then (if v_74 then (if v_75 then (hs_2,b2ae(kch_2),b2ae(ksh_2),kcm_2,ksm_2) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {533}in(io, CRT(crt_msg_1: bitstring));
+        {534}let log_CRT_1: bitstring = (log_SH_1,CRT(crt_msg_1)) in
+        {535}let (cmw_1: bitstring,server_cert_3: bitstring) = crt_msg_1 in
+        {536}let (id_pub_pair_3: bitstring,sig1_2: bitstring) = server_cert_3 in
+        {537}let (cert_subject_2: identity,pubTSK_4: pubkey) = id_pub_pair_3 in
+        {538}let sessionNonce_1: bitstring = hash(StrongHash,(log_SH_1,pubTSK_4)) in
+        {539}let cr_3: random = cr_2 in
+        {540}let req_msg_1: msg = CRT(Nil) in
+        {541}let ea_cert_1: bitstring = Nil in
+        {542}let ea_sg_1: bitstring = Nil in
+        {543}let ea_mac_1: bitstring = Nil in
+        {544}let ems_5: bitstring = Nil in
+        {545}let ks_5: ae_key = b2ae(Nil) in
+        {546}let kc_5: ae_key = b2ae(Nil) in
+        {547}let rms_3: bitstring = Nil in
+        {548}let req_ctx_3: bitstring = Nil in
+        {549}let (pat_1: bitstring,kat_1: bitstring) = cmw_1 in
+        {550}in(io, (manifest_3: bitstring,endorsements_2: bitstring));
+        {551}let (comid_csp_1: bitstring,sig_csp_1: bitstring) = endorsements_2 in
+        {552}if (verify(pubCSP,comid_csp_1,sig_csp_1) = true) then
+        {553}let AttestKeyTriple(=NULL_ID,pubAK_4: pubkey) = comid_csp_1 in
+        {554}event ClientIdentityOption(idOption);
+        {555}in(io, timingOption_1: attestation_option);
+        {556}if (idOption = OptionA) then
         (
-            {561}let dev_status_2: measurements = id2dev(ID_S_6) in
-            {562}let (comid_rvp_2: bitstring,sig_rvp_2: bitstring) = manifest_3 in
-            {563}if (verify(pubRVP,comid_rvp_2,sig_rvp_2) = true) then
-            {564}let RefValTriple(workloadID_1: identity,dev_statusRef_5: measurements,workloadAttr_3: attribute) = comid_rvp_2 in
-            {565}let (pat_claims_2: bitstring,ae_sig_1: bitstring) = pat_1 in
-            {566}let eat_pat_profile(pubKAK_4: pubkey,evidenceAttr_2: attribute,=dev_statusRef_5,eat_nonce_2: bitstring) = pat_claims_2 in
-            {567}let cdata_2: bitstring = (StrongHash,pat_claims_2) in
-            {568}if (verify(pubAK_4,(dev_statusRef_5,cdata_2),ae_sig_1) = true) then
-            {569}let (kat_claims_2: bitstring,kat_sig_2: bitstring) = kat_1 in
-            {570}let eat_kat_profile(=pubTSK_4,=evidenceAttr_2,=eat_nonce_2) = kat_claims_2 in
-            {571}if (verify(pubKAK_4,kat_claims_2,kat_sig_2) = true) then
-            {572}if (ID_S_6 = workloadID_1) then
-            {573}if (ID_S_6 = dev2id(dev_statusRef_5)) then
-            {574}if (dev_status_2 = dev_statusRef_5) then
-            {575}if (evidenceAttr_2 = workloadAttr_3) then
-            {576}if (eat_nonce_2 = sessionNonce_1) then
-            {577}event ClientAcceptsProvenance(cr_3,sr_1,evidenceAttr_2,pubKAK_4);
-            {578}if (timingOption_1 = Intra) then
+            {557}let dev_status_2: measurements = id2dev(ID_S_6) in
+            {558}let (comid_rvp_2: bitstring,sig_rvp_2: bitstring) = manifest_3 in
+            {559}if (verify(pubRVP,comid_rvp_2,sig_rvp_2) = true) then
+            {560}let RefValTuple(workloadID_1: identity,dev_statusRef_5: measurements) = comid_rvp_2 in
+            {561}let (pat_claims_2: bitstring,ae_sig_1: bitstring) = pat_1 in
+            {562}let eat_pat_profile(pubKAK_4: pubkey,evidenceAttr_2: attribute,=dev_statusRef_5,eat_nonce_2: bitstring) = pat_claims_2 in
+            {563}let cdata_2: bitstring = (StrongHash,pat_claims_2) in
+            {564}if (verify(pubAK_4,(dev_statusRef_5,cdata_2),ae_sig_1) = true) then
+            {565}let (kat_claims_2: bitstring,kat_sig_2: bitstring) = kat_1 in
+            {566}let eat_kat_profile(=pubTSK_4,=evidenceAttr_2,=eat_nonce_2) = kat_claims_2 in
+            {567}if (verify(pubKAK_4,kat_claims_2,kat_sig_2) = true) then
+            {568}if (ID_S_6 = workloadID_1) then
+            {569}if (ID_S_6 = dev2id(dev_statusRef_5)) then
+            {570}if (dev_status_2 = dev_statusRef_5) then
+            {571}if (eat_nonce_2 = sessionNonce_1) then
+            {572}event ClientAcceptsProvenance(cr_3,sr_1,evidenceAttr_2,pubKAK_4);
+            {573}if (timingOption_1 = Intra) then
             (
-                {579}event AttestationTimingWindow(timingOption_1);
-                {580}in(io, CV(sg_2: bitstring));
-                {581}if (verify(pubTSK_4,hash(shash_algo_1,log_CRT_1),sg_2) = true) then
-                {582}event Accepted(cmw_1);
-                {583}event Appraised(log_SH_1);
-                {584}event AcceptedRdata(dev_status_2);
-                {585}let log_CV_2: bitstring = (log_CRT_1,CV(sg_2)) in
-                {586}in(io, FIN(m1_2: bitstring));
-                {587}if (m1_2 = hmac(StrongHash,ksm_3,log_CV_2)) then
-                {588}let log_SFIN_2: bitstring = (log_CV_2,FIN(m1_2)) in
-                {589}let l_44: label = tls13_derived in
-                {590}let m_10: bitstring = zero in
-                {591}let c_44: bitstring = catch-fail(hash(StrongHash,m_10)) in
-                {592}let v_76: bool = not-caught-fail(c_44) in
-                {593}let salt2_2: bitstring = catch-fail((if v_76 then hmac(StrongHash,hs_3,(l_44,c_44)) else fail-any_type)) in
-                {594}let v_77: bool = not-caught-fail(salt2_2) in
-                {595}let ikm_4: bitstring = (if v_77 then zero else caught-fail) in
-                {596}let ms_4: bitstring = (if v_77 then catch-fail(hmac(StrongHash,salt2_2,ikm_4)) else caught-fail) in
-                {597}let v_78: bool = not-caught-fail(ms_4) in
-                {598}let l_45: label = (if v_78 then tls13_client_application_traffic_secret else caught-fail) in
-                {599}let c_45: bitstring = (if v_78 then catch-fail(hash(StrongHash,log_SFIN_2)) else caught-fail) in
-                {600}let v_79: bool = not-caught-fail(c_45) in
-                {601}let atsc_2: bitstring = (if v_78 then catch-fail((if v_79 then hmac(StrongHash,ms_4,(l_45,c_45)) else fail-any_type)) else caught-fail) in
-                {602}let v_80: bool = not-caught-fail(atsc_2) in
-                {603}let l_46: label = (if v_80 then tls13_server_application_traffic_secret else caught-fail) in
-                {604}let c_46: bitstring = (if v_80 then catch-fail(hash(StrongHash,log_SFIN_2)) else caught-fail) in
-                {605}let v_81: bool = not-caught-fail(c_46) in
-                {606}let atss_2: bitstring = (if v_80 then catch-fail((if v_81 then hmac(StrongHash,ms_4,(l_46,c_46)) else fail-any_type)) else caught-fail) in
-                {607}let v_82: bool = not-caught-fail(atss_2) in
-                {608}let l_47: label = (if v_82 then tls13_key else caught-fail) in
-                {609}let c_47: bitstring = (if v_82 then zero else caught-fail) in
-                {610}let kc_6: bitstring = (if v_82 then catch-fail(hmac(StrongHash,atsc_2,(l_47,c_47))) else caught-fail) in
-                {611}let v_83: bool = not-caught-fail(kc_6) in
-                {612}let l_48: label = (if v_83 then tls13_key else caught-fail) in
-                {613}let c_48: bitstring = (if v_83 then zero else caught-fail) in
-                {614}let ks_6: bitstring = (if v_83 then catch-fail(hmac(StrongHash,atss_2,(l_48,c_48))) else caught-fail) in
-                {615}let v_84: bool = not-caught-fail(ks_6) in
-                {616}let l_49: label = (if v_84 then tls13_exporter_master_secret else caught-fail) in
-                {617}let c_49: bitstring = (if v_84 then catch-fail(hash(StrongHash,log_SFIN_2)) else caught-fail) in
-                {618}let v_85: bool = not-caught-fail(c_49) in
-                {619}let ems_6: bitstring = (if v_84 then catch-fail((if v_85 then hmac(StrongHash,ms_4,(l_49,c_49)) else fail-any_type)) else caught-fail) in
-                {620}let v_86: bool = not-caught-fail(ems_6) in
-                {621}let (ms_5: bitstring,kc_7: ae_key,ks_7: ae_key,ems_7: bitstring) = (if v_77 then (if v_78 then (if v_80 then (if v_82 then (if v_83 then (if v_84 then (if v_86 then (ms_4,b2ae(kc_6),b2ae(ks_6),ems_6) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-                {622}let m2_2: bitstring = hmac(StrongHash,kcm_3,log_SFIN_2) in
-                {623}let log_CFIN_2: bitstring = (log_SFIN_2,FIN(m2_2)) in
-                {624}let l_50: label = tls13_resumption_master_secret in
-                {625}let c_50: bitstring = catch-fail(hash(StrongHash,log_CFIN_2)) in
-                {626}let v_87: bool = not-caught-fail(c_50) in
-                {627}let rms_4: bitstring = (if v_87 then hmac(StrongHash,ms_5,(l_50,c_50)) else fail-any_type) in
-                {628}event ClientFin1WayAgr(ID_S_6,pubTSK_4,psk_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4);
-                {629}event ClientFinRecentAgr(ID_S_6,ID_C_2,pubTSK_4,psk_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4,cr_3,sr_1);
-                {630}event ClientConn(cmw_1);
-                {631}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4,cr_3,sr_1,pubTSK_4,dev_statusRef_5);
-                {632}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_4,pubTSK_4,pubRVP,dev_statusRef_5,cmw_1);
-                {633}event ClientID(ID_S_6,kem_ss_1);
-                {634}event ClientStateEvKc(cmw_1,kc_7);
-                {635}event ClientStateEvKch(cmw_1,kch_3);
-                {636}event ClientStateEv(cmw_1,kem_ss_1);
-                {637}event ClientFinished(pubTSK_4,psk_1,cr_3,sr_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4);
-                {638}out(io, FIN(m2_2));
-                {639}in(io, app_msg_enc_4: bitstring);
-                {640}let app_msg_s_4: bitstring = ph_read(app_msg_enc_4,ks_7) in
-                {641}let req_ctx_4: bitstring = cr_3 in
-                {642}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_4,cr_3,sr_1,req_ctx_4,ems_7,ks_7,kc_7,dev_statusRef_5,app_msg_s_4)
+                {574}event AttestationTimingWindow(timingOption_1);
+                {575}in(io, CV(sg_2: bitstring));
+                {576}if (verify(pubTSK_4,hash(shash_algo_1,log_CRT_1),sg_2) = true) then
+                {577}event Accepted(cmw_1);
+                {578}event Appraised(log_SH_1);
+                {579}event AcceptedRdata(dev_status_2);
+                {580}let log_CV_2: bitstring = (log_CRT_1,CV(sg_2)) in
+                {581}in(io, FIN(m1_2: bitstring));
+                {582}if (m1_2 = hmac(StrongHash,ksm_3,log_CV_2)) then
+                {583}let log_SFIN_2: bitstring = (log_CV_2,FIN(m1_2)) in
+                {584}let l_44: label = tls13_derived in
+                {585}let m_10: bitstring = zero in
+                {586}let c_44: bitstring = catch-fail(hash(StrongHash,m_10)) in
+                {587}let v_76: bool = not-caught-fail(c_44) in
+                {588}let salt2_2: bitstring = catch-fail((if v_76 then hmac(StrongHash,hs_3,(l_44,c_44)) else fail-any_type)) in
+                {589}let v_77: bool = not-caught-fail(salt2_2) in
+                {590}let ikm_4: bitstring = (if v_77 then zero else caught-fail) in
+                {591}let ms_4: bitstring = (if v_77 then catch-fail(hmac(StrongHash,salt2_2,ikm_4)) else caught-fail) in
+                {592}let v_78: bool = not-caught-fail(ms_4) in
+                {593}let l_45: label = (if v_78 then tls13_client_application_traffic_secret else caught-fail) in
+                {594}let c_45: bitstring = (if v_78 then catch-fail(hash(StrongHash,log_SFIN_2)) else caught-fail) in
+                {595}let v_79: bool = not-caught-fail(c_45) in
+                {596}let atsc_2: bitstring = (if v_78 then catch-fail((if v_79 then hmac(StrongHash,ms_4,(l_45,c_45)) else fail-any_type)) else caught-fail) in
+                {597}let v_80: bool = not-caught-fail(atsc_2) in
+                {598}let l_46: label = (if v_80 then tls13_server_application_traffic_secret else caught-fail) in
+                {599}let c_46: bitstring = (if v_80 then catch-fail(hash(StrongHash,log_SFIN_2)) else caught-fail) in
+                {600}let v_81: bool = not-caught-fail(c_46) in
+                {601}let atss_2: bitstring = (if v_80 then catch-fail((if v_81 then hmac(StrongHash,ms_4,(l_46,c_46)) else fail-any_type)) else caught-fail) in
+                {602}let v_82: bool = not-caught-fail(atss_2) in
+                {603}let l_47: label = (if v_82 then tls13_key else caught-fail) in
+                {604}let c_47: bitstring = (if v_82 then zero else caught-fail) in
+                {605}let kc_6: bitstring = (if v_82 then catch-fail(hmac(StrongHash,atsc_2,(l_47,c_47))) else caught-fail) in
+                {606}let v_83: bool = not-caught-fail(kc_6) in
+                {607}let l_48: label = (if v_83 then tls13_key else caught-fail) in
+                {608}let c_48: bitstring = (if v_83 then zero else caught-fail) in
+                {609}let ks_6: bitstring = (if v_83 then catch-fail(hmac(StrongHash,atss_2,(l_48,c_48))) else caught-fail) in
+                {610}let v_84: bool = not-caught-fail(ks_6) in
+                {611}let l_49: label = (if v_84 then tls13_exporter_master_secret else caught-fail) in
+                {612}let c_49: bitstring = (if v_84 then catch-fail(hash(StrongHash,log_SFIN_2)) else caught-fail) in
+                {613}let v_85: bool = not-caught-fail(c_49) in
+                {614}let ems_6: bitstring = (if v_84 then catch-fail((if v_85 then hmac(StrongHash,ms_4,(l_49,c_49)) else fail-any_type)) else caught-fail) in
+                {615}let v_86: bool = not-caught-fail(ems_6) in
+                {616}let (ms_5: bitstring,kc_7: ae_key,ks_7: ae_key,ems_7: bitstring) = (if v_77 then (if v_78 then (if v_80 then (if v_82 then (if v_83 then (if v_84 then (if v_86 then (ms_4,b2ae(kc_6),b2ae(ks_6),ems_6) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+                {617}let m2_2: bitstring = hmac(StrongHash,kcm_3,log_SFIN_2) in
+                {618}let log_CFIN_2: bitstring = (log_SFIN_2,FIN(m2_2)) in
+                {619}let l_50: label = tls13_resumption_master_secret in
+                {620}let c_50: bitstring = catch-fail(hash(StrongHash,log_CFIN_2)) in
+                {621}let v_87: bool = not-caught-fail(c_50) in
+                {622}let rms_4: bitstring = (if v_87 then hmac(StrongHash,ms_5,(l_50,c_50)) else fail-any_type) in
+                {623}event ClientFin1WayAgr(ID_S_6,pubTSK_4,psk_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4);
+                {624}event ClientFinRecentAgr(ID_S_6,ID_C_2,pubTSK_4,psk_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4,cr_3,sr_1);
+                {625}event ClientConn(cmw_1);
+                {626}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4,cr_3,sr_1,pubTSK_4,dev_statusRef_5);
+                {627}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_4,pubTSK_4,pubRVP,dev_statusRef_5,cmw_1);
+                {628}event ClientID(ID_S_6,kem_ss_1);
+                {629}event ClientStateEvKc(cmw_1,kc_7);
+                {630}event ClientStateEvKch(cmw_1,kch_3);
+                {631}event ClientStateEv(cmw_1,kem_ss_1);
+                {632}event ClientFinished(pubTSK_4,psk_1,cr_3,sr_1,offer_1,mode_1,kc_7,ks_7,ems_7,rms_4);
+                {633}out(io, FIN(m2_2));
+                {634}in(io, app_msg_enc_4: bitstring);
+                {635}let app_msg_s_4: bitstring = ph_read(app_msg_enc_4,ks_7) in
+                {636}let req_ctx_4: bitstring = cr_3 in
+                {637}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_4,cr_3,sr_1,req_ctx_4,ems_7,ks_7,kc_7,dev_statusRef_5,app_msg_s_4)
             )
             else
-                {643}if (timingOption_1 = Post) then
-                {644}event AttestationTimingWindow(timingOption_1);
-                {645}let l_51: label = ea_server_hs_context in
-                {646}let context_value_4: bitstring = zero in
-                {647}let m_11: bitstring = zero in
-                {648}let c_51: bitstring = catch-fail(hash(StrongHash,m_11)) in
-                {649}let v_88: bool = not-caught-fail(c_51) in
-                {650}let s_4: bitstring = catch-fail((if v_88 then hmac(StrongHash,ems_5,(l_51,c_51)) else fail-any_type)) in
-                {651}let v_89: bool = not-caught-fail(s_4) in
-                {652}let l_52: label = (if v_89 then exporter_label else caught-fail) in
-                {653}let c_52: bitstring = (if v_89 then catch-fail(hash(StrongHash,context_value_4)) else caught-fail) in
-                {654}let v_90: bool = not-caught-fail(c_52) in
-                {655}let ea_hs_ctx_2: bitstring = (if v_89 then (if v_90 then hmac(StrongHash,s_4,(l_52,c_52)) else fail-any_type) else fail-any_type) in
-                {656}let log_EA_CRT_2: bitstring = (ea_hs_ctx_2,req_msg_1,CRT(ea_cert_1)) in
-                {657}if (verify(pubTSK_4,hash(shash_algo_1,(ea_cv_context,log_EA_CRT_2)),ea_sg_1) = true) then
-                {658}event Accepted(cmw_1);
-                {659}event Appraised(log_EA_CRT_2);
-                {660}event AcceptedRdata(dev_status_2);
-                {661}let log_EA_CV_2: bitstring = (log_EA_CRT_2,CV(ea_sg_1)) in
-                {662}let l_53: label = ea_server_fin_key in
-                {663}let context_value_5: bitstring = zero in
-                {664}let m_12: bitstring = zero in
-                {665}let c_53: bitstring = catch-fail(hash(StrongHash,m_12)) in
-                {666}let v_91: bool = not-caught-fail(c_53) in
-                {667}let s_5: bitstring = catch-fail((if v_91 then hmac(StrongHash,ems_5,(l_53,c_53)) else fail-any_type)) in
-                {668}let v_92: bool = not-caught-fail(s_5) in
-                {669}let l_54: label = (if v_92 then exporter_label else caught-fail) in
-                {670}let c_54: bitstring = (if v_92 then catch-fail(hash(StrongHash,context_value_5)) else caught-fail) in
-                {671}let v_93: bool = not-caught-fail(c_54) in
-                {672}let ea_fin_2: bitstring = (if v_92 then (if v_93 then hmac(StrongHash,s_5,(l_54,c_54)) else fail-any_type) else fail-any_type) in
-                {673}if (ea_mac_1 = hmac(StrongHash,ea_fin_2,log_EA_CV_2)) then
-                {674}event ClientConn(cmw_1);
-                {675}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_5,ks_5,ems_5,rms_3,cr_3,sr_1,pubTSK_4,dev_status_2);
-                {676}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_4,pubTSK_4,pubRVP,dev_status_2,cmw_1);
-                {677}event ClientID(ID_S_6,kem_ss_1);
-                {678}event ClientStateEvKc(cmw_1,kc_5);
-                {679}event ClientStateEvKch(cmw_1,kch_3);
-                {680}event ClientStateEv(cmw_1,kem_ss_1);
-                {681}in(io, app_msg_enc_5: bitstring);
-                {682}let app_msg_s_5: bitstring = ph_read(app_msg_enc_5,ks_5) in
-                {683}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_4,cr_3,sr_1,req_ctx_3,ems_5,ks_5,kc_5,dev_status_2,app_msg_s_5)
+                {638}if (timingOption_1 = Post) then
+                {639}event AttestationTimingWindow(timingOption_1);
+                {640}let l_51: label = ea_server_hs_context in
+                {641}let context_value_4: bitstring = zero in
+                {642}let m_11: bitstring = zero in
+                {643}let c_51: bitstring = catch-fail(hash(StrongHash,m_11)) in
+                {644}let v_88: bool = not-caught-fail(c_51) in
+                {645}let s_4: bitstring = catch-fail((if v_88 then hmac(StrongHash,ems_5,(l_51,c_51)) else fail-any_type)) in
+                {646}let v_89: bool = not-caught-fail(s_4) in
+                {647}let l_52: label = (if v_89 then exporter_label else caught-fail) in
+                {648}let c_52: bitstring = (if v_89 then catch-fail(hash(StrongHash,context_value_4)) else caught-fail) in
+                {649}let v_90: bool = not-caught-fail(c_52) in
+                {650}let ea_hs_ctx_2: bitstring = (if v_89 then (if v_90 then hmac(StrongHash,s_4,(l_52,c_52)) else fail-any_type) else fail-any_type) in
+                {651}let log_EA_CRT_2: bitstring = (ea_hs_ctx_2,req_msg_1,CRT(ea_cert_1)) in
+                {652}if (verify(pubTSK_4,hash(shash_algo_1,(ea_cv_context,log_EA_CRT_2)),ea_sg_1) = true) then
+                {653}event Accepted(cmw_1);
+                {654}event Appraised(log_EA_CRT_2);
+                {655}event AcceptedRdata(dev_status_2);
+                {656}let log_EA_CV_2: bitstring = (log_EA_CRT_2,CV(ea_sg_1)) in
+                {657}let l_53: label = ea_server_fin_key in
+                {658}let context_value_5: bitstring = zero in
+                {659}let m_12: bitstring = zero in
+                {660}let c_53: bitstring = catch-fail(hash(StrongHash,m_12)) in
+                {661}let v_91: bool = not-caught-fail(c_53) in
+                {662}let s_5: bitstring = catch-fail((if v_91 then hmac(StrongHash,ems_5,(l_53,c_53)) else fail-any_type)) in
+                {663}let v_92: bool = not-caught-fail(s_5) in
+                {664}let l_54: label = (if v_92 then exporter_label else caught-fail) in
+                {665}let c_54: bitstring = (if v_92 then catch-fail(hash(StrongHash,context_value_5)) else caught-fail) in
+                {666}let v_93: bool = not-caught-fail(c_54) in
+                {667}let ea_fin_2: bitstring = (if v_92 then (if v_93 then hmac(StrongHash,s_5,(l_54,c_54)) else fail-any_type) else fail-any_type) in
+                {668}if (ea_mac_1 = hmac(StrongHash,ea_fin_2,log_EA_CV_2)) then
+                {669}event ClientConn(cmw_1);
+                {670}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_5,ks_5,ems_5,rms_3,cr_3,sr_1,pubTSK_4,dev_status_2);
+                {671}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_4,pubTSK_4,pubRVP,dev_status_2,cmw_1);
+                {672}event ClientID(ID_S_6,kem_ss_1);
+                {673}event ClientStateEvKc(cmw_1,kc_5);
+                {674}event ClientStateEvKch(cmw_1,kch_3);
+                {675}event ClientStateEv(cmw_1,kem_ss_1);
+                {676}in(io, app_msg_enc_5: bitstring);
+                {677}let app_msg_s_5: bitstring = ph_read(app_msg_enc_5,ks_5) in
+                {678}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_4,cr_3,sr_1,req_ctx_3,ems_5,ks_5,kc_5,dev_status_2,app_msg_s_5)
         )
         else
-            {684}if (idOption = OptionB) then
-            {685}let (id_pub_pair_4: bitstring,sig_ca_1: bitstring) = server_cert_3 in
-            {686}let (cert_subject_3: identity,=pubTSK_4) = id_pub_pair_4 in
-            {687}if (verify(pubCA,id_pub_pair_4,sig_ca_1) = true) then
-            {688}if (TargetHost_2 = ID_S_6) then
-            {689}if (ID_S_6 = cert_subject_3) then
-            {690}let (comid_rvp_3: bitstring,sig_rvp_3: bitstring) = manifest_3 in
-            {691}if (verify(pubRVP,comid_rvp_3,sig_rvp_3) = true) then
-            {692}let RefValTriple(WID_1: identity,dev_statusRef_6: measurements,workloadAttr_4: attribute) = comid_rvp_3 in
-            {693}let (pat_claims_3: bitstring,pat_sig_1: bitstring) = pat_1 in
-            {694}let eat_pat_profile(pubKAK_5: pubkey,evidenceAttr_3: attribute,dev_status_3: measurements,eat_nonce_3: bitstring) = pat_claims_3 in
-            {695}let cdata_3: bitstring = (StrongHash,pat_claims_3) in
-            {696}if (verify(pubAK_4,(dev_status_3,cdata_3),pat_sig_1) = true) then
-            {697}let (kat_claims_3: bitstring,kat_sig_3: bitstring) = kat_1 in
-            {698}let eat_kat_profile(=pubTSK_4,=evidenceAttr_3,=eat_nonce_3) = kat_claims_3 in
-            {699}if (verify(pubKAK_5,kat_claims_3,kat_sig_3) = true) then
-            {700}if ((WID_1,dev_status_3,evidenceAttr_3,eat_nonce_3) = (ID_S_6,dev_statusRef_6,workloadAttr_4,sessionNonce_1)) then
-            {701}event ClientAcceptsProvenance(cr_3,sr_1,evidenceAttr_3,pubKAK_5);
-            {702}if (timingOption_1 = Intra) then
+            {679}if (idOption = OptionB) then
+            {680}let (id_pub_pair_4: bitstring,sig_ca_1: bitstring) = server_cert_3 in
+            {681}let (cert_subject_3: identity,=pubTSK_4) = id_pub_pair_4 in
+            {682}if (verify(pubCA,id_pub_pair_4,sig_ca_1) = true) then
+            {683}if (TargetHost_2 = ID_S_6) then
+            {684}if (ID_S_6 = cert_subject_3) then
+            {685}let (comid_rvp_3: bitstring,sig_rvp_3: bitstring) = manifest_3 in
+            {686}if (verify(pubRVP,comid_rvp_3,sig_rvp_3) = true) then
+            {687}let RefValTuple(WID_1: identity,dev_statusRef_6: measurements) = comid_rvp_3 in
+            {688}let (pat_claims_3: bitstring,pat_sig_1: bitstring) = pat_1 in
+            {689}let eat_pat_profile(pubKAK_5: pubkey,evidenceAttr_3: attribute,dev_status_3: measurements,eat_nonce_3: bitstring) = pat_claims_3 in
+            {690}let cdata_3: bitstring = (StrongHash,pat_claims_3) in
+            {691}if (verify(pubAK_4,(dev_status_3,cdata_3),pat_sig_1) = true) then
+            {692}let (kat_claims_3: bitstring,kat_sig_3: bitstring) = kat_1 in
+            {693}let eat_kat_profile(=pubTSK_4,=evidenceAttr_3,=eat_nonce_3) = kat_claims_3 in
+            {694}if (verify(pubKAK_5,kat_claims_3,kat_sig_3) = true) then
+            {695}if ((WID_1,dev_status_3,eat_nonce_3) = (ID_S_6,dev_statusRef_6,sessionNonce_1)) then
+            {696}event ClientAcceptsProvenance(cr_3,sr_1,evidenceAttr_3,pubKAK_5);
+            {697}if (timingOption_1 = Intra) then
             (
-                {703}event AttestationTimingWindow(timingOption_1);
-                {704}in(io, CV(sg_3: bitstring));
-                {705}if (verify(pubTSK_4,hash(shash_algo_1,log_CRT_1),sg_3) = true) then
-                {706}event Accepted(cmw_1);
-                {707}event Appraised(log_SH_1);
-                {708}event AcceptedRdata(dev_status_3);
-                {709}let log_CV_3: bitstring = (log_CRT_1,CV(sg_3)) in
-                {710}in(io, FIN(m1_3: bitstring));
-                {711}if (m1_3 = hmac(StrongHash,ksm_3,log_CV_3)) then
-                {712}let log_SFIN_3: bitstring = (log_CV_3,FIN(m1_3)) in
-                {713}let l_55: label = tls13_derived in
-                {714}let m_13: bitstring = zero in
-                {715}let c_55: bitstring = catch-fail(hash(StrongHash,m_13)) in
-                {716}let v_94: bool = not-caught-fail(c_55) in
-                {717}let salt2_3: bitstring = catch-fail((if v_94 then hmac(StrongHash,hs_3,(l_55,c_55)) else fail-any_type)) in
-                {718}let v_95: bool = not-caught-fail(salt2_3) in
-                {719}let ikm_5: bitstring = (if v_95 then zero else caught-fail) in
-                {720}let ms_6: bitstring = (if v_95 then catch-fail(hmac(StrongHash,salt2_3,ikm_5)) else caught-fail) in
-                {721}let v_96: bool = not-caught-fail(ms_6) in
-                {722}let l_56: label = (if v_96 then tls13_client_application_traffic_secret else caught-fail) in
-                {723}let c_56: bitstring = (if v_96 then catch-fail(hash(StrongHash,log_SFIN_3)) else caught-fail) in
-                {724}let v_97: bool = not-caught-fail(c_56) in
-                {725}let atsc_3: bitstring = (if v_96 then catch-fail((if v_97 then hmac(StrongHash,ms_6,(l_56,c_56)) else fail-any_type)) else caught-fail) in
-                {726}let v_98: bool = not-caught-fail(atsc_3) in
-                {727}let l_57: label = (if v_98 then tls13_server_application_traffic_secret else caught-fail) in
-                {728}let c_57: bitstring = (if v_98 then catch-fail(hash(StrongHash,log_SFIN_3)) else caught-fail) in
-                {729}let v_99: bool = not-caught-fail(c_57) in
-                {730}let atss_3: bitstring = (if v_98 then catch-fail((if v_99 then hmac(StrongHash,ms_6,(l_57,c_57)) else fail-any_type)) else caught-fail) in
-                {731}let v_100: bool = not-caught-fail(atss_3) in
-                {732}let l_58: label = (if v_100 then tls13_key else caught-fail) in
-                {733}let c_58: bitstring = (if v_100 then zero else caught-fail) in
-                {734}let kc_8: bitstring = (if v_100 then catch-fail(hmac(StrongHash,atsc_3,(l_58,c_58))) else caught-fail) in
-                {735}let v_101: bool = not-caught-fail(kc_8) in
-                {736}let l_59: label = (if v_101 then tls13_key else caught-fail) in
-                {737}let c_59: bitstring = (if v_101 then zero else caught-fail) in
-                {738}let ks_8: bitstring = (if v_101 then catch-fail(hmac(StrongHash,atss_3,(l_59,c_59))) else caught-fail) in
-                {739}let v_102: bool = not-caught-fail(ks_8) in
-                {740}let l_60: label = (if v_102 then tls13_exporter_master_secret else caught-fail) in
-                {741}let c_60: bitstring = (if v_102 then catch-fail(hash(StrongHash,log_SFIN_3)) else caught-fail) in
-                {742}let v_103: bool = not-caught-fail(c_60) in
-                {743}let ems_8: bitstring = (if v_102 then catch-fail((if v_103 then hmac(StrongHash,ms_6,(l_60,c_60)) else fail-any_type)) else caught-fail) in
-                {744}let v_104: bool = not-caught-fail(ems_8) in
-                {745}let (ms_7: bitstring,kc_9: ae_key,ks_9: ae_key,ems_9: bitstring) = (if v_95 then (if v_96 then (if v_98 then (if v_100 then (if v_101 then (if v_102 then (if v_104 then (ms_6,b2ae(kc_8),b2ae(ks_8),ems_8) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-                {746}let m2_3: bitstring = hmac(StrongHash,kcm_3,log_SFIN_3) in
-                {747}let log_CFIN_3: bitstring = (log_SFIN_3,FIN(m2_3)) in
-                {748}let l_61: label = tls13_resumption_master_secret in
-                {749}let c_61: bitstring = catch-fail(hash(StrongHash,log_CFIN_3)) in
-                {750}let v_105: bool = not-caught-fail(c_61) in
-                {751}let rms_5: bitstring = (if v_105 then hmac(StrongHash,ms_7,(l_61,c_61)) else fail-any_type) in
-                {752}event ClientFin1WayAgr(ID_S_6,pubTSK_4,psk_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5);
-                {753}event ClientFinRecentAgr(ID_S_6,ID_C_2,pubTSK_4,psk_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5,cr_3,sr_1);
-                {754}event ClientConn(cmw_1);
-                {755}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5,cr_3,sr_1,pubTSK_4,dev_statusRef_6);
-                {756}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_5,pubTSK_4,pubRVP,dev_statusRef_6,cmw_1);
-                {757}event ClientID(ID_S_6,kem_ss_1);
-                {758}event ClientStateEvKc(cmw_1,kc_9);
-                {759}event ClientStateEvKch(cmw_1,kch_3);
-                {760}event ClientStateEv(cmw_1,kem_ss_1);
-                {761}event ClientFinished(pubTSK_4,psk_1,cr_3,sr_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5);
-                {762}out(io, FIN(m2_3));
-                {763}in(io, app_msg_enc_6: bitstring);
-                {764}let app_msg_s_6: bitstring = ph_read(app_msg_enc_6,ks_9) in
-                {765}let req_ctx_5: bitstring = cr_3 in
-                {766}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_5,cr_3,sr_1,req_ctx_5,ems_9,ks_9,kc_9,dev_statusRef_6,app_msg_s_6)
+                {698}event AttestationTimingWindow(timingOption_1);
+                {699}in(io, CV(sg_3: bitstring));
+                {700}if (verify(pubTSK_4,hash(shash_algo_1,log_CRT_1),sg_3) = true) then
+                {701}event Accepted(cmw_1);
+                {702}event Appraised(log_SH_1);
+                {703}event AcceptedRdata(dev_status_3);
+                {704}let log_CV_3: bitstring = (log_CRT_1,CV(sg_3)) in
+                {705}in(io, FIN(m1_3: bitstring));
+                {706}if (m1_3 = hmac(StrongHash,ksm_3,log_CV_3)) then
+                {707}let log_SFIN_3: bitstring = (log_CV_3,FIN(m1_3)) in
+                {708}let l_55: label = tls13_derived in
+                {709}let m_13: bitstring = zero in
+                {710}let c_55: bitstring = catch-fail(hash(StrongHash,m_13)) in
+                {711}let v_94: bool = not-caught-fail(c_55) in
+                {712}let salt2_3: bitstring = catch-fail((if v_94 then hmac(StrongHash,hs_3,(l_55,c_55)) else fail-any_type)) in
+                {713}let v_95: bool = not-caught-fail(salt2_3) in
+                {714}let ikm_5: bitstring = (if v_95 then zero else caught-fail) in
+                {715}let ms_6: bitstring = (if v_95 then catch-fail(hmac(StrongHash,salt2_3,ikm_5)) else caught-fail) in
+                {716}let v_96: bool = not-caught-fail(ms_6) in
+                {717}let l_56: label = (if v_96 then tls13_client_application_traffic_secret else caught-fail) in
+                {718}let c_56: bitstring = (if v_96 then catch-fail(hash(StrongHash,log_SFIN_3)) else caught-fail) in
+                {719}let v_97: bool = not-caught-fail(c_56) in
+                {720}let atsc_3: bitstring = (if v_96 then catch-fail((if v_97 then hmac(StrongHash,ms_6,(l_56,c_56)) else fail-any_type)) else caught-fail) in
+                {721}let v_98: bool = not-caught-fail(atsc_3) in
+                {722}let l_57: label = (if v_98 then tls13_server_application_traffic_secret else caught-fail) in
+                {723}let c_57: bitstring = (if v_98 then catch-fail(hash(StrongHash,log_SFIN_3)) else caught-fail) in
+                {724}let v_99: bool = not-caught-fail(c_57) in
+                {725}let atss_3: bitstring = (if v_98 then catch-fail((if v_99 then hmac(StrongHash,ms_6,(l_57,c_57)) else fail-any_type)) else caught-fail) in
+                {726}let v_100: bool = not-caught-fail(atss_3) in
+                {727}let l_58: label = (if v_100 then tls13_key else caught-fail) in
+                {728}let c_58: bitstring = (if v_100 then zero else caught-fail) in
+                {729}let kc_8: bitstring = (if v_100 then catch-fail(hmac(StrongHash,atsc_3,(l_58,c_58))) else caught-fail) in
+                {730}let v_101: bool = not-caught-fail(kc_8) in
+                {731}let l_59: label = (if v_101 then tls13_key else caught-fail) in
+                {732}let c_59: bitstring = (if v_101 then zero else caught-fail) in
+                {733}let ks_8: bitstring = (if v_101 then catch-fail(hmac(StrongHash,atss_3,(l_59,c_59))) else caught-fail) in
+                {734}let v_102: bool = not-caught-fail(ks_8) in
+                {735}let l_60: label = (if v_102 then tls13_exporter_master_secret else caught-fail) in
+                {736}let c_60: bitstring = (if v_102 then catch-fail(hash(StrongHash,log_SFIN_3)) else caught-fail) in
+                {737}let v_103: bool = not-caught-fail(c_60) in
+                {738}let ems_8: bitstring = (if v_102 then catch-fail((if v_103 then hmac(StrongHash,ms_6,(l_60,c_60)) else fail-any_type)) else caught-fail) in
+                {739}let v_104: bool = not-caught-fail(ems_8) in
+                {740}let (ms_7: bitstring,kc_9: ae_key,ks_9: ae_key,ems_9: bitstring) = (if v_95 then (if v_96 then (if v_98 then (if v_100 then (if v_101 then (if v_102 then (if v_104 then (ms_6,b2ae(kc_8),b2ae(ks_8),ems_8) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+                {741}let m2_3: bitstring = hmac(StrongHash,kcm_3,log_SFIN_3) in
+                {742}let log_CFIN_3: bitstring = (log_SFIN_3,FIN(m2_3)) in
+                {743}let l_61: label = tls13_resumption_master_secret in
+                {744}let c_61: bitstring = catch-fail(hash(StrongHash,log_CFIN_3)) in
+                {745}let v_105: bool = not-caught-fail(c_61) in
+                {746}let rms_5: bitstring = (if v_105 then hmac(StrongHash,ms_7,(l_61,c_61)) else fail-any_type) in
+                {747}event ClientFin1WayAgr(ID_S_6,pubTSK_4,psk_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5);
+                {748}event ClientFinRecentAgr(ID_S_6,ID_C_2,pubTSK_4,psk_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5,cr_3,sr_1);
+                {749}event ClientConn(cmw_1);
+                {750}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5,cr_3,sr_1,pubTSK_4,dev_statusRef_6);
+                {751}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_5,pubTSK_4,pubRVP,dev_statusRef_6,cmw_1);
+                {752}event ClientID(ID_S_6,kem_ss_1);
+                {753}event ClientStateEvKc(cmw_1,kc_9);
+                {754}event ClientStateEvKch(cmw_1,kch_3);
+                {755}event ClientStateEv(cmw_1,kem_ss_1);
+                {756}event ClientFinished(pubTSK_4,psk_1,cr_3,sr_1,offer_1,mode_1,kc_9,ks_9,ems_9,rms_5);
+                {757}out(io, FIN(m2_3));
+                {758}in(io, app_msg_enc_6: bitstring);
+                {759}let app_msg_s_6: bitstring = ph_read(app_msg_enc_6,ks_9) in
+                {760}let req_ctx_5: bitstring = cr_3 in
+                {761}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_5,cr_3,sr_1,req_ctx_5,ems_9,ks_9,kc_9,dev_statusRef_6,app_msg_s_6)
             )
             else
-                {767}if (timingOption_1 = Post) then
-                {768}event AttestationTimingWindow(timingOption_1);
-                {769}let l_62: label = ea_server_hs_context in
-                {770}let context_value_6: bitstring = zero in
-                {771}let m_14: bitstring = zero in
-                {772}let c_62: bitstring = catch-fail(hash(StrongHash,m_14)) in
-                {773}let v_106: bool = not-caught-fail(c_62) in
-                {774}let s_6: bitstring = catch-fail((if v_106 then hmac(StrongHash,ems_5,(l_62,c_62)) else fail-any_type)) in
-                {775}let v_107: bool = not-caught-fail(s_6) in
-                {776}let l_63: label = (if v_107 then exporter_label else caught-fail) in
-                {777}let c_63: bitstring = (if v_107 then catch-fail(hash(StrongHash,context_value_6)) else caught-fail) in
-                {778}let v_108: bool = not-caught-fail(c_63) in
-                {779}let ea_hs_ctx_3: bitstring = (if v_107 then (if v_108 then hmac(StrongHash,s_6,(l_63,c_63)) else fail-any_type) else fail-any_type) in
-                {780}let log_EA_CRT_3: bitstring = (ea_hs_ctx_3,req_msg_1,CRT(ea_cert_1)) in
-                {781}if (verify(pubTSK_4,hash(shash_algo_1,(ea_cv_context,log_EA_CRT_3)),ea_sg_1) = true) then
-                {782}event Accepted(cmw_1);
-                {783}event Appraised(log_EA_CRT_3);
-                {784}event AcceptedRdata(dev_status_3);
-                {785}let log_EA_CV_3: bitstring = (log_EA_CRT_3,CV(ea_sg_1)) in
-                {786}let l_64: label = ea_server_fin_key in
-                {787}let context_value_7: bitstring = zero in
-                {788}let m_15: bitstring = zero in
-                {789}let c_64: bitstring = catch-fail(hash(StrongHash,m_15)) in
-                {790}let v_109: bool = not-caught-fail(c_64) in
-                {791}let s_7: bitstring = catch-fail((if v_109 then hmac(StrongHash,ems_5,(l_64,c_64)) else fail-any_type)) in
-                {792}let v_110: bool = not-caught-fail(s_7) in
-                {793}let l_65: label = (if v_110 then exporter_label else caught-fail) in
-                {794}let c_65: bitstring = (if v_110 then catch-fail(hash(StrongHash,context_value_7)) else caught-fail) in
-                {795}let v_111: bool = not-caught-fail(c_65) in
-                {796}let ea_fin_3: bitstring = (if v_110 then (if v_111 then hmac(StrongHash,s_7,(l_65,c_65)) else fail-any_type) else fail-any_type) in
-                {797}if (ea_mac_1 = hmac(StrongHash,ea_fin_3,log_EA_CV_3)) then
-                {798}event ClientConn(cmw_1);
-                {799}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_5,ks_5,ems_5,rms_3,cr_3,sr_1,pubTSK_4,dev_status_3);
-                {800}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_5,pubTSK_4,pubRVP,dev_status_3,cmw_1);
-                {801}event ClientID(ID_S_6,kem_ss_1);
-                {802}event ClientStateEvKc(cmw_1,kc_5);
-                {803}event ClientStateEvKch(cmw_1,kch_3);
-                {804}event ClientStateEv(cmw_1,kem_ss_1);
-                {805}in(io, app_msg_enc_7: bitstring);
-                {806}let app_msg_s_7: bitstring = ph_read(app_msg_enc_7,ks_5) in
-                {807}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_5,cr_3,sr_1,req_ctx_3,ems_5,ks_5,kc_5,dev_status_3,app_msg_s_7)
+                {762}if (timingOption_1 = Post) then
+                {763}event AttestationTimingWindow(timingOption_1);
+                {764}let l_62: label = ea_server_hs_context in
+                {765}let context_value_6: bitstring = zero in
+                {766}let m_14: bitstring = zero in
+                {767}let c_62: bitstring = catch-fail(hash(StrongHash,m_14)) in
+                {768}let v_106: bool = not-caught-fail(c_62) in
+                {769}let s_6: bitstring = catch-fail((if v_106 then hmac(StrongHash,ems_5,(l_62,c_62)) else fail-any_type)) in
+                {770}let v_107: bool = not-caught-fail(s_6) in
+                {771}let l_63: label = (if v_107 then exporter_label else caught-fail) in
+                {772}let c_63: bitstring = (if v_107 then catch-fail(hash(StrongHash,context_value_6)) else caught-fail) in
+                {773}let v_108: bool = not-caught-fail(c_63) in
+                {774}let ea_hs_ctx_3: bitstring = (if v_107 then (if v_108 then hmac(StrongHash,s_6,(l_63,c_63)) else fail-any_type) else fail-any_type) in
+                {775}let log_EA_CRT_3: bitstring = (ea_hs_ctx_3,req_msg_1,CRT(ea_cert_1)) in
+                {776}if (verify(pubTSK_4,hash(shash_algo_1,(ea_cv_context,log_EA_CRT_3)),ea_sg_1) = true) then
+                {777}event Accepted(cmw_1);
+                {778}event Appraised(log_EA_CRT_3);
+                {779}event AcceptedRdata(dev_status_3);
+                {780}let log_EA_CV_3: bitstring = (log_EA_CRT_3,CV(ea_sg_1)) in
+                {781}let l_64: label = ea_server_fin_key in
+                {782}let context_value_7: bitstring = zero in
+                {783}let m_15: bitstring = zero in
+                {784}let c_64: bitstring = catch-fail(hash(StrongHash,m_15)) in
+                {785}let v_109: bool = not-caught-fail(c_64) in
+                {786}let s_7: bitstring = catch-fail((if v_109 then hmac(StrongHash,ems_5,(l_64,c_64)) else fail-any_type)) in
+                {787}let v_110: bool = not-caught-fail(s_7) in
+                {788}let l_65: label = (if v_110 then exporter_label else caught-fail) in
+                {789}let c_65: bitstring = (if v_110 then catch-fail(hash(StrongHash,context_value_7)) else caught-fail) in
+                {790}let v_111: bool = not-caught-fail(c_65) in
+                {791}let ea_fin_3: bitstring = (if v_110 then (if v_111 then hmac(StrongHash,s_7,(l_65,c_65)) else fail-any_type) else fail-any_type) in
+                {792}if (ea_mac_1 = hmac(StrongHash,ea_fin_3,log_EA_CV_3)) then
+                {793}event ClientConn(cmw_1);
+                {794}event ClientComp(ID_S_6,psk_1,offer_1,mode_1,kc_5,ks_5,ems_5,rms_3,cr_3,sr_1,pubTSK_4,dev_status_3);
+                {795}event ClientRANew(NULL_ID,NULL_pubkey,pubAK_4,pubKAK_5,pubTSK_4,pubRVP,dev_status_3,cmw_1);
+                {796}event ClientID(ID_S_6,kem_ss_1);
+                {797}event ClientStateEvKc(cmw_1,kc_5);
+                {798}event ClientStateEvKch(cmw_1,kch_3);
+                {799}event ClientStateEv(cmw_1,kem_ss_1);
+                {800}in(io, app_msg_enc_7: bitstring);
+                {801}let app_msg_s_7: bitstring = ph_read(app_msg_enc_7,ks_5) in
+                {802}event ClientReceivesAppData(ID_S_6,pubTSK_4,pubKAK_5,cr_3,sr_1,req_ctx_3,ems_5,ks_5,kc_5,dev_status_3,app_msg_s_7)
 ) | (
-    {808}!
-    {809}if (idOption = OptionA) then
+    {803}!
+    {804}if (idOption = OptionA) then
     (
-        {810}in(io, workloadRef: measurements);
-        {975}get agent_keys(ignored_v_9: identity,ignored_v_10: measurements,privTSK_3: privkey,pubTSK_5: pubkey,ignored_v_11: privkey,ignored_v_12: pubkey,ignored_v_13: privkey,ignored_v_14: pubkey) in
-        {974}get agent_keys(ignored_v_15: identity,ignored_v_16: measurements,=privTSK_3,ignored_v_17: pubkey,ignored_v_18: privkey,ignored_v_19: pubkey,privKAK_2: privkey,pubKAK_6: pubkey) in
-        {811}let ID_S_7: identity = dev2id(workloadRef) in
-        {812}let selfsign: bitstring = ((ID_S_7,pubTSK_5),Nil) in
-        {813}!
-        {814}in(io, ch_2: msg);
-        {815}let CH(cr_4: random,offer_2: params,sni: identity) = ch_2 in
-        {816}let nego(=aTLS,MLKEM_13_C(ka_2: kem_alg,ek_4: kem_pub),xhash_algo: hash_alg,xev_type: ev_typ) = offer_2 in
-        {817}let psk_2: preSharedKey = NoPSK in
-        {818}let salt_2: bitstring = zero in
-        {819}let ikm_6: bitstring = catch-fail(psk2b(psk_2)) in
-        {820}let v_112: bool = not-caught-fail(ikm_6) in
-        {821}let es_4: bitstring = catch-fail((if v_112 then hmac(StrongHash,salt_2,ikm_6) else fail-any_type)) in
-        {822}let v_113: bool = not-caught-fail(es_4) in
-        {823}let l_66: label = (if v_113 then tls13_resumption_psk_binder_key else caught-fail) in
-        {824}let m_16: bitstring = (if v_113 then zero else caught-fail) in
-        {825}let c_66: bitstring = (if v_113 then catch-fail(hash(StrongHash,m_16)) else caught-fail) in
-        {826}let v_114: bool = not-caught-fail(c_66) in
-        {827}let kb_4: bitstring = (if v_113 then catch-fail((if v_114 then hmac(StrongHash,es_4,(l_66,c_66)) else fail-any_type)) else caught-fail) in
-        {828}let v_115: bool = not-caught-fail(kb_4) in
-        {829}let l_67: label = (if v_115 then tls13_client_early_traffic_secret else caught-fail) in
-        {830}let c_67: bitstring = (if v_115 then catch-fail(hash(StrongHash,ch_2)) else caught-fail) in
-        {831}let v_116: bool = not-caught-fail(c_67) in
-        {832}let atsc0_2: bitstring = (if v_115 then catch-fail((if v_116 then hmac(StrongHash,es_4,(l_67,c_67)) else fail-any_type)) else caught-fail) in
-        {833}let v_117: bool = not-caught-fail(atsc0_2) in
-        {834}let l_68: label = (if v_117 then tls13_key else caught-fail) in
-        {835}let c_68: bitstring = (if v_117 then zero else caught-fail) in
-        {836}let kc0_4: bitstring = (if v_117 then catch-fail(hmac(StrongHash,atsc0_2,(l_68,c_68))) else caught-fail) in
-        {837}let v_118: bool = not-caught-fail(kc0_4) in
-        {838}let l_69: label = (if v_118 then tls13_early_exporter_master_secret else caught-fail) in
-        {839}let c_69: bitstring = (if v_118 then catch-fail(hash(StrongHash,ch_2)) else caught-fail) in
-        {840}let v_119: bool = not-caught-fail(c_69) in
-        {841}let ems0_4: bitstring = (if v_118 then catch-fail((if v_119 then hmac(StrongHash,es_4,(l_69,c_69)) else fail-any_type)) else caught-fail) in
-        {842}let v_120: bool = not-caught-fail(ems0_4) in
-        {843}let (es_5: bitstring,kb_5: mac_key,kc0_5: ae_key,ems0_5: bitstring) = (if v_113 then (if v_115 then (if v_117 then (if v_118 then (if v_120 then (es_4,kb_4,b2ae(kc0_4),ems0_4) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {844}new sr_2: random;
-        {845}in(io, smode: params);
-        {846}let nego(=aTLS,MLKEM_13_S(=ka_2,eee_2: kem_ct),hash_algo_2: hash_alg,ev_type_2: ev_typ) = smode in
-        {847}new ss_kem: bitstring;
-        {848}let ciph_2: kem_ct = kem_encap(ka_2,ek_4,ss_kem) in
-        {849}let mode_2: params = nego(aTLS,MLKEM_13_S(ka_2,ciph_2),hash_algo_2,ev_type_2) in
-        {850}out(io, SH(sr_2,mode_2));
-        {851}let log_SH_2: bitstring = (ch_2,SH(sr_2,mode_2)) in
-        {852}event ServerChoosesKEX(cr_4,sr_2,MLKEM_13_S(ka_2,ciph_2));
-        {853}event ServerChoosesHash(cr_4,sr_2,hash_algo_2);
-        {854}event ServerChoosesATLS(cr_4,sr_2,aTLS);
-        {855}event ServerChoosesEvType(cr_4,sr_2,ev_type_2);
-        {856}let kem_ss_2: bitstring = ss_kem in
-        {857}let l_70: label = tls13_derived in
-        {858}let m_17: bitstring = zero in
-        {859}let c_70: bitstring = catch-fail(hash(StrongHash,m_17)) in
-        {860}let v_121: bool = not-caught-fail(c_70) in
-        {861}let salt1_2: bitstring = catch-fail((if v_121 then hmac(StrongHash,es_5,(l_70,c_70)) else fail-any_type)) in
-        {862}let v_122: bool = not-caught-fail(salt1_2) in
-        {863}let hs_4: bitstring = (if v_122 then catch-fail(hmac(StrongHash,salt1_2,kem_ss_2)) else caught-fail) in
-        {864}let v_123: bool = not-caught-fail(hs_4) in
-        {865}let l_71: label = (if v_123 then tls13_client_handshake_traffic_secret else caught-fail) in
-        {866}let c_71: bitstring = (if v_123 then catch-fail(hash(StrongHash,log_SH_2)) else caught-fail) in
-        {867}let v_124: bool = not-caught-fail(c_71) in
-        {868}let htsc_2: bitstring = (if v_123 then catch-fail((if v_124 then hmac(StrongHash,hs_4,(l_71,c_71)) else fail-any_type)) else caught-fail) in
-        {869}let v_125: bool = not-caught-fail(htsc_2) in
-        {870}let l_72: label = (if v_125 then tls13_server_handshake_traffic_secret else caught-fail) in
-        {871}let c_72: bitstring = (if v_125 then catch-fail(hash(StrongHash,log_SH_2)) else caught-fail) in
-        {872}let v_126: bool = not-caught-fail(c_72) in
-        {873}let htss_2: bitstring = (if v_125 then catch-fail((if v_126 then hmac(StrongHash,hs_4,(l_72,c_72)) else fail-any_type)) else caught-fail) in
-        {874}let v_127: bool = not-caught-fail(htss_2) in
-        {875}let l_73: label = (if v_127 then tls13_key else caught-fail) in
-        {876}let c_73: bitstring = (if v_127 then zero else caught-fail) in
-        {877}let kch_4: bitstring = (if v_127 then catch-fail(hmac(StrongHash,htsc_2,(l_73,c_73))) else caught-fail) in
-        {878}let v_128: bool = not-caught-fail(kch_4) in
-        {879}let l_74: label = (if v_128 then tls13_key else caught-fail) in
-        {880}let c_74: bitstring = (if v_128 then zero else caught-fail) in
-        {881}let ksh_4: bitstring = (if v_128 then catch-fail(hmac(StrongHash,htss_2,(l_74,c_74))) else caught-fail) in
-        {882}let v_129: bool = not-caught-fail(ksh_4) in
-        {883}let l_75: label = (if v_129 then tls13_finished else caught-fail) in
-        {884}let c_75: bitstring = (if v_129 then zero else caught-fail) in
-        {885}let kcm_4: bitstring = (if v_129 then catch-fail(hmac(StrongHash,htsc_2,(l_75,c_75))) else caught-fail) in
-        {886}let v_130: bool = not-caught-fail(kcm_4) in
-        {887}let l_76: label = (if v_130 then tls13_finished else caught-fail) in
-        {888}let c_76: bitstring = (if v_130 then zero else caught-fail) in
-        {889}let ksm_4: bitstring = (if v_130 then catch-fail(hmac(StrongHash,htss_2,(l_76,c_76))) else caught-fail) in
-        {890}let v_131: bool = not-caught-fail(ksm_4) in
-        {891}let (hs_5: bitstring,kch_5: ae_key,ksh_5: ae_key,kcm_5: mac_key,ksm_5: mac_key) = (if v_122 then (if v_123 then (if v_125 then (if v_127 then (if v_128 then (if v_129 then (if v_130 then (if v_131 then (hs_4,b2ae(kch_4),b2ae(ksh_4),kcm_4,ksm_4) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {892}out(io, (kch_5,ksh_5));
-        {893}event AttackerControlsHSK(kch_5,ksh_5);
-        {894}let pubTSK_6: pubkey = pk(privTSK_3) in
-        {895}let pubKAK_7: pubkey = pk(privKAK_2) in
-        {896}event ServerID(ID_S_7,kem_ss_2);
-        {897}let eat_nonce_4: bitstring = hash(StrongHash,(log_SH_2,pubTSK_6)) in
-        {898}new ev_return: channel;
+        {805}in(io, workloadRef: measurements);
+        {969}get agent_keys(ignored_v_9: identity,ignored_v_10: measurements,privTSK_3: privkey,pubTSK_5: pubkey,ignored_v_11: privkey,ignored_v_12: pubkey,ignored_v_13: privkey,ignored_v_14: pubkey) in
+        {968}get agent_keys(ignored_v_15: identity,ignored_v_16: measurements,=privTSK_3,ignored_v_17: pubkey,ignored_v_18: privkey,ignored_v_19: pubkey,privKAK_2: privkey,pubKAK_6: pubkey) in
+        {806}let ID_S_7: identity = dev2id(workloadRef) in
+        {807}let selfsign: bitstring = ((ID_S_7,pubTSK_5),Nil) in
+        {808}!
+        {809}in(io, ch_2: msg);
+        {810}let CH(cr_4: random,offer_2: params,sni: identity) = ch_2 in
+        {811}let nego(=aTLS,MLKEM_13_C(ka_2: kem_alg,ek_4: kem_pub),xhash_algo: hash_alg,xev_type: ev_typ) = offer_2 in
+        {812}let psk_2: preSharedKey = NoPSK in
+        {813}let salt_2: bitstring = zero in
+        {814}let ikm_6: bitstring = catch-fail(psk2b(psk_2)) in
+        {815}let v_112: bool = not-caught-fail(ikm_6) in
+        {816}let es_4: bitstring = catch-fail((if v_112 then hmac(StrongHash,salt_2,ikm_6) else fail-any_type)) in
+        {817}let v_113: bool = not-caught-fail(es_4) in
+        {818}let l_66: label = (if v_113 then tls13_resumption_psk_binder_key else caught-fail) in
+        {819}let m_16: bitstring = (if v_113 then zero else caught-fail) in
+        {820}let c_66: bitstring = (if v_113 then catch-fail(hash(StrongHash,m_16)) else caught-fail) in
+        {821}let v_114: bool = not-caught-fail(c_66) in
+        {822}let kb_4: bitstring = (if v_113 then catch-fail((if v_114 then hmac(StrongHash,es_4,(l_66,c_66)) else fail-any_type)) else caught-fail) in
+        {823}let v_115: bool = not-caught-fail(kb_4) in
+        {824}let l_67: label = (if v_115 then tls13_client_early_traffic_secret else caught-fail) in
+        {825}let c_67: bitstring = (if v_115 then catch-fail(hash(StrongHash,ch_2)) else caught-fail) in
+        {826}let v_116: bool = not-caught-fail(c_67) in
+        {827}let atsc0_2: bitstring = (if v_115 then catch-fail((if v_116 then hmac(StrongHash,es_4,(l_67,c_67)) else fail-any_type)) else caught-fail) in
+        {828}let v_117: bool = not-caught-fail(atsc0_2) in
+        {829}let l_68: label = (if v_117 then tls13_key else caught-fail) in
+        {830}let c_68: bitstring = (if v_117 then zero else caught-fail) in
+        {831}let kc0_4: bitstring = (if v_117 then catch-fail(hmac(StrongHash,atsc0_2,(l_68,c_68))) else caught-fail) in
+        {832}let v_118: bool = not-caught-fail(kc0_4) in
+        {833}let l_69: label = (if v_118 then tls13_early_exporter_master_secret else caught-fail) in
+        {834}let c_69: bitstring = (if v_118 then catch-fail(hash(StrongHash,ch_2)) else caught-fail) in
+        {835}let v_119: bool = not-caught-fail(c_69) in
+        {836}let ems0_4: bitstring = (if v_118 then catch-fail((if v_119 then hmac(StrongHash,es_4,(l_69,c_69)) else fail-any_type)) else caught-fail) in
+        {837}let v_120: bool = not-caught-fail(ems0_4) in
+        {838}let (es_5: bitstring,kb_5: mac_key,kc0_5: ae_key,ems0_5: bitstring) = (if v_113 then (if v_115 then (if v_117 then (if v_118 then (if v_120 then (es_4,kb_4,b2ae(kc0_4),ems0_4) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {839}new sr_2: random;
+        {840}in(io, smode: params);
+        {841}let nego(=aTLS,MLKEM_13_S(=ka_2,eee_2: kem_ct),hash_algo_2: hash_alg,ev_type_2: ev_typ) = smode in
+        {842}new ss_kem: bitstring;
+        {843}let ciph_2: kem_ct = kem_encap(ka_2,ek_4,ss_kem) in
+        {844}let mode_2: params = nego(aTLS,MLKEM_13_S(ka_2,ciph_2),hash_algo_2,ev_type_2) in
+        {845}out(io, SH(sr_2,mode_2));
+        {846}let log_SH_2: bitstring = (ch_2,SH(sr_2,mode_2)) in
+        {847}event ServerChoosesKEX(cr_4,sr_2,MLKEM_13_S(ka_2,ciph_2));
+        {848}event ServerChoosesHash(cr_4,sr_2,hash_algo_2);
+        {849}event ServerChoosesATLS(cr_4,sr_2,aTLS);
+        {850}event ServerChoosesEvType(cr_4,sr_2,ev_type_2);
+        {851}let kem_ss_2: bitstring = ss_kem in
+        {852}let l_70: label = tls13_derived in
+        {853}let m_17: bitstring = zero in
+        {854}let c_70: bitstring = catch-fail(hash(StrongHash,m_17)) in
+        {855}let v_121: bool = not-caught-fail(c_70) in
+        {856}let salt1_2: bitstring = catch-fail((if v_121 then hmac(StrongHash,es_5,(l_70,c_70)) else fail-any_type)) in
+        {857}let v_122: bool = not-caught-fail(salt1_2) in
+        {858}let hs_4: bitstring = (if v_122 then catch-fail(hmac(StrongHash,salt1_2,kem_ss_2)) else caught-fail) in
+        {859}let v_123: bool = not-caught-fail(hs_4) in
+        {860}let l_71: label = (if v_123 then tls13_client_handshake_traffic_secret else caught-fail) in
+        {861}let c_71: bitstring = (if v_123 then catch-fail(hash(StrongHash,log_SH_2)) else caught-fail) in
+        {862}let v_124: bool = not-caught-fail(c_71) in
+        {863}let htsc_2: bitstring = (if v_123 then catch-fail((if v_124 then hmac(StrongHash,hs_4,(l_71,c_71)) else fail-any_type)) else caught-fail) in
+        {864}let v_125: bool = not-caught-fail(htsc_2) in
+        {865}let l_72: label = (if v_125 then tls13_server_handshake_traffic_secret else caught-fail) in
+        {866}let c_72: bitstring = (if v_125 then catch-fail(hash(StrongHash,log_SH_2)) else caught-fail) in
+        {867}let v_126: bool = not-caught-fail(c_72) in
+        {868}let htss_2: bitstring = (if v_125 then catch-fail((if v_126 then hmac(StrongHash,hs_4,(l_72,c_72)) else fail-any_type)) else caught-fail) in
+        {869}let v_127: bool = not-caught-fail(htss_2) in
+        {870}let l_73: label = (if v_127 then tls13_key else caught-fail) in
+        {871}let c_73: bitstring = (if v_127 then zero else caught-fail) in
+        {872}let kch_4: bitstring = (if v_127 then catch-fail(hmac(StrongHash,htsc_2,(l_73,c_73))) else caught-fail) in
+        {873}let v_128: bool = not-caught-fail(kch_4) in
+        {874}let l_74: label = (if v_128 then tls13_key else caught-fail) in
+        {875}let c_74: bitstring = (if v_128 then zero else caught-fail) in
+        {876}let ksh_4: bitstring = (if v_128 then catch-fail(hmac(StrongHash,htss_2,(l_74,c_74))) else caught-fail) in
+        {877}let v_129: bool = not-caught-fail(ksh_4) in
+        {878}let l_75: label = (if v_129 then tls13_finished else caught-fail) in
+        {879}let c_75: bitstring = (if v_129 then zero else caught-fail) in
+        {880}let kcm_4: bitstring = (if v_129 then catch-fail(hmac(StrongHash,htsc_2,(l_75,c_75))) else caught-fail) in
+        {881}let v_130: bool = not-caught-fail(kcm_4) in
+        {882}let l_76: label = (if v_130 then tls13_finished else caught-fail) in
+        {883}let c_76: bitstring = (if v_130 then zero else caught-fail) in
+        {884}let ksm_4: bitstring = (if v_130 then catch-fail(hmac(StrongHash,htss_2,(l_76,c_76))) else caught-fail) in
+        {885}let v_131: bool = not-caught-fail(ksm_4) in
+        {886}let (hs_5: bitstring,kch_5: ae_key,ksh_5: ae_key,kcm_5: mac_key,ksm_5: mac_key) = (if v_122 then (if v_123 then (if v_125 then (if v_127 then (if v_128 then (if v_129 then (if v_130 then (if v_131 then (hs_4,b2ae(kch_4),b2ae(ksh_4),kcm_4,ksm_4) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {887}out(io, (kch_5,ksh_5));
+        {888}event AttackerControlsHSK(kch_5,ksh_5);
+        {889}let pubTSK_6: pubkey = pk(privTSK_3) in
+        {890}let pubKAK_7: pubkey = pk(privKAK_2) in
+        {891}event ServerID(ID_S_7,kem_ss_2);
+        {892}let eat_nonce_4: bitstring = hash(StrongHash,(log_SH_2,pubTSK_6)) in
+        {893}new ev_return: channel;
         (
-            {899}let sr_3: random = sr_2 in
-            {900}let return_chan: channel = ev_return in
-            {901}let pubKAK_8: pubkey = pk(privKAK_2) in
-            {902}let runtime_attr: attribute = meas2attr(workloadRef) in
-            {903}let pat_claims_4: bitstring = eat_pat_profile(pubKAK_8,runtime_attr,workloadRef,eat_nonce_4) in
-            {904}let cdata_4: bitstring = (StrongHash,pat_claims_4) in
-            {905}out(io, (workloadRef,cdata_4));
-            {906}in(io, dataSign: bitstring);
-            {907}let (signed_claims: bitstring,pat_sig_2: bitstring) = dataSign in
-            {908}let eat_pat_profile(=pubKAK_8,evidence_attr: attribute,=workloadRef,=eat_nonce_4) = signed_claims in
-            {909}let pat_2: bitstring = (signed_claims,pat_sig_2) in
-            {910}let kat_claims_4: bitstring = eat_kat_profile(pubTSK_6,evidence_attr,eat_nonce_4) in
-            {911}let kat_2: bitstring = (kat_claims_4,sign(privKAK_2,kat_claims_4)) in
-            {912}event ServerAssertsProvenance(cr_4,sr_3,evidence_attr);
-            {913}let cmw_2: bitstring = (pat_2,kat_2) in
-            {914}out(return_chan, cmw_2)
+            {894}let sr_3: random = sr_2 in
+            {895}let return_chan: channel = ev_return in
+            {896}let pubKAK_8: pubkey = pk(privKAK_2) in
+            {897}let evidence_attr: attribute = meas2attr(workloadRef) in
+            {898}let pat_claims_4: bitstring = eat_pat_profile(pubKAK_8,evidence_attr,workloadRef,eat_nonce_4) in
+            {899}let cdata_4: bitstring = (StrongHash,pat_claims_4) in
+            {900}out(io, (workloadRef,cdata_4));
+            {901}in(io, dataSign: bitstring);
+            {902}let (signed_claims: bitstring,pat_sig_2: bitstring) = dataSign in
+            {903}let pat_2: bitstring = (pat_claims_4,pat_sig_2) in
+            {904}let kat_claims_4: bitstring = eat_kat_profile(pubTSK_6,evidence_attr,eat_nonce_4) in
+            {905}let kat_2: bitstring = (kat_claims_4,sign(privKAK_2,kat_claims_4)) in
+            {906}event ServerAssertsProvenance(cr_4,sr_3,evidence_attr);
+            {907}let cmw_2: bitstring = (pat_2,kat_2) in
+            {908}out(return_chan, cmw_2)
         ) | (
-            {915}in(ev_return, cmw_3: bitstring);
-            {916}let crt_msg_2: bitstring = (cmw_3,selfsign) in
-            {917}out(io, CRT(crt_msg_2));
-            {918}let log_CRT_2: bitstring = (log_SH_2,CRT(crt_msg_2)) in
-            {919}let sg_4: bitstring = sign(privTSK_3,hash(hash_algo_2,log_CRT_2)) in
-            {920}out(io, CV(sg_4));
-            {921}let log_CV_4: bitstring = (log_CRT_2,CV(sg_4)) in
-            {922}let m1_4: bitstring = hmac(StrongHash,ksm_5,log_CV_4) in
-            {923}let log_SFIN_4: bitstring = (log_CV_4,FIN(m1_4)) in
-            {924}let l_77: label = tls13_derived in
-            {925}let m_18: bitstring = zero in
-            {926}let c_77: bitstring = catch-fail(hash(StrongHash,m_18)) in
-            {927}let v_132: bool = not-caught-fail(c_77) in
-            {928}let salt2_4: bitstring = catch-fail((if v_132 then hmac(StrongHash,hs_5,(l_77,c_77)) else fail-any_type)) in
-            {929}let v_133: bool = not-caught-fail(salt2_4) in
-            {930}let ikm_7: bitstring = (if v_133 then zero else caught-fail) in
-            {931}let ms_8: bitstring = (if v_133 then catch-fail(hmac(StrongHash,salt2_4,ikm_7)) else caught-fail) in
-            {932}let v_134: bool = not-caught-fail(ms_8) in
-            {933}let l_78: label = (if v_134 then tls13_client_application_traffic_secret else caught-fail) in
-            {934}let c_78: bitstring = (if v_134 then catch-fail(hash(StrongHash,log_SFIN_4)) else caught-fail) in
-            {935}let v_135: bool = not-caught-fail(c_78) in
-            {936}let atsc_4: bitstring = (if v_134 then catch-fail((if v_135 then hmac(StrongHash,ms_8,(l_78,c_78)) else fail-any_type)) else caught-fail) in
-            {937}let v_136: bool = not-caught-fail(atsc_4) in
-            {938}let l_79: label = (if v_136 then tls13_server_application_traffic_secret else caught-fail) in
-            {939}let c_79: bitstring = (if v_136 then catch-fail(hash(StrongHash,log_SFIN_4)) else caught-fail) in
-            {940}let v_137: bool = not-caught-fail(c_79) in
-            {941}let atss_4: bitstring = (if v_136 then catch-fail((if v_137 then hmac(StrongHash,ms_8,(l_79,c_79)) else fail-any_type)) else caught-fail) in
-            {942}let v_138: bool = not-caught-fail(atss_4) in
-            {943}let l_80: label = (if v_138 then tls13_key else caught-fail) in
-            {944}let c_80: bitstring = (if v_138 then zero else caught-fail) in
-            {945}let kc_10: bitstring = (if v_138 then catch-fail(hmac(StrongHash,atsc_4,(l_80,c_80))) else caught-fail) in
-            {946}let v_139: bool = not-caught-fail(kc_10) in
-            {947}let l_81: label = (if v_139 then tls13_key else caught-fail) in
-            {948}let c_81: bitstring = (if v_139 then zero else caught-fail) in
-            {949}let ks_10: bitstring = (if v_139 then catch-fail(hmac(StrongHash,atss_4,(l_81,c_81))) else caught-fail) in
-            {950}let v_140: bool = not-caught-fail(ks_10) in
-            {951}let l_82: label = (if v_140 then tls13_exporter_master_secret else caught-fail) in
-            {952}let c_82: bitstring = (if v_140 then catch-fail(hash(StrongHash,log_SFIN_4)) else caught-fail) in
-            {953}let v_141: bool = not-caught-fail(c_82) in
-            {954}let ems_10: bitstring = (if v_140 then catch-fail((if v_141 then hmac(StrongHash,ms_8,(l_82,c_82)) else fail-any_type)) else caught-fail) in
-            {955}let v_142: bool = not-caught-fail(ems_10) in
-            {956}let (ms_9: bitstring,kc_11: ae_key,ks_11: ae_key,ems_11: bitstring) = (if v_133 then (if v_134 then (if v_136 then (if v_138 then (if v_139 then (if v_140 then (if v_142 then (ms_8,b2ae(kc_10),b2ae(ks_10),ems_10) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-            {957}event PreServerComp(ID_S_7,psk_2,offer_2,mode_2,kc_11,ks_11,ems_11,cr_4,sr_2,pubTSK_6,workloadRef);
-            {958}out(io, FIN(m1_4));
-            {959}in(io, FIN(m2_4: bitstring));
-            {960}if (m2_4 = hmac(StrongHash,kcm_5,log_SFIN_4)) then
-            {961}let log_CFIN_4: bitstring = (log_SFIN_4,FIN(m2_4)) in
-            {962}let l_83: label = tls13_resumption_master_secret in
-            {963}let c_83: bitstring = catch-fail(hash(StrongHash,log_CFIN_4)) in
-            {964}let v_143: bool = not-caught-fail(c_83) in
-            {965}let rms_6: bitstring = (if v_143 then hmac(StrongHash,ms_9,(l_83,c_83)) else fail-any_type) in
-            {966}event ServerStateEvKc(cmw_3,kc_11);
-            {967}event ServerStateEvKch(cmw_3,kch_5);
-            {968}event ServerStateEv(cmw_3,kem_ss_2);
-            {969}event ServerFinished(cr_4,sr_2,psk_2,pubTSK_6,offer_2,mode_2,kc_11,ks_11,ems_11,rms_6);
-            {970}new app_msg: bitstring;
-            {971}let req_ctx_6: bitstring = cr_4 in
-            {972}event ServerSendsAppData(ID_S_7,pubTSK_6,pubKAK_7,cr_4,sr_2,req_ctx_6,ems_11,ks_11,kc_11,workloadRef,app_msg);
-            {973}out(io, ph_msg(app_msg,ks_11))
+            {909}in(ev_return, cmw_3: bitstring);
+            {910}let crt_msg_2: bitstring = (cmw_3,selfsign) in
+            {911}out(io, CRT(crt_msg_2));
+            {912}let log_CRT_2: bitstring = (log_SH_2,CRT(crt_msg_2)) in
+            {913}let sg_4: bitstring = sign(privTSK_3,hash(hash_algo_2,log_CRT_2)) in
+            {914}out(io, CV(sg_4));
+            {915}let log_CV_4: bitstring = (log_CRT_2,CV(sg_4)) in
+            {916}let m1_4: bitstring = hmac(StrongHash,ksm_5,log_CV_4) in
+            {917}let log_SFIN_4: bitstring = (log_CV_4,FIN(m1_4)) in
+            {918}let l_77: label = tls13_derived in
+            {919}let m_18: bitstring = zero in
+            {920}let c_77: bitstring = catch-fail(hash(StrongHash,m_18)) in
+            {921}let v_132: bool = not-caught-fail(c_77) in
+            {922}let salt2_4: bitstring = catch-fail((if v_132 then hmac(StrongHash,hs_5,(l_77,c_77)) else fail-any_type)) in
+            {923}let v_133: bool = not-caught-fail(salt2_4) in
+            {924}let ikm_7: bitstring = (if v_133 then zero else caught-fail) in
+            {925}let ms_8: bitstring = (if v_133 then catch-fail(hmac(StrongHash,salt2_4,ikm_7)) else caught-fail) in
+            {926}let v_134: bool = not-caught-fail(ms_8) in
+            {927}let l_78: label = (if v_134 then tls13_client_application_traffic_secret else caught-fail) in
+            {928}let c_78: bitstring = (if v_134 then catch-fail(hash(StrongHash,log_SFIN_4)) else caught-fail) in
+            {929}let v_135: bool = not-caught-fail(c_78) in
+            {930}let atsc_4: bitstring = (if v_134 then catch-fail((if v_135 then hmac(StrongHash,ms_8,(l_78,c_78)) else fail-any_type)) else caught-fail) in
+            {931}let v_136: bool = not-caught-fail(atsc_4) in
+            {932}let l_79: label = (if v_136 then tls13_server_application_traffic_secret else caught-fail) in
+            {933}let c_79: bitstring = (if v_136 then catch-fail(hash(StrongHash,log_SFIN_4)) else caught-fail) in
+            {934}let v_137: bool = not-caught-fail(c_79) in
+            {935}let atss_4: bitstring = (if v_136 then catch-fail((if v_137 then hmac(StrongHash,ms_8,(l_79,c_79)) else fail-any_type)) else caught-fail) in
+            {936}let v_138: bool = not-caught-fail(atss_4) in
+            {937}let l_80: label = (if v_138 then tls13_key else caught-fail) in
+            {938}let c_80: bitstring = (if v_138 then zero else caught-fail) in
+            {939}let kc_10: bitstring = (if v_138 then catch-fail(hmac(StrongHash,atsc_4,(l_80,c_80))) else caught-fail) in
+            {940}let v_139: bool = not-caught-fail(kc_10) in
+            {941}let l_81: label = (if v_139 then tls13_key else caught-fail) in
+            {942}let c_81: bitstring = (if v_139 then zero else caught-fail) in
+            {943}let ks_10: bitstring = (if v_139 then catch-fail(hmac(StrongHash,atss_4,(l_81,c_81))) else caught-fail) in
+            {944}let v_140: bool = not-caught-fail(ks_10) in
+            {945}let l_82: label = (if v_140 then tls13_exporter_master_secret else caught-fail) in
+            {946}let c_82: bitstring = (if v_140 then catch-fail(hash(StrongHash,log_SFIN_4)) else caught-fail) in
+            {947}let v_141: bool = not-caught-fail(c_82) in
+            {948}let ems_10: bitstring = (if v_140 then catch-fail((if v_141 then hmac(StrongHash,ms_8,(l_82,c_82)) else fail-any_type)) else caught-fail) in
+            {949}let v_142: bool = not-caught-fail(ems_10) in
+            {950}let (ms_9: bitstring,kc_11: ae_key,ks_11: ae_key,ems_11: bitstring) = (if v_133 then (if v_134 then (if v_136 then (if v_138 then (if v_139 then (if v_140 then (if v_142 then (ms_8,b2ae(kc_10),b2ae(ks_10),ems_10) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+            {951}event PreServerComp(ID_S_7,psk_2,offer_2,mode_2,kc_11,ks_11,ems_11,cr_4,sr_2,pubTSK_6,workloadRef);
+            {952}out(io, FIN(m1_4));
+            {953}in(io, FIN(m2_4: bitstring));
+            {954}if (m2_4 = hmac(StrongHash,kcm_5,log_SFIN_4)) then
+            {955}let log_CFIN_4: bitstring = (log_SFIN_4,FIN(m2_4)) in
+            {956}let l_83: label = tls13_resumption_master_secret in
+            {957}let c_83: bitstring = catch-fail(hash(StrongHash,log_CFIN_4)) in
+            {958}let v_143: bool = not-caught-fail(c_83) in
+            {959}let rms_6: bitstring = (if v_143 then hmac(StrongHash,ms_9,(l_83,c_83)) else fail-any_type) in
+            {960}event ServerStateEvKc(cmw_3,kc_11);
+            {961}event ServerStateEvKch(cmw_3,kch_5);
+            {962}event ServerStateEv(cmw_3,kem_ss_2);
+            {963}event ServerFinished(cr_4,sr_2,psk_2,pubTSK_6,offer_2,mode_2,kc_11,ks_11,ems_11,rms_6);
+            {964}new app_msg: bitstring;
+            {965}let req_ctx_6: bitstring = cr_4 in
+            {966}event ServerSendsAppData(ID_S_7,pubTSK_6,pubKAK_7,cr_4,sr_2,req_ctx_6,ems_11,ks_11,kc_11,workloadRef,app_msg);
+            {967}out(io, ph_msg(app_msg,ks_11))
         )
     )
     else
-        {976}if (idOption = OptionB) then
-        {977}in(io, (server_cert_4: bitstring,workloadRef_1: measurements));
-        {978}let (id_pub_pair_5: bitstring,sig1_3: bitstring) = server_cert_4 in
-        {979}let (SAN: identity,pubTSK_7: pubkey) = id_pub_pair_5 in
-        {1142}get agent_keys(UEID_3: identity,ignored_v_20: measurements,privTSK_4: privkey,ignored_v_21: pubkey,ignored_v_22: privkey,ignored_v_23: pubkey,ignored_v_24: privkey,ignored_v_25: pubkey) in
-        {1141}get agent_keys(=UEID_3,ignored_v_26: measurements,ignored_v_27: privkey,ignored_v_28: pubkey,ignored_v_29: privkey,ignored_v_30: pubkey,privKAK_3: privkey,pubKAK_9: pubkey) in
-        {980}!
-        {981}in(io, ch_3: msg);
-        {982}let CH(cr_5: random,offer_3: params,sni_1: identity) = ch_3 in
-        {983}let nego(=aTLS,MLKEM_13_C(ka_3: kem_alg,ek_5: kem_pub),xhash_algo_1: hash_alg,xev_type_1: ev_typ) = offer_3 in
-        {984}let psk_3: preSharedKey = NoPSK in
-        {985}let salt_3: bitstring = zero in
-        {986}let ikm_8: bitstring = catch-fail(psk2b(psk_3)) in
-        {987}let v_144: bool = not-caught-fail(ikm_8) in
-        {988}let es_6: bitstring = catch-fail((if v_144 then hmac(StrongHash,salt_3,ikm_8) else fail-any_type)) in
-        {989}let v_145: bool = not-caught-fail(es_6) in
-        {990}let l_84: label = (if v_145 then tls13_resumption_psk_binder_key else caught-fail) in
-        {991}let m_19: bitstring = (if v_145 then zero else caught-fail) in
-        {992}let c_84: bitstring = (if v_145 then catch-fail(hash(StrongHash,m_19)) else caught-fail) in
-        {993}let v_146: bool = not-caught-fail(c_84) in
-        {994}let kb_6: bitstring = (if v_145 then catch-fail((if v_146 then hmac(StrongHash,es_6,(l_84,c_84)) else fail-any_type)) else caught-fail) in
-        {995}let v_147: bool = not-caught-fail(kb_6) in
-        {996}let l_85: label = (if v_147 then tls13_client_early_traffic_secret else caught-fail) in
-        {997}let c_85: bitstring = (if v_147 then catch-fail(hash(StrongHash,ch_3)) else caught-fail) in
-        {998}let v_148: bool = not-caught-fail(c_85) in
-        {999}let atsc0_3: bitstring = (if v_147 then catch-fail((if v_148 then hmac(StrongHash,es_6,(l_85,c_85)) else fail-any_type)) else caught-fail) in
-        {1000}let v_149: bool = not-caught-fail(atsc0_3) in
-        {1001}let l_86: label = (if v_149 then tls13_key else caught-fail) in
-        {1002}let c_86: bitstring = (if v_149 then zero else caught-fail) in
-        {1003}let kc0_6: bitstring = (if v_149 then catch-fail(hmac(StrongHash,atsc0_3,(l_86,c_86))) else caught-fail) in
-        {1004}let v_150: bool = not-caught-fail(kc0_6) in
-        {1005}let l_87: label = (if v_150 then tls13_early_exporter_master_secret else caught-fail) in
-        {1006}let c_87: bitstring = (if v_150 then catch-fail(hash(StrongHash,ch_3)) else caught-fail) in
-        {1007}let v_151: bool = not-caught-fail(c_87) in
-        {1008}let ems0_6: bitstring = (if v_150 then catch-fail((if v_151 then hmac(StrongHash,es_6,(l_87,c_87)) else fail-any_type)) else caught-fail) in
-        {1009}let v_152: bool = not-caught-fail(ems0_6) in
-        {1010}let (es_7: bitstring,kb_7: mac_key,kc0_7: ae_key,ems0_7: bitstring) = (if v_145 then (if v_147 then (if v_149 then (if v_150 then (if v_152 then (es_6,kb_6,b2ae(kc0_6),ems0_6) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {1011}new sr_4: random;
-        {1012}in(io, smode_1: params);
-        {1013}let nego(=aTLS,MLKEM_13_S(=ka_3,eee_3: kem_ct),hash_algo_3: hash_alg,ev_type_3: ev_typ) = smode_1 in
-        {1014}new ss_kem_1: bitstring;
-        {1015}let ciph_3: kem_ct = kem_encap(ka_3,ek_5,ss_kem_1) in
-        {1016}let mode_3: params = nego(aTLS,MLKEM_13_S(ka_3,ciph_3),hash_algo_3,ev_type_3) in
-        {1017}out(io, SH(sr_4,mode_3));
-        {1018}let log_SH_3: bitstring = (ch_3,SH(sr_4,mode_3)) in
-        {1019}event ServerChoosesKEX(cr_5,sr_4,MLKEM_13_S(ka_3,ciph_3));
-        {1020}event ServerChoosesHash(cr_5,sr_4,hash_algo_3);
-        {1021}event ServerChoosesATLS(cr_5,sr_4,aTLS);
-        {1022}event ServerChoosesEvType(cr_5,sr_4,ev_type_3);
-        {1023}let kem_ss_3: bitstring = ss_kem_1 in
-        {1024}let l_88: label = tls13_derived in
-        {1025}let m_20: bitstring = zero in
-        {1026}let c_88: bitstring = catch-fail(hash(StrongHash,m_20)) in
-        {1027}let v_153: bool = not-caught-fail(c_88) in
-        {1028}let salt1_3: bitstring = catch-fail((if v_153 then hmac(StrongHash,es_7,(l_88,c_88)) else fail-any_type)) in
-        {1029}let v_154: bool = not-caught-fail(salt1_3) in
-        {1030}let hs_6: bitstring = (if v_154 then catch-fail(hmac(StrongHash,salt1_3,kem_ss_3)) else caught-fail) in
-        {1031}let v_155: bool = not-caught-fail(hs_6) in
-        {1032}let l_89: label = (if v_155 then tls13_client_handshake_traffic_secret else caught-fail) in
-        {1033}let c_89: bitstring = (if v_155 then catch-fail(hash(StrongHash,log_SH_3)) else caught-fail) in
-        {1034}let v_156: bool = not-caught-fail(c_89) in
-        {1035}let htsc_3: bitstring = (if v_155 then catch-fail((if v_156 then hmac(StrongHash,hs_6,(l_89,c_89)) else fail-any_type)) else caught-fail) in
-        {1036}let v_157: bool = not-caught-fail(htsc_3) in
-        {1037}let l_90: label = (if v_157 then tls13_server_handshake_traffic_secret else caught-fail) in
-        {1038}let c_90: bitstring = (if v_157 then catch-fail(hash(StrongHash,log_SH_3)) else caught-fail) in
-        {1039}let v_158: bool = not-caught-fail(c_90) in
-        {1040}let htss_3: bitstring = (if v_157 then catch-fail((if v_158 then hmac(StrongHash,hs_6,(l_90,c_90)) else fail-any_type)) else caught-fail) in
-        {1041}let v_159: bool = not-caught-fail(htss_3) in
-        {1042}let l_91: label = (if v_159 then tls13_key else caught-fail) in
-        {1043}let c_91: bitstring = (if v_159 then zero else caught-fail) in
-        {1044}let kch_6: bitstring = (if v_159 then catch-fail(hmac(StrongHash,htsc_3,(l_91,c_91))) else caught-fail) in
-        {1045}let v_160: bool = not-caught-fail(kch_6) in
-        {1046}let l_92: label = (if v_160 then tls13_key else caught-fail) in
-        {1047}let c_92: bitstring = (if v_160 then zero else caught-fail) in
-        {1048}let ksh_6: bitstring = (if v_160 then catch-fail(hmac(StrongHash,htss_3,(l_92,c_92))) else caught-fail) in
-        {1049}let v_161: bool = not-caught-fail(ksh_6) in
-        {1050}let l_93: label = (if v_161 then tls13_finished else caught-fail) in
-        {1051}let c_93: bitstring = (if v_161 then zero else caught-fail) in
-        {1052}let kcm_6: bitstring = (if v_161 then catch-fail(hmac(StrongHash,htsc_3,(l_93,c_93))) else caught-fail) in
-        {1053}let v_162: bool = not-caught-fail(kcm_6) in
-        {1054}let l_94: label = (if v_162 then tls13_finished else caught-fail) in
-        {1055}let c_94: bitstring = (if v_162 then zero else caught-fail) in
-        {1056}let ksm_6: bitstring = (if v_162 then catch-fail(hmac(StrongHash,htss_3,(l_94,c_94))) else caught-fail) in
-        {1057}let v_163: bool = not-caught-fail(ksm_6) in
-        {1058}let (hs_7: bitstring,kch_7: ae_key,ksh_7: ae_key,kcm_7: mac_key,ksm_7: mac_key) = (if v_154 then (if v_155 then (if v_157 then (if v_159 then (if v_160 then (if v_161 then (if v_162 then (if v_163 then (hs_6,b2ae(kch_6),b2ae(ksh_6),kcm_6,ksm_6) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-        {1059}out(io, (kch_7,ksh_7));
-        {1060}event AttackerControlsHSK(kch_7,ksh_7);
-        {1061}let pubTSK_8: pubkey = pk(privTSK_4) in
-        {1062}let pubKAK_10: pubkey = pk(privKAK_3) in
-        {1063}event ServerID(SAN,kem_ss_3);
-        {1064}let eat_nonce_5: bitstring = hash(StrongHash,(log_SH_3,pubTSK_8)) in
-        {1065}new ev_return_1: channel;
+        {970}if (idOption = OptionB) then
+        {971}in(io, (server_cert_4: bitstring,workloadRef_1: measurements));
+        {972}let (id_pub_pair_5: bitstring,sig1_3: bitstring) = server_cert_4 in
+        {973}let (SAN: identity,pubTSK_7: pubkey) = id_pub_pair_5 in
+        {1135}get agent_keys(UEID_3: identity,ignored_v_20: measurements,privTSK_4: privkey,ignored_v_21: pubkey,ignored_v_22: privkey,ignored_v_23: pubkey,ignored_v_24: privkey,ignored_v_25: pubkey) in
+        {1134}get agent_keys(=UEID_3,ignored_v_26: measurements,ignored_v_27: privkey,ignored_v_28: pubkey,ignored_v_29: privkey,ignored_v_30: pubkey,privKAK_3: privkey,pubKAK_9: pubkey) in
+        {974}!
+        {975}in(io, ch_3: msg);
+        {976}let CH(cr_5: random,offer_3: params,sni_1: identity) = ch_3 in
+        {977}let nego(=aTLS,MLKEM_13_C(ka_3: kem_alg,ek_5: kem_pub),xhash_algo_1: hash_alg,xev_type_1: ev_typ) = offer_3 in
+        {978}let psk_3: preSharedKey = NoPSK in
+        {979}let salt_3: bitstring = zero in
+        {980}let ikm_8: bitstring = catch-fail(psk2b(psk_3)) in
+        {981}let v_144: bool = not-caught-fail(ikm_8) in
+        {982}let es_6: bitstring = catch-fail((if v_144 then hmac(StrongHash,salt_3,ikm_8) else fail-any_type)) in
+        {983}let v_145: bool = not-caught-fail(es_6) in
+        {984}let l_84: label = (if v_145 then tls13_resumption_psk_binder_key else caught-fail) in
+        {985}let m_19: bitstring = (if v_145 then zero else caught-fail) in
+        {986}let c_84: bitstring = (if v_145 then catch-fail(hash(StrongHash,m_19)) else caught-fail) in
+        {987}let v_146: bool = not-caught-fail(c_84) in
+        {988}let kb_6: bitstring = (if v_145 then catch-fail((if v_146 then hmac(StrongHash,es_6,(l_84,c_84)) else fail-any_type)) else caught-fail) in
+        {989}let v_147: bool = not-caught-fail(kb_6) in
+        {990}let l_85: label = (if v_147 then tls13_client_early_traffic_secret else caught-fail) in
+        {991}let c_85: bitstring = (if v_147 then catch-fail(hash(StrongHash,ch_3)) else caught-fail) in
+        {992}let v_148: bool = not-caught-fail(c_85) in
+        {993}let atsc0_3: bitstring = (if v_147 then catch-fail((if v_148 then hmac(StrongHash,es_6,(l_85,c_85)) else fail-any_type)) else caught-fail) in
+        {994}let v_149: bool = not-caught-fail(atsc0_3) in
+        {995}let l_86: label = (if v_149 then tls13_key else caught-fail) in
+        {996}let c_86: bitstring = (if v_149 then zero else caught-fail) in
+        {997}let kc0_6: bitstring = (if v_149 then catch-fail(hmac(StrongHash,atsc0_3,(l_86,c_86))) else caught-fail) in
+        {998}let v_150: bool = not-caught-fail(kc0_6) in
+        {999}let l_87: label = (if v_150 then tls13_early_exporter_master_secret else caught-fail) in
+        {1000}let c_87: bitstring = (if v_150 then catch-fail(hash(StrongHash,ch_3)) else caught-fail) in
+        {1001}let v_151: bool = not-caught-fail(c_87) in
+        {1002}let ems0_6: bitstring = (if v_150 then catch-fail((if v_151 then hmac(StrongHash,es_6,(l_87,c_87)) else fail-any_type)) else caught-fail) in
+        {1003}let v_152: bool = not-caught-fail(ems0_6) in
+        {1004}let (es_7: bitstring,kb_7: mac_key,kc0_7: ae_key,ems0_7: bitstring) = (if v_145 then (if v_147 then (if v_149 then (if v_150 then (if v_152 then (es_6,kb_6,b2ae(kc0_6),ems0_6) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {1005}new sr_4: random;
+        {1006}in(io, smode_1: params);
+        {1007}let nego(=aTLS,MLKEM_13_S(=ka_3,eee_3: kem_ct),hash_algo_3: hash_alg,ev_type_3: ev_typ) = smode_1 in
+        {1008}new ss_kem_1: bitstring;
+        {1009}let ciph_3: kem_ct = kem_encap(ka_3,ek_5,ss_kem_1) in
+        {1010}let mode_3: params = nego(aTLS,MLKEM_13_S(ka_3,ciph_3),hash_algo_3,ev_type_3) in
+        {1011}out(io, SH(sr_4,mode_3));
+        {1012}let log_SH_3: bitstring = (ch_3,SH(sr_4,mode_3)) in
+        {1013}event ServerChoosesKEX(cr_5,sr_4,MLKEM_13_S(ka_3,ciph_3));
+        {1014}event ServerChoosesHash(cr_5,sr_4,hash_algo_3);
+        {1015}event ServerChoosesATLS(cr_5,sr_4,aTLS);
+        {1016}event ServerChoosesEvType(cr_5,sr_4,ev_type_3);
+        {1017}let kem_ss_3: bitstring = ss_kem_1 in
+        {1018}let l_88: label = tls13_derived in
+        {1019}let m_20: bitstring = zero in
+        {1020}let c_88: bitstring = catch-fail(hash(StrongHash,m_20)) in
+        {1021}let v_153: bool = not-caught-fail(c_88) in
+        {1022}let salt1_3: bitstring = catch-fail((if v_153 then hmac(StrongHash,es_7,(l_88,c_88)) else fail-any_type)) in
+        {1023}let v_154: bool = not-caught-fail(salt1_3) in
+        {1024}let hs_6: bitstring = (if v_154 then catch-fail(hmac(StrongHash,salt1_3,kem_ss_3)) else caught-fail) in
+        {1025}let v_155: bool = not-caught-fail(hs_6) in
+        {1026}let l_89: label = (if v_155 then tls13_client_handshake_traffic_secret else caught-fail) in
+        {1027}let c_89: bitstring = (if v_155 then catch-fail(hash(StrongHash,log_SH_3)) else caught-fail) in
+        {1028}let v_156: bool = not-caught-fail(c_89) in
+        {1029}let htsc_3: bitstring = (if v_155 then catch-fail((if v_156 then hmac(StrongHash,hs_6,(l_89,c_89)) else fail-any_type)) else caught-fail) in
+        {1030}let v_157: bool = not-caught-fail(htsc_3) in
+        {1031}let l_90: label = (if v_157 then tls13_server_handshake_traffic_secret else caught-fail) in
+        {1032}let c_90: bitstring = (if v_157 then catch-fail(hash(StrongHash,log_SH_3)) else caught-fail) in
+        {1033}let v_158: bool = not-caught-fail(c_90) in
+        {1034}let htss_3: bitstring = (if v_157 then catch-fail((if v_158 then hmac(StrongHash,hs_6,(l_90,c_90)) else fail-any_type)) else caught-fail) in
+        {1035}let v_159: bool = not-caught-fail(htss_3) in
+        {1036}let l_91: label = (if v_159 then tls13_key else caught-fail) in
+        {1037}let c_91: bitstring = (if v_159 then zero else caught-fail) in
+        {1038}let kch_6: bitstring = (if v_159 then catch-fail(hmac(StrongHash,htsc_3,(l_91,c_91))) else caught-fail) in
+        {1039}let v_160: bool = not-caught-fail(kch_6) in
+        {1040}let l_92: label = (if v_160 then tls13_key else caught-fail) in
+        {1041}let c_92: bitstring = (if v_160 then zero else caught-fail) in
+        {1042}let ksh_6: bitstring = (if v_160 then catch-fail(hmac(StrongHash,htss_3,(l_92,c_92))) else caught-fail) in
+        {1043}let v_161: bool = not-caught-fail(ksh_6) in
+        {1044}let l_93: label = (if v_161 then tls13_finished else caught-fail) in
+        {1045}let c_93: bitstring = (if v_161 then zero else caught-fail) in
+        {1046}let kcm_6: bitstring = (if v_161 then catch-fail(hmac(StrongHash,htsc_3,(l_93,c_93))) else caught-fail) in
+        {1047}let v_162: bool = not-caught-fail(kcm_6) in
+        {1048}let l_94: label = (if v_162 then tls13_finished else caught-fail) in
+        {1049}let c_94: bitstring = (if v_162 then zero else caught-fail) in
+        {1050}let ksm_6: bitstring = (if v_162 then catch-fail(hmac(StrongHash,htss_3,(l_94,c_94))) else caught-fail) in
+        {1051}let v_163: bool = not-caught-fail(ksm_6) in
+        {1052}let (hs_7: bitstring,kch_7: ae_key,ksh_7: ae_key,kcm_7: mac_key,ksm_7: mac_key) = (if v_154 then (if v_155 then (if v_157 then (if v_159 then (if v_160 then (if v_161 then (if v_162 then (if v_163 then (hs_6,b2ae(kch_6),b2ae(ksh_6),kcm_6,ksm_6) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+        {1053}out(io, (kch_7,ksh_7));
+        {1054}event AttackerControlsHSK(kch_7,ksh_7);
+        {1055}let pubTSK_8: pubkey = pk(privTSK_4) in
+        {1056}let pubKAK_10: pubkey = pk(privKAK_3) in
+        {1057}event ServerID(SAN,kem_ss_3);
+        {1058}let eat_nonce_5: bitstring = hash(StrongHash,(log_SH_3,pubTSK_8)) in
+        {1059}new ev_return_1: channel;
         (
-            {1066}let sr_5: random = sr_4 in
-            {1067}let return_chan_1: channel = ev_return_1 in
-            {1068}let pubKAK_11: pubkey = pk(privKAK_3) in
-            {1069}let runtime_attr_1: attribute = meas2attr(workloadRef_1) in
-            {1070}let pat_claims_5: bitstring = eat_pat_profile(pubKAK_11,runtime_attr_1,workloadRef_1,eat_nonce_5) in
-            {1071}let cdata_5: bitstring = (StrongHash,pat_claims_5) in
-            {1072}out(io, (workloadRef_1,cdata_5));
-            {1073}in(io, dataSign_1: bitstring);
-            {1074}let (signed_claims_1: bitstring,pat_sig_3: bitstring) = dataSign_1 in
-            {1075}let eat_pat_profile(=pubKAK_11,evidence_attr_1: attribute,=workloadRef_1,=eat_nonce_5) = signed_claims_1 in
-            {1076}let pat_3: bitstring = (signed_claims_1,pat_sig_3) in
-            {1077}let kat_claims_5: bitstring = eat_kat_profile(pubTSK_8,evidence_attr_1,eat_nonce_5) in
-            {1078}let kat_3: bitstring = (kat_claims_5,sign(privKAK_3,kat_claims_5)) in
-            {1079}event ServerAssertsProvenance(cr_5,sr_5,evidence_attr_1);
-            {1080}let cmw_4: bitstring = (pat_3,kat_3) in
-            {1081}out(return_chan_1, cmw_4)
+            {1060}let sr_5: random = sr_4 in
+            {1061}let return_chan_1: channel = ev_return_1 in
+            {1062}let pubKAK_11: pubkey = pk(privKAK_3) in
+            {1063}let evidence_attr_1: attribute = meas2attr(workloadRef_1) in
+            {1064}let pat_claims_5: bitstring = eat_pat_profile(pubKAK_11,evidence_attr_1,workloadRef_1,eat_nonce_5) in
+            {1065}let cdata_5: bitstring = (StrongHash,pat_claims_5) in
+            {1066}out(io, (workloadRef_1,cdata_5));
+            {1067}in(io, dataSign_1: bitstring);
+            {1068}let (signed_claims_1: bitstring,pat_sig_3: bitstring) = dataSign_1 in
+            {1069}let pat_3: bitstring = (pat_claims_5,pat_sig_3) in
+            {1070}let kat_claims_5: bitstring = eat_kat_profile(pubTSK_8,evidence_attr_1,eat_nonce_5) in
+            {1071}let kat_3: bitstring = (kat_claims_5,sign(privKAK_3,kat_claims_5)) in
+            {1072}event ServerAssertsProvenance(cr_5,sr_5,evidence_attr_1);
+            {1073}let cmw_4: bitstring = (pat_3,kat_3) in
+            {1074}out(return_chan_1, cmw_4)
         ) | (
-            {1082}in(ev_return_1, cmw_5: bitstring);
-            {1083}let crt_msg_3: bitstring = (cmw_5,server_cert_4) in
-            {1084}out(io, CRT(crt_msg_3));
-            {1085}let log_CRT_3: bitstring = (log_SH_3,CRT(crt_msg_3)) in
-            {1086}let sg_5: bitstring = sign(privTSK_4,hash(hash_algo_3,log_CRT_3)) in
-            {1087}out(io, CV(sg_5));
-            {1088}let log_CV_5: bitstring = (log_CRT_3,CV(sg_5)) in
-            {1089}let m1_5: bitstring = hmac(StrongHash,ksm_7,log_CV_5) in
-            {1090}let log_SFIN_5: bitstring = (log_CV_5,FIN(m1_5)) in
-            {1091}let l_95: label = tls13_derived in
-            {1092}let m_21: bitstring = zero in
-            {1093}let c_95: bitstring = catch-fail(hash(StrongHash,m_21)) in
-            {1094}let v_164: bool = not-caught-fail(c_95) in
-            {1095}let salt2_5: bitstring = catch-fail((if v_164 then hmac(StrongHash,hs_7,(l_95,c_95)) else fail-any_type)) in
-            {1096}let v_165: bool = not-caught-fail(salt2_5) in
-            {1097}let ikm_9: bitstring = (if v_165 then zero else caught-fail) in
-            {1098}let ms_10: bitstring = (if v_165 then catch-fail(hmac(StrongHash,salt2_5,ikm_9)) else caught-fail) in
-            {1099}let v_166: bool = not-caught-fail(ms_10) in
-            {1100}let l_96: label = (if v_166 then tls13_client_application_traffic_secret else caught-fail) in
-            {1101}let c_96: bitstring = (if v_166 then catch-fail(hash(StrongHash,log_SFIN_5)) else caught-fail) in
-            {1102}let v_167: bool = not-caught-fail(c_96) in
-            {1103}let atsc_5: bitstring = (if v_166 then catch-fail((if v_167 then hmac(StrongHash,ms_10,(l_96,c_96)) else fail-any_type)) else caught-fail) in
-            {1104}let v_168: bool = not-caught-fail(atsc_5) in
-            {1105}let l_97: label = (if v_168 then tls13_server_application_traffic_secret else caught-fail) in
-            {1106}let c_97: bitstring = (if v_168 then catch-fail(hash(StrongHash,log_SFIN_5)) else caught-fail) in
-            {1107}let v_169: bool = not-caught-fail(c_97) in
-            {1108}let atss_5: bitstring = (if v_168 then catch-fail((if v_169 then hmac(StrongHash,ms_10,(l_97,c_97)) else fail-any_type)) else caught-fail) in
-            {1109}let v_170: bool = not-caught-fail(atss_5) in
-            {1110}let l_98: label = (if v_170 then tls13_key else caught-fail) in
-            {1111}let c_98: bitstring = (if v_170 then zero else caught-fail) in
-            {1112}let kc_12: bitstring = (if v_170 then catch-fail(hmac(StrongHash,atsc_5,(l_98,c_98))) else caught-fail) in
-            {1113}let v_171: bool = not-caught-fail(kc_12) in
-            {1114}let l_99: label = (if v_171 then tls13_key else caught-fail) in
-            {1115}let c_99: bitstring = (if v_171 then zero else caught-fail) in
-            {1116}let ks_12: bitstring = (if v_171 then catch-fail(hmac(StrongHash,atss_5,(l_99,c_99))) else caught-fail) in
-            {1117}let v_172: bool = not-caught-fail(ks_12) in
-            {1118}let l_100: label = (if v_172 then tls13_exporter_master_secret else caught-fail) in
-            {1119}let c_100: bitstring = (if v_172 then catch-fail(hash(StrongHash,log_SFIN_5)) else caught-fail) in
-            {1120}let v_173: bool = not-caught-fail(c_100) in
-            {1121}let ems_12: bitstring = (if v_172 then catch-fail((if v_173 then hmac(StrongHash,ms_10,(l_100,c_100)) else fail-any_type)) else caught-fail) in
-            {1122}let v_174: bool = not-caught-fail(ems_12) in
-            {1123}let (ms_11: bitstring,kc_13: ae_key,ks_13: ae_key,ems_13: bitstring) = (if v_165 then (if v_166 then (if v_168 then (if v_170 then (if v_171 then (if v_172 then (if v_174 then (ms_10,b2ae(kc_12),b2ae(ks_12),ems_12) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
-            {1124}event PreServerComp(SAN,psk_3,offer_3,mode_3,kc_13,ks_13,ems_13,cr_5,sr_4,pubTSK_8,workloadRef_1);
-            {1125}out(io, FIN(m1_5));
-            {1126}in(io, FIN(m2_5: bitstring));
-            {1127}if (m2_5 = hmac(StrongHash,kcm_7,log_SFIN_5)) then
-            {1128}let log_CFIN_5: bitstring = (log_SFIN_5,FIN(m2_5)) in
-            {1129}let l_101: label = tls13_resumption_master_secret in
-            {1130}let c_101: bitstring = catch-fail(hash(StrongHash,log_CFIN_5)) in
-            {1131}let v_175: bool = not-caught-fail(c_101) in
-            {1132}let rms_7: bitstring = (if v_175 then hmac(StrongHash,ms_11,(l_101,c_101)) else fail-any_type) in
-            {1133}event ServerStateEvKc(cmw_5,kc_13);
-            {1134}event ServerStateEvKch(cmw_5,kch_7);
-            {1135}event ServerStateEv(cmw_5,kem_ss_3);
-            {1136}event ServerFinished(cr_5,sr_4,psk_3,pubTSK_8,offer_3,mode_3,kc_13,ks_13,ems_13,rms_7);
-            {1137}new app_msg_1: bitstring;
-            {1138}let req_ctx_7: bitstring = cr_5 in
-            {1139}event ServerSendsAppData(SAN,pubTSK_8,pubKAK_10,cr_5,sr_4,req_ctx_7,ems_13,ks_13,kc_13,workloadRef_1,app_msg_1);
-            {1140}out(io, ph_msg(app_msg_1,ks_13))
+            {1075}in(ev_return_1, cmw_5: bitstring);
+            {1076}let crt_msg_3: bitstring = (cmw_5,server_cert_4) in
+            {1077}out(io, CRT(crt_msg_3));
+            {1078}let log_CRT_3: bitstring = (log_SH_3,CRT(crt_msg_3)) in
+            {1079}let sg_5: bitstring = sign(privTSK_4,hash(hash_algo_3,log_CRT_3)) in
+            {1080}out(io, CV(sg_5));
+            {1081}let log_CV_5: bitstring = (log_CRT_3,CV(sg_5)) in
+            {1082}let m1_5: bitstring = hmac(StrongHash,ksm_7,log_CV_5) in
+            {1083}let log_SFIN_5: bitstring = (log_CV_5,FIN(m1_5)) in
+            {1084}let l_95: label = tls13_derived in
+            {1085}let m_21: bitstring = zero in
+            {1086}let c_95: bitstring = catch-fail(hash(StrongHash,m_21)) in
+            {1087}let v_164: bool = not-caught-fail(c_95) in
+            {1088}let salt2_5: bitstring = catch-fail((if v_164 then hmac(StrongHash,hs_7,(l_95,c_95)) else fail-any_type)) in
+            {1089}let v_165: bool = not-caught-fail(salt2_5) in
+            {1090}let ikm_9: bitstring = (if v_165 then zero else caught-fail) in
+            {1091}let ms_10: bitstring = (if v_165 then catch-fail(hmac(StrongHash,salt2_5,ikm_9)) else caught-fail) in
+            {1092}let v_166: bool = not-caught-fail(ms_10) in
+            {1093}let l_96: label = (if v_166 then tls13_client_application_traffic_secret else caught-fail) in
+            {1094}let c_96: bitstring = (if v_166 then catch-fail(hash(StrongHash,log_SFIN_5)) else caught-fail) in
+            {1095}let v_167: bool = not-caught-fail(c_96) in
+            {1096}let atsc_5: bitstring = (if v_166 then catch-fail((if v_167 then hmac(StrongHash,ms_10,(l_96,c_96)) else fail-any_type)) else caught-fail) in
+            {1097}let v_168: bool = not-caught-fail(atsc_5) in
+            {1098}let l_97: label = (if v_168 then tls13_server_application_traffic_secret else caught-fail) in
+            {1099}let c_97: bitstring = (if v_168 then catch-fail(hash(StrongHash,log_SFIN_5)) else caught-fail) in
+            {1100}let v_169: bool = not-caught-fail(c_97) in
+            {1101}let atss_5: bitstring = (if v_168 then catch-fail((if v_169 then hmac(StrongHash,ms_10,(l_97,c_97)) else fail-any_type)) else caught-fail) in
+            {1102}let v_170: bool = not-caught-fail(atss_5) in
+            {1103}let l_98: label = (if v_170 then tls13_key else caught-fail) in
+            {1104}let c_98: bitstring = (if v_170 then zero else caught-fail) in
+            {1105}let kc_12: bitstring = (if v_170 then catch-fail(hmac(StrongHash,atsc_5,(l_98,c_98))) else caught-fail) in
+            {1106}let v_171: bool = not-caught-fail(kc_12) in
+            {1107}let l_99: label = (if v_171 then tls13_key else caught-fail) in
+            {1108}let c_99: bitstring = (if v_171 then zero else caught-fail) in
+            {1109}let ks_12: bitstring = (if v_171 then catch-fail(hmac(StrongHash,atss_5,(l_99,c_99))) else caught-fail) in
+            {1110}let v_172: bool = not-caught-fail(ks_12) in
+            {1111}let l_100: label = (if v_172 then tls13_exporter_master_secret else caught-fail) in
+            {1112}let c_100: bitstring = (if v_172 then catch-fail(hash(StrongHash,log_SFIN_5)) else caught-fail) in
+            {1113}let v_173: bool = not-caught-fail(c_100) in
+            {1114}let ems_12: bitstring = (if v_172 then catch-fail((if v_173 then hmac(StrongHash,ms_10,(l_100,c_100)) else fail-any_type)) else caught-fail) in
+            {1115}let v_174: bool = not-caught-fail(ems_12) in
+            {1116}let (ms_11: bitstring,kc_13: ae_key,ks_13: ae_key,ems_13: bitstring) = (if v_165 then (if v_166 then (if v_168 then (if v_170 then (if v_171 then (if v_172 then (if v_174 then (ms_10,b2ae(kc_12),b2ae(ks_12),ems_12) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) else fail-any_type) in
+            {1117}event PreServerComp(SAN,psk_3,offer_3,mode_3,kc_13,ks_13,ems_13,cr_5,sr_4,pubTSK_8,workloadRef_1);
+            {1118}out(io, FIN(m1_5));
+            {1119}in(io, FIN(m2_5: bitstring));
+            {1120}if (m2_5 = hmac(StrongHash,kcm_7,log_SFIN_5)) then
+            {1121}let log_CFIN_5: bitstring = (log_SFIN_5,FIN(m2_5)) in
+            {1122}let l_101: label = tls13_resumption_master_secret in
+            {1123}let c_101: bitstring = catch-fail(hash(StrongHash,log_CFIN_5)) in
+            {1124}let v_175: bool = not-caught-fail(c_101) in
+            {1125}let rms_7: bitstring = (if v_175 then hmac(StrongHash,ms_11,(l_101,c_101)) else fail-any_type) in
+            {1126}event ServerStateEvKc(cmw_5,kc_13);
+            {1127}event ServerStateEvKch(cmw_5,kch_7);
+            {1128}event ServerStateEv(cmw_5,kem_ss_3);
+            {1129}event ServerFinished(cr_5,sr_4,psk_3,pubTSK_8,offer_3,mode_3,kc_13,ks_13,ems_13,rms_7);
+            {1130}new app_msg_1: bitstring;
+            {1131}let req_ctx_7: bitstring = cr_5 in
+            {1132}event ServerSendsAppData(SAN,pubTSK_8,pubKAK_10,cr_5,sr_4,req_ctx_7,ems_13,ks_13,kc_13,workloadRef_1,app_msg_1);
+            {1133}out(io, ph_msg(app_msg_1,ks_13))
         )
 ) | (
-    {1143}!
-    {1144}in(io, (caller_device: measurements,cdata_6: bitstring));
-    {1145}let (=StrongHash,pat_claims_6: bitstring) = cdata_6 in
-    {1146}let eat_pat_profile(reqKAK: pubkey,evidence_attr_2: attribute,=caller_device,eat_nonce_6: bitstring) = pat_claims_6 in
-    {1160}get agent_keys(ignored_v_31: identity,trusted_instance: measurements,ignored_v_32: privkey,ignored_v_33: pubkey,ignored_v_34: privkey,ignored_v_35: pubkey,privKAK_4: privkey,pubKAK_12: pubkey) in
-    {1147}let trusted_attr: attribute = meas2attr(trusted_instance) in
-    {1148}let genuine_claims: bitstring = eat_pat_profile(pubKAK_12,trusted_attr,trusted_instance,eat_nonce_6) in
-    {1149}if (cdata_6 = (StrongHash,genuine_claims)) then
+    {1136}!
+    {1137}in(io, (caller_device: measurements,cdata_6: bitstring));
+    {1138}let evidence_attr_2: attribute = meas2attr(caller_device) in
+    {1139}let (=StrongHash,pat_claims_6: bitstring) = cdata_6 in
+    {1140}let eat_pat_profile(reqKAK: pubkey,=evidence_attr_2,=caller_device,eat_nonce_6: bitstring) = pat_claims_6 in
+    {1154}get agent_keys(ignored_v_31: identity,trusted_instance: measurements,ignored_v_32: privkey,ignored_v_33: pubkey,ignored_v_34: privkey,ignored_v_35: pubkey,privKAK_4: privkey,pubKAK_12: pubkey) in
+    {1141}let trusted_attr: attribute = meas2attr(trusted_instance) in
+    {1142}let genuine_claims: bitstring = eat_pat_profile(pubKAK_12,trusted_attr,trusted_instance,eat_nonce_6) in
+    {1143}if (cdata_6 = (StrongHash,genuine_claims)) then
     (
-        {1153}get agent_keys(ignored_v_36: identity,=trusted_instance,ignored_v_37: privkey,ignored_v_38: pubkey,privAK_2: privkey,pubAK_5: pubkey,ignored_v_39: privkey,ignored_v_40: pubkey) in
-        {1150}let hwQuote: bitstring = (trusted_instance,cdata_6) in
-        {1151}let pat_4: bitstring = (pat_claims_6,sign(privAK_2,hwQuote)) in
-        {1152}out(io, pat_4)
+        {1147}get agent_keys(ignored_v_36: identity,=trusted_instance,ignored_v_37: privkey,ignored_v_38: pubkey,privAK_2: privkey,pubAK_5: pubkey,ignored_v_39: privkey,ignored_v_40: pubkey) in
+        {1144}let hwQuote: bitstring = (trusted_instance,cdata_6) in
+        {1145}let pat_4: bitstring = (pat_claims_6,sign(privAK_2,hwQuote)) in
+        {1146}out(io, pat_4)
     )
     else
-        {1154}if (evidence_attr_2 = ExternalOrUntrusted) then
-        {1159}get agent_keys(ignored_v_41: identity,ignored_v_42: measurements,ignored_v_43: privkey,ignored_v_44: pubkey,privAK_3: privkey,pubAK_6: pubkey,ignored_v_45: privkey,ignored_v_46: pubkey) in
-        {1155}let hwQuote_1: bitstring = (caller_device,cdata_6) in
-        {1156}let pat_5: bitstring = (pat_claims_6,sign(privAK_3,hwQuote_1)) in
-        {1157}event EvidenceOracle(reqKAK,caller_device,pat_5);
-        {1158}out(io, pat_5)
+        {1148}if (evidence_attr_2 = ExternalOrUntrusted) then
+        {1153}get agent_keys(ignored_v_41: identity,ignored_v_42: measurements,ignored_v_43: privkey,ignored_v_44: pubkey,privAK_3: privkey,pubAK_6: pubkey,ignored_v_45: privkey,ignored_v_46: pubkey) in
+        {1149}let hwQuote_1: bitstring = (caller_device,cdata_6) in
+        {1150}let pat_5: bitstring = (pat_claims_6,sign(privAK_3,hwQuote_1)) in
+        {1151}event EvidenceOracle(reqKAK,caller_device,pat_5);
+        {1152}out(io, pat_5)
 ) | (
-    {1161}!
-    {1164}get agent_keys(ignored_v_47: identity,ignored_v_48: measurements,privTSK_5: privkey,pubTSK_9: pubkey,ignored_v_49: privkey,ignored_v_50: pubkey,ignored_v_51: privkey,ignored_v_52: pubkey) in
-    {1162}event LeakedTSK(pubTSK_9);
-    {1163}out(io, privTSK_5)
+    {1155}!
+    {1158}get agent_keys(ignored_v_47: identity,ignored_v_48: measurements,privTSK_5: privkey,pubTSK_9: pubkey,ignored_v_49: privkey,ignored_v_50: pubkey,ignored_v_51: privkey,ignored_v_52: pubkey) in
+    {1156}event LeakedTSK(pubTSK_9);
+    {1157}out(io, privTSK_5)
 ) | (
-    {1165}!
-    {1168}get agent_keys(ignored_v_53: identity,ignored_v_54: measurements,ignored_v_55: privkey,ignored_v_56: pubkey,privAK_4: privkey,pubAK_7: pubkey,ignored_v_57: privkey,ignored_v_58: pubkey) in
-    {1166}event LeakedAK(pubAK_7);
-    {1167}out(io, privAK_4)
+    {1159}!
+    {1162}get agent_keys(ignored_v_53: identity,ignored_v_54: measurements,ignored_v_55: privkey,ignored_v_56: pubkey,privAK_4: privkey,pubAK_7: pubkey,ignored_v_57: privkey,ignored_v_58: pubkey) in
+    {1160}event LeakedAK(pubAK_7);
+    {1161}out(io, privAK_4)
 ) | (
-    {1169}!
-    {1172}get agent_keys(ignored_v_59: identity,ignored_v_60: measurements,ignored_v_61: privkey,ignored_v_62: pubkey,ignored_v_63: privkey,ignored_v_64: pubkey,privKAK_5: privkey,pubKAK_13: pubkey) in
-    {1170}event LeakedKAK(pubKAK_13);
-    {1171}out(io, privKAK_5)
+    {1163}!
+    {1166}get agent_keys(ignored_v_59: identity,ignored_v_60: measurements,ignored_v_61: privkey,ignored_v_62: pubkey,ignored_v_63: privkey,ignored_v_64: pubkey,privKAK_5: privkey,pubKAK_13: pubkey) in
+    {1164}event LeakedKAK(pubKAK_13);
+    {1165}out(io, privKAK_5)
 ) | (
-    {1173}!
-    {1174}let privCSP_2: privkey = privCSP in
-    {1175}event CompromisedCSP(pk(privCSP_2));
-    {1176}out(io, privCSP_2)
+    {1167}!
+    {1168}let privCSP_2: privkey = privCSP in
+    {1169}event CompromisedCSP(pk(privCSP_2));
+    {1170}out(io, privCSP_2)
 ) | (
-    {1177}!
-    {1178}let privCA_2: privkey = privCA in
-    {1179}event CompromisedCA(pk(privCA_2));
-    {1180}out(io, privCA_2)
+    {1171}!
+    {1172}let privCA_2: privkey = privCA in
+    {1173}event CompromisedCA(pk(privCA_2));
+    {1174}out(io, privCA_2)
 ) | (
-    {1181}!
-    {1182}let privRVP_2: privkey = privRVP in
-    {1183}event InvalidPolicies(pk(privRVP_2));
-    {1184}out(io, privRVP_2)
+    {1175}!
+    {1176}let privRVP_2: privkey = privRVP in
+    {1177}event InvalidPolicies(pk(privRVP_2));
+    {1178}out(io, privRVP_2)
 )

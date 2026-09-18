@@ -340,6 +340,72 @@ Interpretation: The Evidence Oracle is an active, coexisting threat
 .
 
 (**********************************************************************)
+(* Attestation Oracle Abuse vs Session Secrecy [key-binding §8.3]     *)
+(* Tag: Q-ORACLE-POLICY-BOUND                                         *)
+(**********************************************************************)
+
+(* Demonstrated property:
+
+Capturing the client application traffic secret (kc) via an 
+EvidenceOracle-manufactured credential strictly necessitates an RVP policy 
+validation failure (InvalidPolicies). 
+
+The attestation signing oracle enables the adversary to obtain valid hardware 
+quotes over arbitrary claims without exposing private signing keys. However, 
+client session secrecy remains intact unless the Reference Value Provider's 
+policy appraisal root of trust is itself compromised.
+*)
+
+query dev_state,dev_state1,dev_state2:measurements,quote:bitstring,
+      cr:random, sr:random, cr':random, sr':random, kem_ss:bitstring,
+      ID_S,ID2,EUID,ID_C:identity,pubTSK:pubkey,pubAK,pubKAK:pubkey,
+      psk:preSharedKey, e:bitstring, pubRVP,pubCA,pubCSP:pubkey,
+      offer:params, mode:params, pat,kat:bitstring,
+      kc:ae_key,ks:ae_key,kch,ksh:ae_key,ems:bitstring,rms:bitstring;
+
+  (* Goal: Prove session compromise via oracle abuse requires policy failure *)
+
+  (* Hypothesis: A client session completed using oracle-manufactured evidence
+                 and resulting in key exposure (kc) strictly requires the RVP
+                 to have issued an invalid reference manifest.
+        Expected: true when hardware measurements and provenance attributes 
+                 are faithfully bound, preventing untrusted caller quotes from 
+                 matching golden manifests without an RVP compromise.
+          Branch: A+B
+  Interpretation: Verifier policy validation is a sufficient defense against
+                 attestation oracle abuse; the oracle cannot compromise 
+                 application traffic secrecy under sound RVP appraisal.
+  *)
+  attacker(kc) &&
+  event(EvidenceOracle(pubKAK, dev_state, pat)) &&
+  (    
+       event(ClientTargetWorkload(ID_C, ID_S))
+    && event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
+    && event(ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc((pat,kat), kc))
+  ) ==>  event(InvalidPolicies(pubRVP))
+;
+
+  (* Hypothesis: The adversary can never leverage the EvidenceOracle to 
+                 impersonate the target workload and recover the client
+                 traffic secret (kc).
+        Expected: counterexample (false) when the adversary leaks privRVP to
+                 forge reference values matching the untrusted caller's state.
+          Branch: A+B
+  Interpretation: Proves the premise is non-vacuous and the attack trace is
+                  realizable in the threat model when RVP trust is broken.
+  *)
+  attacker(kc) &&
+  event(EvidenceOracle(pubKAK, dev_state, pat)) &&
+  (    
+       event(ClientTargetWorkload(ID_C, ID_S))
+    && event(ClientRANew(NULL_ID, NULL_pubkey, pubAK, pubKAK, pubTSK, pubRVP, dev_state, (pat, kat)))
+    && event(ClientFinRecentAgr(ID_S,ID_C,pubTSK,psk,offer,mode,kc,ks,ems,rms,cr,sr))
+    && event(ClientStateEvKc((pat,kat), kc))
+  ) ==>  false
+.
+
+(**********************************************************************)
 (* Target Environment Engagement [seat-use-cases-01 §3.8.1, §3.4] *)
 (* Tag: Q-DIVERSION / Q-SUBST *)
 (**********************************************************************)

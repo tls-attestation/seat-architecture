@@ -20,17 +20,17 @@ Per `draft-reddy-rats-key-binding-02` §6, attestation is split across two keys 
 
 The PAT and KAT together form the Composite Attestation Token / Conceptual Message Wrapper (`cmw = (pat, kat)`) per RFC 9999 and `draft-ietf-rats-msg-wrap`.
 
-The manifest and endorsement structures implement `draft-ietf-rats-corim-11` CoRIM/CoMID triples:
+The manifest and endorsement structures implement `draft-ietf-rats-corim-11` CoRIM/CoMID tuples ("triples"):
 
-* `AttestKeyTriple(NULL_ID, pubAK)` for CSP hardware endorsements.
-* `RefValTriple(ID_S, dev_statusRef, workloadAttr)` for reference value appraisal.
+* `attestKeyTuple(NULL_ID, pubAK)` for CSP hardware endorsements.
+* `refValTuple(ID_S, dev_statusRef)` for reference value appraisal.
 
 ### Structural Extensions to the Baseline TLS 1.3 Model
 
 The model extends the baseline single-path TLS 1.3 specification (Bhargavan et al.) through five architectural modifications:
 
 * **Consolidated Workload Keying**: Replaces the separate long-term identity key (`pubLTK`) and ephemeral TLS handshake key (`pubEK`) with a unified TLS Signing Key (`pubTSK`). Under Option A, `pubTSK` is self-signed; under Option B, it is certified by a CA. The legacy `LeakedLTK` event is eliminated.
-* **Additional External Trust Anchors**: Introduces a Cloud Service Provider (`CSP`, hardware/platform endorser, keys `pubCSP`/`privCSP`) and a Verifier Owner (`VOK`, workload manifest signer, keys `pubVOK`/`privVOK`) as separate principals, accompanied by respective compromise events (`CompromisedCSP`, `UncheckedPolicies`) to model compound authorization architectures.
+* **Additional External Trust Anchors**: Introduces a Cloud Service Provider (`CSP`, hardware/platform endorser, keys `pubCSP`/`privCSP`) and a Verifier Owner (`RVP`, workload manifest signer, keys `pubRVP`/`privRVP`) as separate principals, accompanied by respective compromise events (`CompromisedCSP`, `InvalidPolicies`) to model compound authorization architectures.
 * **Provisioning and Lifecycle Instrumentation**: Introduces setup-phase events (`CSRSigned`, `ProvisionedTargetEnv`, `EndorsementsIssued`, and `IdentityManifestIssued`). These events establish baseline reachability invariants and support correspondence lemmas verifying Target Environment Engagement.
 * **Adversarial Session Seeding**: Enables adversary-controlled inputs (certificates or target launch measurements) to initialize `run_Server` prior to internal key matching, modeling misconfigured server provisioning and malicious tenant dispatching.
 * **Hardware Identifier Anonymization**: Adds a Universal Entity ID (`UEID`) attribute to `agent_keys`, which `gen_endorsements` overwrites with `NULL_ID` to model CSP-enforced pseudonymization of physical hardware platform identifiers.
@@ -40,11 +40,11 @@ The model extends the baseline single-path TLS 1.3 specification (Bhargavan et a
 Identity appraisal is parameterized via `idOption: branch_option`, evaluated across key generation, manifest issuance, and endpoint execution:
 
 * **Option A — Direct Attestation Anchoring**: Attestation replaces Web PKI entirely. The workload identity is derived directly from target measurements via `dev2id(dev_statusRef)`. The TLS handshake key (`pubTSK`) is self-signed without Web PKI certificates, and the attestation quote serves as the sole proof of authentication and session binding.
-* **Option B — Compound Additive Authentication**: Attestation composes additively with standard Web PKI. Identity (`ID_S`) is bound to `pubTSK` through a CA-signed X.509 certificate, while a VOK-signed **Workload Manifest** binds `ID_S` to authorized launch measurements (`dev_statusRef`). Authentication requires concurrent appraisal across both Web PKI and platform endorsement chains.
+* **Option B — Compound Additive Authentication**: Attestation composes additively with standard Web PKI. Identity (`ID_S`) is bound to `pubTSK` through a CA-signed X.509 certificate, while an RVP-signed **Workload Manifest** binds `ID_S` to authorized launch measurements (`dev_statusRef`). Authentication requires concurrent appraisal across both Web PKI and platform endorsement chains.
   * **Compromise Resilience**:
-    - If a Web PKI CA is compromised or untrusted DNS redirects traffic, the attacker cannot spoof the instance without presenting measurements that match the Verifier Owner's signed manifest and valid hardware endorsements.
-    - If an enclave host is compromised, the attacker cannot impersonate the domain without a CA-signed certificate and VOK-signed manifest.
-    - If an Evidence Oracle signs arbitrary attacker key material, the attack fails under Option B without relying on key provenance claims (`ExternalOrUntrusted`), provided the CA, CSP, AK, TSK, and Verifier Owner policy anchors remain sound.
+    - If a Web PKI CA is compromised or untrusted DNS redirects traffic, the attacker cannot spoof the instance without presenting measurements that match the RVP's signed manifest and valid hardware endorsements.
+    - If an enclave host is compromised, the attacker cannot impersonate the domain without a CA-signed certificate and RVP-signed manifest.
+    - If an Evidence Oracle signs arbitrary attacker key material, the attack fails under Option B without relying on key provenance claims (`ExternalOrUntrusted`), provided the CA, CSP, AK, TSK, and RVP policy anchors remain sound.
 
 ---
 
@@ -52,21 +52,21 @@ Identity appraisal is parameterized via `idOption: branch_option`, evaluated acr
 
 The automated verification of the model demonstrates several core cryptographic and architectural guarantees:
 
-* **Cryptographic Evidence-to-Handshake Binding:** The attestation evidence (`pat`/`kat`/`ev`) cannot be transplanted or replayed across sessions:
-  * **Intra-handshake model:** Attestation evidence is embedded directly into the handshake transcript, establishing unconditional transcript and session correlation `(kc1, ev1) = (kc2, ev2)`.
-  * **Post-handshake model:** Evidence binding is derived from post-handshake exported key material (`ClientStateEvKc`), ensuring agreement on secrets (`kem_ss`, `kch`, `kc`) while session correlation `(kc1, ev1) = (kc2, ev2)` holds strictly on the condition that a downgraded KEM parameter set (`WeakKEM`) is rejected.
+* **Cryptographic Evidence-to-Handshake Binding:** The attestation evidence (`pat`/`kat`/`ev`) cannot be transplanted or replayed across sessions. Session correlation `(kc1, ev1) = (kc2, ev2)` holds identically in both timing models via the shared `ClientStateEv`/`ClientStateEvKch`/`ClientStateEvKc` machinery in `hs-cv-fin.pvl`; the models differ only in what `sessionNonce` binds to:
+  * **Intra-handshake model:** `sessionNonce = hash(StrongHash, (log_SH, pubTSK))` — bound to the pre-Finished handshake transcript.
+  * **Post-handshake model:** `sessionNonce = hash(StrongHash, (exported_val, pubTSK))`, where `exported_val` is derived from the TLS Exporter Master Secret (`ems`) and the authenticator request context.
 
 * **Orthogonal Trust-Root Redundancy:** Server authentication and remote attestation achieve independent survivability under single-root compromise across three anchors:
 
   * **CA Compromise Resilience:** If the Web PKI CA is fully compromised (`CompromisedCA`) or the TLS signing key is leaked (`LeakedTSK`), injective agreement on the handshake and remote attestation parameters (`ClientFinRecentAgr`, `ClientRANew`) still holds, provided the hardware attestation key (`pubAK`), Key Attestation Key (`pubKAK`), and CSP endorsement root remain intact.
   * **Attestation Compromise Resilience:** If the CSP root is compromised (`CompromisedCSP`) or an attestation key is leaked (`LeakedAK`/`LeakedKAK`), TLS session authentication and server identity integrity still hold via the standard PKI trust path.
-  * **Policy Compromise Resilience:** If Verifier Owner policy validation is bypassed (`UncheckedPolicies`), enclave identity assurance can still hold, provided the CSP, AK, KAK, and (in Option B) CA anchors remain sound.
+  * **Policy Compromise Resilience:** If Verifier Owner policy validation is bypassed (`InvalidPolicies`), enclave identity assurance can still hold, provided the CSP, AK, KAK, and (in Option B) CA anchors remain sound.
 
 * **Mitigation of Identity Diversion and Relay Attacks:** Injective agreement over composition parameters (`ClientComp ==> PreServerComp`) prevents adversary-in-the-middle relay and splicing attacks. The client's perceived server identity is guaranteed to match the actual server (correlated `ClientID`/`ServerID` on the shared session key `kem_ss`), precluding DNS/SNI diversion attacks.
 
-* **Per-Session Attestation Freshness:** Replay of pre-recorded quotes or platform measurement claims (`dev_status`) is prevented. Reachability of `AcceptedRdata` together with the `eat_nonce = expectedNonce` freshness check in appraisal guarantees that accepted measurements correspond to the active, live session instance.
+* **Per-Session Attestation Freshness:** Replay of pre-recorded quotes or platform measurement claims (`dev_status`) is prevented. Reachability of `AcceptedRdata` together with the `eat_nonce = sessionNonce` freshness check in appraisal guarantees that accepted measurements correspond to the active, live session instance.
 
-* **Application Key Confidentiality:** The client application traffic secret (`kc`) remains completely confidential from active Dolev-Yao attackers. Secrecy is breached only in the explicit presence of underlying root compromise (`CompromisedCSP` / `CompromisedCA` / `UncheckedPolicies`), key compromise (`LeakedAK` / `LeakedKAK` / `LeakedTSK`), or negotiation downgrades to weak primitives (`WeakKEM` / `WeakHash`) elsewhere in the model.
+* **Application Key Confidentiality:** The client application traffic secret (`kc`) remains completely confidential from active Dolev-Yao attackers. Secrecy is breached only in the explicit presence of underlying root compromise (`CompromisedCSP` / `CompromisedCA` / `InvalidPolicies`), key compromise (`LeakedAK` / `LeakedKAK` / `LeakedTSK`), or negotiation downgrades to weak primitives (`WeakKEM` / `WeakHash`) elsewhere in the model.
 
 ### Security Equivalence of Post-Handshake Attestation
 
@@ -102,15 +102,15 @@ Consequently, once the Relying Party successfully appraises the post-handshake e
 
 The `Attestation_Environment` process models both genuine attestation requests and an untrusted external API oracle — the UCCS proxy-forwarding attack described in `draft-reddy-rats-key-binding-02` §8.3:
 
-* **The Vulnerability**: An untrusted caller passes arbitrary key material and device-state claims into a TEE-hosted service. If the enclave blindly forwards this caller-supplied input to the local attestation runtime, the hardware generates a valid PAT over rogue keys/measurements. An attacker could use this oracle to masquerade an arbitrary external endpoint as a secure enclave. The model evaluates whether the client's endorsement verification pipeline — comparing the appraised device state against a VOK-signed `RefValTriple` — successfully detects and rejects such malicious or misconfigured VM launches.
+* **The Vulnerability**: An untrusted caller passes arbitrary key material and device-state claims into a TEE-hosted service. If the enclave blindly forwards this caller-supplied input to the local attestation runtime, the hardware generates a valid PAT over rogue keys/measurements. An attacker could use this oracle to masquerade an arbitrary external endpoint as a secure enclave. The model evaluates whether the client's endorsement verification pipeline — comparing the appraised device state against an RVP-signed `RefValTuple` — successfully detects and rejects such malicious or misconfigured VM launches.
 * **Scope of Proxy Forwarding Vulnerability**: Changing transport placement (moving from intra-handshake `log_SH` binding to post-handshake `ems` exporter binding) does not alter the underlying trust dependencies of evidence appraisal. In direct attestation architectures (Option A), an attestation interface that quotes arbitrary input produces a validly bound session unless the relying party explicitly filters out `ExternalOrUntrusted` evidence. Under compound additive authentication (Option B), the oracle attack is neutralized under standard trust assumptions (uncompromised AK, TSK, CSP, CA, and Verifier Owner policy) even without evaluating key provenance attributes.
 * **The Defense Mechanism**: Hardware-enforced key provenance flags differentiate keys generated within the cryptographic boundary from imported keys. When the oracle signs over externally supplied data, the hardware tags the quote claims with `ExternalOrUntrusted` rather than `TrustedNonExportable`.
 
-**Selective, per-party compromise.** Each key class — TLS signing key (`TSK`), attestation key (`AK`), Key Attestation Key (`KAK`), CA root key, CSP root key, and Verifier Owner policy key (`VOK`) — has its own independent leakage process, each tagged with a distinct event. This lets the model reason about partial-compromise scenarios rather than all-or-nothing trust, distinguishing three independent trust paths:
+**Selective, per-party compromise.** Each key class — TLS signing key (`TSK`), attestation key (`AK`), Key Attestation Key (`KAK`), CA root key, CSP root key, and Verifier Owner policy key (`RVP`) — has its own independent leakage process, each tagged with a distinct event. This lets the model reason about partial-compromise scenarios rather than all-or-nothing trust, distinguishing three independent trust paths:
 
 * **WebPKI Trust Path:** Evaluates compromises along the standard TLS certificate hierarchy through `CompromisedCA` (compromise of the Certificate Authority signing key) and `LeakedTSK` (exfiltration of the cVM's TLS private key). This isolates transport-layer identity failures to test whether remote attestation evidence and platform endorsements can preserve session integrity even if the Web PKI authority or TLS key is completely undermined.
 * **Platform Endorsement (CSP) Trust Path:** Evaluates compromises along the confidential computing endorsement chain through `CompromisedCSP` (compromise of the Cloud Service Provider endorsement key) and `LeakedAK`/`LeakedKAK` (leakage of the platform attestation key or the per-cVM key attestation key). This isolates hardware platform trust to determine whether the standard Web PKI identity pipeline remains sufficient to authenticate the server and protect session data even when platform measurement endorsements are untrusted or forged.
-* **Verifier Owner (Policy) Trust Path:** Evaluates the compromise or bypass of Verifier Owner appraisal policy (`UncheckedPolicies`, `privVOK` via `LVOK`) independently of the hardware and Web PKI roots, isolating whether reference-value/manifest policy is a single point of failure.
+* **Verifier Owner (Policy) Trust Path:** Evaluates the compromise or bypass of Verifier Owner appraisal policy (`InvalidPolicies`, `privRVP` via `LRVP`) independently of the hardware and Web PKI roots, isolating whether reference-value/manifest policy is a single point of failure.
 
 | Event | Compromised Subject |
 | --- | --- |
@@ -119,9 +119,9 @@ The `Attestation_Environment` process models both genuine attestation requests a
 | `LeakedKAK` | Key Attestation Key of an individual cVM instance |
 | `CompromisedCA` | Web PKI certification authority private key (`privCA`) |
 | `CompromisedCSP` | CSP / platform endorser private key (`privCSP`) |
-| `UncheckedPolicies` | Verifier Owner private signing key (`privVOK`) |
+| `InvalidPolicies` | Verifier Owner private signing key (`privRVP`) |
 
-Each compromise event is triggered by a matching adversarial leak process in the driver file: `LCA` leaks `privCA`, `LCSP` leaks `privCSP` (firing `CompromisedCSP`), `LKAK` leaks `privKAK` (firing `LeakedKAK`), and `LVOK` leaks `privVOK` (firing `UncheckedPolicies`).
+Each compromise event is triggered by a matching adversarial leak process in the driver file: `LCA` leaks `privCA`, `LCSP` leaks `privCSP` (firing `CompromisedCSP`), `LKAK` leaks `privKAK` (firing `LeakedKAK`), and `LRVP` leaks `privRVP` (firing `InvalidPolicies`).
 
 ---
 
@@ -132,13 +132,15 @@ Each compromise event is triggered by a matching adversarial leak process in the
   - **Soundness Under Handshake Key Exposure:** Handshake write keys (`kch`, `ksh`) are modeled as fully compromised and published directly to the adversary (`out(io, (kch, ksh))`). The formal verification proves that client application traffic key confidentiality (`kc`) and mutual session binding (`ClientComp`) remain unbroken even when the adversary actively possesses the handshake traffic keys.
   - **Transcript-Enforced Authenticity:** Handshake binding is achieved entirely through the public cryptographic transcript (`log_SH = (ch, SH)`), hashed into the session nonce `sessionNonce = hash(StrongHash, (log_SH, pubTSK))` and embedded as the attestation nonce inside the PAT claims signed by the hardware attestation key — demonstrating that altering the TLS 1.3 key schedule is unnecessary for formal session integrity on this timing path. (The post-handshake path binds evidence via the TLS 1.3 exporter interface instead — see "Key Hierarchy and Split-Model Attestation" and the exporter-derivation labels in `atls-library.pvl`.)
 
-**Three independent trust roots.** A Web PKI-style Certificate Authority (CA) certifies the binding between a server's identity and its TLS key (`ID_S`, `pubTSK`). A Cloud Service Provider (CSP) endorsement authority independently certifies the binding between an attestation key and its expected launch measurements (`pubAK`, `dev_statusRef`). A Verifier Owner (VOK) independently signs the reference-value manifest binding workload identity to expected measurements. These are modeled as distinct signers with distinct keys, reflecting that certificate issuance, hardware endorsement, and policy/reference-value authorship are handled by different real-world organizations.
+**Three independent trust roots.** A Web PKI-style Certificate Authority (CA) certifies the binding between a server's identity and its TLS key (`ID_S`, `pubTSK`). A Cloud Service Provider (CSP) endorsement authority independently certifies the binding between an attestation key and its expected launch measurements (`pubAK`, `dev_statusRef`). A Verifier Owner (RVP) independently signs the reference-value manifest binding workload identity to expected measurements. These are modeled as distinct signers with distinct keys, reflecting that certificate issuance, hardware endorsement, and policy/reference-value authorship are handled by different real-world organizations.
 
 * **Relocation of the enforcement boundary to the client:** Prior models treated cryptographic downgrade and parameter selection as server-driven behaviors (`ServerChoosesKEX`, `ServerChoosesHash`). Because Confidential Computing assumes the server executes within an untrusted host or hypervisor that actively proposes malicious parameters, the evaluation reframes these failure modes around client-side acceptance (`ClientAcceptsKEM`, `ClientAcceptsHash`). Verification proves that the protocol remains secure across hostile server environments unless the client implementation actively fails to enforce basic KEM parameter and hash-algorithm validation.
-* **Factorized single-root resilience versus monolithic disjunctions:** Rather than combining all possible leakages into a single, catch-all failure disjunction where any compromised key collapses the model, queries are split into contrasting groups. This factorizes the proof space across three distinct survivability paths — Web PKI compromise (`CompromisedCA` / `LeakedTSK`), platform attestation compromise (`CompromisedCSP` / `LeakedAK` / `LeakedKAK`), and policy compromise (`UncheckedPolicies`) — proving that identity and session security hold independently under single-root failure rather than demanding all-or-nothing trust.
+* **Factorized single-root resilience versus monolithic disjunctions:** Rather than combining all possible leakages into a single, catch-all failure disjunction where any compromised key collapses the model, queries are split into contrasting groups. This factorizes the proof space across three distinct survivability paths — Web PKI compromise (`CompromisedCA` / `LeakedTSK`), platform attestation compromise (`CompromisedCSP` / `LeakedAK` / `LeakedKAK`), and policy compromise (`InvalidPolicies`) — proving that identity and session security hold independently under single-root failure rather than demanding all-or-nothing trust.
 * **Isolation of algebraic attacks from binder logic:** The queries decouple low-level ML-KEM parameter-downgrade exploits (`ClientAcceptsKEM(..., WeakKEM)`) from the core attestation binder. This isolates whether an attack represents an algebraic weakness or a protocol design flaw, directly exposing why intra-handshake transcript integration inherently neutralizes weak-KEM parameter sets while post-handshake key-exporter binding leaves session correlation conditional on client-side KEM parameter validation.
 
 **Per-launch measurement granularity.** Each server launch generates its own fresh reference measurement value (`dev_statusRef`) rather than checking against one shared global reference. This allows the model to represent many different, independently-measured launches — correctly configured or otherwise — coexisting under the same hardware root of trust.
+
+**Note on ML-KEM:** The migration from classical DHE to ML-KEM in the extended model set is a modeling-performance decision, not a post-quantum security claim — ProVerif resolves this expanded model roughly 2–3x faster under the ML-KEM formalization than under the DHE/small-subgroup (`BadElement`) construction. This has no bearing on, and should not be read as part of, the evaluation of the RATS/SEAT protocol designs themselves.
 
 ---
 
@@ -148,7 +150,7 @@ Each compromise event is triggered by a matching adversarial leak process in the
 
 * **CA**: Web PKI trust anchor that signs X.509 certificates binding `ID_S` to `pubTSK`.
 * **CSP**: Cloud Service Provider / infrastructure endorser (keys `pubCSP`/`privCSP`) that certifies `pubAK` associations with platform launch measurements via `gen_endorsements`.
-* **VOK**: Verifier Owner (keys `pubVOK`/`privVOK`, active in Option B) that signs the workload manifest and baseline measurements (`dev_statusRef`) via `gen_reference_manifest`, binding workload identifiers to expected runtime measurements.
+* **RVP**: Verifier Owner / Reference Value Provider (keys `pubRVP`/`privRVP`; roles merged per the conflation note in `atls-multiagent-driver.pv`) that signs the workload manifest and baseline measurements (`dev_statusRef`) via `gen_reference_manifest` — active under both Option A and Option B, binding workload identifiers to expected runtime measurements.
 * **Client / Server**: TLS protocol endpoints. Each confidential VM (cVM) server instance hosts an attestation key (`pubAK`), a per-cVM Key Attestation Key (`pubKAK`), and one or more workload TLS signing keys (`pubTSK`).
 * **Adversary**: Active Dolev-Yao attacker operating over the public channel `io`, capable of intercepting and injecting traffic, instantiating server processes with arbitrary parameters, and triggering selective key compromises.
 
