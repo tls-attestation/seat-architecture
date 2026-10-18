@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-06T03:16:38.564904+00:00",
+  "timestamp": "2026-10-18T03:20:51.762833+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -2658,7 +2658,7 @@
       "labels": [],
       "body": "Add Yuxuan Song to authors",
       "createdAt": "2026-07-16T16:17:16Z",
-      "updatedAt": "2026-07-16T16:17:16Z",
+      "updatedAt": "2026-10-16T00:40:15Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "969d25fa6ff243949f7cda10e8a0b5264903076d",
@@ -2670,7 +2670,28 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABSk5MXg",
+          "commit": {
+            "abbreviatedOid": "b5c9632"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-16T00:40:14Z",
+          "updatedAt": "2026-10-16T00:40:15Z",
+          "comments": [
+            {
+              "originalPosition": 1,
+              "body": "```suggestion\norganization: NVIDIA\nemail: \"tfossati@nvidia.com\"\n```",
+              "createdAt": "2026-10-16T00:40:15Z",
+              "updatedAt": "2026-10-16T00:40:15Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "number": 30,
