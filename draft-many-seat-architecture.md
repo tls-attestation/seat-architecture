@@ -43,12 +43,13 @@ author:
     email: "yuxuan.song@inria.fr"
 
 normative:
-  RFC2119:
-  RFC8174:
   RFC9334:
-  I-D.mihalcea-seat-use-cases:
+  I-D.ietf-seat-use-cases:
 
 informative:
+  RFC9525:
+  RFC9846:
+  RFC9528:
   I-D.ounsworth-rats-privacy-framework:
   I-D.reddy-rats-key-binding:
   IAB-Attestation-Risks:
@@ -68,7 +69,7 @@ This document defines an architectural framework for composing Remote
 ATtestation procedureS (RATS) with Secure Evidence and Attestation
 Transport (SEAT).  The document establishes normalized terminology
 for SEAT, aligns RATS roles to transport endpoints, outlines
-topological patterns for attestation delivery timing, characterizes
+topological patterns for attestation delivery timing, and characterizes
 the abstract cryptographic pattern by which Evidence is bound to a
 given transport connection.
 
@@ -86,12 +87,12 @@ given transport connection.
 > — Gene Spafford
 {: =aside}
 
-Traditional secure channel protocols, such as Transport Layer
-Security (TLS), primarily establish trust in a peer's identity. This
-is typically achieved through mechanisms like a Public Key
+Traditional secure channel protocols, such as those based on authenticated
+key exchange (AKE), primarily establish trust in a peer's cryptographic
+identity. This is typically achieved through mechanisms like Public Key
 Infrastructure (PKI), where a trusted Certification Authority (CA)
-vouches for the binding between a public key and an identifier (e.g.,
-a hostname).
+vouches for the binding between a public key and an identifier such as
+a hostname (e.g., {{RFC9525}}).
 
 However, this model has a core limitation: identity authentication
 provides no assurance about the peer's internal state or the
@@ -106,40 +107,39 @@ significant security risk in many environments.
 Remote Attestation (RA), as described in the RATS architecture
 {{RFC9334}}, is a mechanism designed to fill this gap.  RA allows an
 entity (the "Attester") to produce verifiable "Evidence" about its
-current runtime state.  This Evidence covers the Attester's TCB, and
-can thus include measurements of its firmware, operating system, and
+current runtime state.  This Evidence covers the Attester's security state,
+and can thus include measurements of its firmware, operating system,
 application code, as well as the configuration of its hardware and
 software security features (e.g., secure boot status, memory
 isolation).  A "Relying Party" can then use this Evidence, often with
 the help of a trusted "Verifier", to appraise the Attester's
 trustworthiness.
 
-By integrating RA into a secure channel establishment protocol, a
-second dimension of trust—trustworthiness—is added to complement
-regular peer authentication.  This allows a peer to make
-authorization decisions based not just on who the other party is, but
-also on what it is (e.g., an AMD SEV-SNP-based server running in some
-known datacenter) and whether its state is acceptable.
-
 ## Purpose and Scope
 
+By integrating RA into a secure channel establishment protocol,
+a second dimension of trust is added to complement regular peer authentication:
+trustworthiness. This allows a Relying Party to make authorization decisions
+based not just on the Attester's cryptographic identity, but also on what
+it is (such as an AMD SEV-SNP-based server or a specific device) and
+whether its security state is acceptable.
+
 This document is intended as an input to the design of protocol
-solutions within the SEAT working group.  A key goal is to define
-requirements for a solution that is agnostic to any specific
+solutions within the SEAT working group. One primary goal is to define
+operational considerations that remain agnostic to any specific
 attestation technology (e.g., Trusted Platform Modules (TPMs), Intel
 TDX, AMD SEV, Arm CCA, etc.).
 
 For the scope of this architecture, the term "transport" is used
 interchangeably with "secure transport" to refer to secure channel
-establishment protocols.
+establishment protocols such as TLS {{RFC9846}} and LAKE {{RFC9528}}.
 
 ## Use Cases
 
 The use cases motivating this architecture are defined in
-{{I-D.mihalcea-seat-use-cases}}.  Readers are directed there for the
-full enumeration of deployment scenarios, requirements, and
-properties that protocol work in the SEAT working group is expected
-to satisfy.
+{{I-D.ietf-seat-use-cases}}.  Readers are directed there to review
+the security property goals and various deployment scenarios that the
+protocol work in the SEAT working group is expected to satisfy.
 
 # Conventions and Definitions {#definitions}
 
@@ -153,33 +153,24 @@ context.
 This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
-Target/TEE‑Bound Key (`tbK`):
-: An asymmetric key pair whose private key is generated
-  and maintained exclusively within the Target Environment
-  (e.g., a TEE). The `tbK` is used to authenticate the Attester’s
-  transport endpoint (for example, signing the TLS CertificateVerify
-  message). Evidence produced by the Attesting Environment
-  MUST include a binding to the `tbK`.
+Transport Signing Key (`TSK`):
+: An asymmetric key pair whose private key used to authenticate the
+  Attester’s transport endpoint (for example, signing the TLS CertificateVerify
+  message). Evidence produced by the Attesting Environment MUST include a
+  binding to the `TSK`. It is RECOMMENDED that the TSK be generated and
+  maintained exclusively within the Target Environment (e.g., a TEE).
 
-Hardware‑Bound Key (`hbK`):
-: A long‑lived asymmetric key pair whose private key resides
-  outside the Target Environment, typically in a Hardware Security
-  Module (HSM) or similar hardened service. The `hbK`’s certificate
-  provides the conventional identity (e.g., a WebPKI domain
-  validation) to the Relying Party. In deployments where a
-  short‑lived `tbK` is used, the `hbK` MAY authorise the `tbK`.
-
-Attesting Environment Key (`aeK`):
+Attesting Environment Key (`AEK`):
 : The asymmetric key used by the Attesting Environment
-  to sign Evidence. The Verifier trusts the `aeK` through an
+  to sign Evidence. The Verifier trusts the `AEK` through an
   Endorsement chain that typically roots in a hardware manufacturer
-  or a device‑specific CA. The `aeK` is used solely for attestation
+  or a device‑specific CA. The `AEK` is used solely for attestation
   and is distinct from any key used for transport authentication.
 
-Attestation Result Key (`arK`):
+Attestation Result Key (`ARK`):
 : The asymmetric key used by a Verifier to sign
   Attestation Results. The Relying Party must possess the
-  corresponding trust anchor for the `arK` so that it can verify
+  corresponding trust anchor for the `ARK` so that it can verify
   the integrity and authenticity of received Attestation Results.
 
 Attestation Credential:
@@ -286,9 +277,10 @@ The SEAT architecture maps the roles defined in {{RFC9334}} to standard
 transport protocol entities.  The subsections below describe each
 role and its specific character in the transport context.
 
-The overarching SEAT goal is to establish an Attested Channel between two
-entities.  {{fig-atls}} shows the TLS and RATS roles that are involved in
-achieving this goal, and how they interact.
+The overarching goal for SEAT is to establish an attested channel between an
+Attester and a Relying Party (or between two endpoints acting mutually
+in both roles). {{fig-atls}} shows the transport and RATS roles that are
+involved in achieving this goal, and how they interact.
 
 ~~~ aasvg
 {::include img/arch.ascii-art}
@@ -489,15 +481,31 @@ trust before the session becomes usable: the Relying Party's Verifier
 must accept the Attester's Attestation Credential before application
 data can flow. The combined model suits constrained device and IoT
 deployments where a single attestation protocol handles both initial
-session trust and ongoing periodic re-attestion, avoiding separate
+session trust and ongoing periodic re-attestation, avoiding separate
 code paths for onboarding and normal operation.
 
 Protocol specifications building on this architecture MAY support one
 or both timing models.
 
-# Failure handling considerations {#failure-handling}
+# Operational Considerations
 
-## Failure handing within Intra-Handshake Window
+This document introduces several operational and manageability
+considerations for deploying attested secure channels.
+
+## Protocol Attack Vectors
+
+Protocol designers, implementers and operators must consider the specific
+security goals and requirements for any given deployment and understand the
+corresponding attacker models that may apply, such as the potential threat
+and impact of network attackers or malicious peers. See {{I-D.ietf-seat-use-cases}}
+section 3 "Attacker Model" to review these considerations and their remedies.
+
+For an architectural overview of additional security-related concerns for attested
+transport channels, see {{security-considerations}}.
+
+## Failure handling {#failure-handling}
+
+### Failure handling within Intra-Handshake Window
 
 When remote attestation occurs within the Intra-Handshake Window,
 the transport handshake withholds progression to application data
@@ -512,7 +520,7 @@ application as a remote-attestation-related fault. Remote attestation
 specificity provides greater flexibility to apply application-layer
 policies, and assists in auditing and general debugging.
 
-## Failure handing within Post-Handshake Window
+### Failure handling within Post-Handshake Window
 
 When attestation occurs within the Post-Handshake Window, or when
 Re-attestation fails during the Lifetime of Connection, the
@@ -532,7 +540,9 @@ Post-Handshake Attestation does not retroactively protect
 application data already exchanged prior to the failed appraisal;
 it bounds further exposure going forward.
 
-# Attestation Session Binding {#channel-binding-pattern}
+## Session Binding
+
+### Attestation Session Binding {#channel-binding-pattern}
 
 Regardless of which timing model is used or which transport protocol
 is in use, a correctly bound attested channel requires that three
@@ -560,7 +570,8 @@ Evidence payload, committing that Evidence to this specific session.
 For this condition to hold when using the Passport model, the Verifier
 must propagate this binding into the resulting Attestation Result,
 ensuring the final Attestation Credential presented to the Relying Party
-remains committed to the specific transport session.
+remains committed to the specific transport session. These conditions mitigate
+two primary attack vectors:
 
 The first is replay across sessions.  Because the Session Binding
 Value is unique to the session, an Attestation Credential committed
@@ -573,7 +584,7 @@ binder, cannot recur across sessions.
 
 The second is a Key Substitution Attack: a valid Attestation Credential
 produced by a genuine attested execution environment is presented while
-the Subject Key used for authentication was not generated or protected
+the `TSK` (Subject key) used for authentication was not generated or protected
 within that environment.  Session binding alone does not bind the
 Subject Key to the attested environment; this is handled at the RATS
 layer, as discussed under Key Non-exportability in
@@ -591,8 +602,8 @@ When all three conditions are met, the channel-binding check may be
 performed either by the Relying Party itself or by the Verifier.  As a
 session participant, the Relying Party holds the Session Binding Value
 and can compute the binder locally and MAY send it to the Verifier
-which compares it with the binder in the Evidence, avoiding the
-need requiring that the Relying Party decode the Evidence first.
+which compares it with the binder in the Evidence, avoiding the need
+for the Relying Party to decode the Evidence first.
 
 If the Relying Party is directly consuming Evidence (Background-Check
 model), it rejects Evidence whose binder does not match. If the Relying
@@ -602,13 +613,13 @@ the Attestation Result if it cannot affirmatively evaluate that the
 Verifier explicitly tied the Attestation Result to the current
 session's Attestation Binder.
 
-# Freshness
+## Freshness
 
 The freshness of Evidence is critical to its value as a
 trustworthiness signal.  In the transport context, freshness has
 several distinct scopes that must be addressed separately.
 
-## Per-session freshness {#per-session-freshness}
+### Per-session freshness {#per-session-freshness}
 
 Per-session freshness ensures that Evidence is bound to the specific
 session being evaluated and cannot be replayed from a prior session.
@@ -622,14 +633,14 @@ session: a replay from a different session will carry an Attestation
 Binder derived from a different Session Binding Value, and appraisal
 will fail.
 
-## Session resumption
+### Session resumption
 
 Session resumption introduces a specific freshness consideration.
 When a transport session is resumed, a previously obtained
 Attestation Credential may no longer reflect the Attester's
 current state.
 
-## Re-Attestation in Long-Running Sessions
+### Re-Attestation in Long-Running Sessions
 
 Initial attestation at Connection Establishment Time addresses
 the architectural invariants the Relying Party's policy
@@ -653,9 +664,9 @@ trust assessment.  Whether to terminate a session upon
 re-attestation failure or continue with reduced privilege is
 a matter of Relying Party policy; see {{failure-handling}}.
 
-# Privacy Considerations
+## Privacy Considerations
 
-## Evidence Payload Confidentiality
+### Evidence Payload Confidentiality
 
 The Evidence payload carries Claims about the Attester's state and is
 the most privacy-sensitive artifact in the protocol.  It is
@@ -672,14 +683,14 @@ including claim classification, Trusted Verifier management, and
 Attestation Credential minimization, is provided in
 {{I-D.ounsworth-rats-privacy-framework}}.
 
-## Transport Metadata
+### Transport Metadata
 
 The transport connection discloses metadata — IP addresses, server
 name indications, and connection timing — that is visible to passive
 network observers.  This disclosure is inherent to the transport
 protocol and is not specific to the attestation layer.
 
-## Attestation Key Correlation
+### Attestation Key Correlation
 
 When the same attestation signing key is used across multiple
 sessions, any party with access to Evidence from more than one of
@@ -688,7 +699,7 @@ Environment.  This linkability consideration is particularly relevant
 for client Attesters where privacy of individual connections is a
 concern.
 
-## Anonymous Client Attestation
+### Anonymous Client Attestation
 
 The SEAT architecture supports deployments where a client Attester
 attests to the trustworthiness of its Attesting Environment without
@@ -697,7 +708,7 @@ client attestation.  In this deployment, the Relying Party's
 appraisal policy applies to the client's hardware and software state
 rather than to a disclosed identity.
 
-## Scope Boundary and Internet Openness
+### Scope Boundary and Internet Openness
 
 The IAB has issued a statement cautioning that using client
 attestation as a barrier to access for otherwise open protocols and
@@ -748,7 +759,7 @@ use the Attesting Environment as a signing oracle by substituting
 the attestation binder input, the architecture relies on
 cryptographic binding rather than continuous state monitoring.
 The Attesting Environment MUST bind the Attestation Credential
-to the private identity key it holds to authenticate a connection
+to the private identity key (`TSK`) it holds to authenticate a connection
 (for example, by including a hash of the associated public key in the
 signed payload).
 
@@ -757,7 +768,7 @@ identity key presented in the transport handshake, preventing
 an untrusted host from successfully substituting the binder.
 
 **Key Non-exportability (informative).** The specific concern of
-demonstrating that the Subject Key used for transport authentication
+demonstrating that the Subject Key (`TSK`) used for transport authentication
 is physically confined within the attested execution environment is
 addressed at the RATS layer by {{I-D.reddy-rats-key-binding}} and is
 not re-specified here.
@@ -774,7 +785,7 @@ not at Connection Establishment Time.
 object-level encryption to a key held exclusively by the intended
 recipient.  See {{I-D.ounsworth-rats-privacy-framework}}.
 
-**Session Resumption.** When a transport session is resumed, previously
+**Session Resumption.** When a transport session is resumed, a previously
 obtained Attestation Credential may no longer reflect the Attester's
 current state.  Attestation from a prior session does not carry over
 to a resumed session.
