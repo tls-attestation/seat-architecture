@@ -29,9 +29,8 @@ author:
     organization: Independent
     email: "ietf@nritz.com"
   - fullname: Thomas Fossati
-    organization: Independent
-organization: NVIDIA
-email: "tfossati@nvidia.com"
+    organization: NVIDIA
+    email: "tfossati@nvidia.com"
   - fullname: Tirumaleswar Reddy
     organization: Nokia
     email: "kondtir@gmail.com"
