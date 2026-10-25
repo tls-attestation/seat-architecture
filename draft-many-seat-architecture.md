@@ -154,7 +154,7 @@ This document adopts terms of art such as `intra-` and `post-`
 as coined by {{NIEME2021}}.
 
 Transport Signing Key (`TSK`):
-: An asymmetric key pair whose private key used to authenticate the
+: An asymmetric key pair whose private key is used to authenticate the
   Attester’s transport endpoint (for example, signing the TLS CertificateVerify
   message). Evidence produced by the Attesting Environment MUST include a
   binding to the `TSK`. It is RECOMMENDED that the TSK be generated and
@@ -172,6 +172,14 @@ Attestation Result Key (`ARK`):
   Attestation Results. The Relying Party must possess the
   corresponding trust anchor for the `ARK` so that it can verify
   the integrity and authenticity of received Attestation Results.
+
+Authenticated Identity ("identity"):
+: The identity of a peer as established by the secure channel
+  establishment protocol's authentication (for example, TLS handshake
+  authentication, see {{Appendix F.1 of RFC9846}}), i.e., a name
+  cryptographically bound to the key or credential the peer authenticates
+  with (for example, a certificate subject as in {{RFC9525}}). How the
+  identity and its credential are issued is outside the scope of this document.
 
 Attestation Credential:
 : The attestation payload conveyed by the Attester to the Relying
@@ -443,6 +451,10 @@ Appraisal Policy for Attestation Results.
 In both cases, an authorization decision must be made before the
 transport state machine permits application data to flow.
 
+> Note: Regardless of the timing model, the deployment of any timing
+model is invariant to *what* is being signed, (i.e., measurements).
+See {{pre-handshake}} for further discussion.
+
 ## Intra-Handshake Attestation
 
 An Attestation Credential is conveyed by the Attester **during** the
@@ -497,8 +509,8 @@ considerations for deploying attested secure channels.
 Protocol designers, implementers and operators must consider the specific
 security goals and requirements for any given deployment and understand the
 corresponding attacker models that may apply, such as the potential threat
-and impact of network attackers or malicious peers. See {{I-D.ietf-seat-use-cases}}
-section 3 "Attacker Model" to review these considerations and their remedies.
+and impact of network attackers or malicious peers. See {{Section 3 of I-D.ietf-seat-use-cases}}
+to review these considerations and their remedies.
 
 For an architectural overview of additional security-related concerns for attested
 transport channels, see {{security-considerations}}.
@@ -584,7 +596,7 @@ binder, cannot recur across sessions.
 
 The second is a Key Substitution Attack: a valid Attestation Credential
 produced by a genuine attested execution environment is presented while
-the `TSK` (Subject key) used for authentication was not generated or protected
+the `TSK` (Subject Key) used for authentication was not generated or protected
 within that environment.  Session binding alone does not bind the
 Subject Key to the attested environment; this is handled at the RATS
 layer, as discussed under Key Non-exportability in
@@ -663,6 +675,25 @@ conditioning continued sensitive data transmission on a current
 trust assessment.  Whether to terminate a session upon
 re-attestation failure or continue with reduced privilege is
 a matter of Relying Party policy; see {{failure-handling}}.
+
+## Time-of-Check vs. Time-of-Use Considerations {#pre-handshake}
+
+Regardless of the timing model, the deployment of any timing
+model is invariant to *what* is being signed (e.g., measurements).
+
+Those measurements may be, and often are, generated at boot time. In cases
+where all/most measurements are fixed pre-handshake, that effectively means
+that the attested exchange is "pre-handshake" conceptually, even if the
+Evidence is collected and appraised following the use of the Background-Check
+conveyance model. Operators should be aware that this may introduce a
+Time-of-Check vs. Time-of-Use (TOCTOU) challenge which may not be readily
+mitigated by choice of attestation timing.
+
+For example, if an underlying platform vulnerability is disclosed, microcode
+is revoked, or the host platform's security state otherwise drops out of policy
+compliance, such a change in posture may not be readily detectable even during
+real-time connection establishment (i.e., intra-handshake) or re-attestation
+(i.e., post-handshake).
 
 ## Privacy Considerations
 
@@ -819,6 +850,72 @@ and binary transparency, Application-layer attestation cannot
 provide security assurance, as the Attester may serve malicious
 code that bypasses cryptographic validation.
 
+## Additional attacker models
+
+The following adopts the attacker model of {{Section 3 of I-D.ietf-seat-use-cases}}
+and evaluates security goals that are broadly inherited from the Security
+Considerations extending the broader RATS ecosystem. See {{Section 12 of RFC9334}}.
+
+### Unauthorized System Hosting of Valid Credentials
+
+**Attacker capabilities:** A malicious peer possesses a valid, CA-endorsed
+authentication private key for an authorized peer identity and controls
+an endorsed Target Environment capable of producing authentic, fresh Evidence.
+
+**Targeted assurance:** The Relying Party verifies that the specific Target
+Environment is authorized to execute operations under the authenticated peer
+identity, preventing communication with an unauthorized system.
+
+**Preconditions and attack:** The Relying Party validates identity credentials
+and platform Evidence independently. The attacker hosts the valid key inside
+an unapproved confidential workload, completes the cryptographic transcript
+binding, and establishes the TLS connection. When the Relying Party's policy
+checks pass in isolation, it authorizes the session.
+
+**Why validation succeeds:** TLS proof of possession and platform Evidence
+verify against their respective independent trust roots, and the connection
+binder confirms channel co-location. Validation succeeds because neither
+root evaluates the other's domain, and the Relying Party lacks a policy
+rule linking them. Cryptographic channel binding alone is insufficient
+to establish that an attested environment is an authorized system for a
+given Authenticated Identity.
+
+**Mitigation strategy:** To prevent communication with an unauthorized system,
+compound authentication requires joint evaluation of the peer identity and
+platform measurements.
+
+### Encrypted Evidence and Blind Envelope Substitution
+
+**Attacker capabilities:** A network attacker or untrusted intermediary that
+can obtain or induce valid encrypted Evidence envelopes constructed against
+the current connection challenge. The attacker does not possess the Verifier's
+private decryption key, the Attestation Key, or the peer authentication key.
+
+**Targeted assurance:** The Evidence evaluated by the Verifier corresponds
+strictly to the encrypted payload conveyed across the secure channel.
+
+**Preconditions and attack:** When a Relying Party is restricted from handling
+claims directly, Evidence may be encrypted for an external Verifier to protect
+claim privacy (see {{Section 11 of RFC9334}}), leaving the Relying Party as a
+blind forwarder. The attacker intercepts the encrypted Evidence envelope and
+substitutes a different valid envelope constructed against the same connection
+challenge. The Relying Party forwards the substituted envelope to the Verifier,
+which decrypts it and returns an Attestation Result confirming valid
+Evidence for that challenge. The Relying Party completes the connection,
+falsely attributing the substituted posture to the peer.
+
+**Why validation succeeds:** The Relying Party cannot inspect inner claims.
+Verifier appraisal succeeds because the substituted payload contains valid
+signatures and matches the expected challenge. Standard channel authentication
+confirms control of the identity key, but remains cryptographically uncoupled
+from the inner Evidence.
+
+**Mitigation strategy:** The Relying Party computes a cryptographic commitment
+directly over the opaque encrypted Evidence bytes on the wire, and the Verifier
+binds this commitment into the signed Attestation Result, establishing transitive
+cryptographic closure between the channel transcript and the appraised payload.
+
+
 # IANA Considerations
 
 This document has no IANA actions.
@@ -856,6 +953,28 @@ payload, and resumes or aborts the handshake based on the callback's
 return value.  The callback interface is transport-external: it need
 not be specified by the transport protocol itself, only supported by
 it as an extension point.
+
+### Session Binding in Intra-Handshake Solutions (informational)
+
+Cryptographic binding of Evidence with per-connection session can be
+achieved in TLS 1.3 as follows:
+
+1. **Binder Derivation:** The server computes the binder over the
+   `ClientHello...ServerHello` transcript checkpoint, binding it
+   directly to the hash of the server's public key.
+
+2. **Evidence Transmission:** The Evidence containing this binder
+   is conveyed within a dedicated Remote Attestation extension of
+   the `Certificate` message.
+
+3. **Cumulative Transcript Incorporation:** The `Certificate` message
+   (carrying the Evidence and binder) becomes an immutable input into
+   the running handshake transcript.
+
+4. **Transcript Sealing and Key Derivation:** That cumulative transcript
+   is signed by `CertificateVerify` and authenticated by the `Finished`
+   MAC. The very same transcript snapshot directly derives the
+   application traffic keys.
 
 ## Structured Payload Conveyance
 
