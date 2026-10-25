@@ -30,7 +30,8 @@ author:
     email: "ietf@nritz.com"
   - fullname: Thomas Fossati
     organization: Independent
-    email: "tho.ietf@gmail.com"
+organization: NVIDIA
+email: "tfossati@nvidia.com"
   - fullname: Tirumaleswar Reddy
     organization: Nokia
     email: "kondtir@gmail.com"
