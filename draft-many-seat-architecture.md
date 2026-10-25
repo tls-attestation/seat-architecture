@@ -29,14 +29,18 @@ author:
     organization: Independent
     email: "ietf@nritz.com"
   - fullname: Thomas Fossati
-    organization: Independent
-    email: "tho.ietf@gmail.com"
+    organization: NVIDIA
+    email: "tfossati@nvidia.com"
   - fullname: Tirumaleswar Reddy
     organization: Nokia
     email: "kondtir@gmail.com"
   - fullname: Ionuț Mihalcea
     organization: Arm
     email: "ionut.mihalcea@arm.com"
+  - fullname: Yuxuan Song
+    ins: Y. Song
+    organization: Inria
+    email: "yuxuan.song@inria.fr"
 
 normative:
   RFC2119:
