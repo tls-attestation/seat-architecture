@@ -3,13 +3,16 @@
 
 
 Network Working Group                                            N. Ritz
-Internet-Draft                                                T. Fossati
-Intended status: Informational                               Independent
-Expires: 7 March 2027                                           T. Reddy
+Internet-Draft                                               Independent
+Intended status: Informational                                T. Fossati
+Expires: 28 April 2027                                            NVIDIA
+                                                                T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
-                                                        3 September 2026
+                                                                 Y. Song
+                                                                   Inria
+                                                         25 October 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -52,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 March 2027.
+   This Internet-Draft will expire on 28 April 2027.
 
 Copyright Notice
 
@@ -987,8 +990,8 @@ Authors' Addresses
 
 
    Thomas Fossati
-   Independent
-   Email: tho.ietf@gmail.com
+   NVIDIA
+   Email: tfossati@nvidia.com
 
 
    Tirumaleswar Reddy
@@ -999,3 +1002,8 @@ Authors' Addresses
    Ionuț Mihalcea
    Arm
    Email: ionut.mihalcea@arm.com
+
+
+   Yuxuan Song
+   Inria
+   Email: yuxuan.song@inria.fr
