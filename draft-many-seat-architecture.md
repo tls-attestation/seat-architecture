@@ -515,7 +515,7 @@ considerations for deploying attested secure channels.
 
 ## Protocol Attack Vectors
 
-Protocol designers, implementers and operators must consider the specific
+Protocol designers, implementers, operators, and users must consider the specific
 security goals and requirements for any given deployment and understand the
 corresponding attacker models that may apply, such as the potential threat
 and impact of network attackers or malicious peers. See {{Section 3 of I-D.ietf-seat-use-cases}}
@@ -703,8 +703,7 @@ mitigated by choice of attestation timing.
 For example, if an underlying platform vulnerability is disclosed, microcode
 is revoked, or the host platform's security state otherwise drops out of policy
 compliance, such a change in posture may not be readily detectable even during
-real-time connection establishment (i.e., intra-handshake) or re-attestation
-(i.e., post-handshake).
+real-time connection establishment or re-attestation.
 
 # Privacy Considerations {#privacy}
 
