@@ -50,8 +50,13 @@ informative:
   RFC9525:
   RFC9846:
   RFC9528:
+  RFC9999:
+  RFC8555:
   I-D.ounsworth-rats-privacy-framework:
   I-D.reddy-rats-key-binding:
+  I-D.ietf-lake-ra:
+  I-D.ietf-acme-rats:
+  I-D.ietf-lamps-csr-attestation:
   IAB-Attestation-Risks:
     title: "IAB Statement on the Risks of Attestation of Software and Hardware on the Open Internet"
     date: 2023-09-25
@@ -181,10 +186,13 @@ Attestation Result Key (`ARK`):
 Authenticated Identity ("identity"):
 : The identity of a peer as established by the secure channel
   establishment protocol's authentication (for example, TLS handshake
-  authentication, see {{Appendix F.1 of RFC9846}}), i.e., a name
+  authentication, see {{Appendix F.1 of RFC9846}}). I.e., a name
   cryptographically bound to the key or credential the peer authenticates
-  with (for example, a certificate subject as in {{RFC9525}}). How the
-  identity and its credential are issued is outside the scope of this document.
+  with (for example, a certificate subject as in {{RFC9525}}).
+
+> How authenticated identity and those credentials are issued is outside
+> the scope of this document. For some additional discussion of adjacent
+> work related to RA and identity, see {{adjacent-work}}.
 
 Attestation Credential:
 : The attestation payload conveyed by the Attester to the Relying
@@ -445,7 +453,7 @@ transport handshake define the two Attestation Timing Models used in
 this architecture.
 
 Depending on the approach, an Attestation Credential may be conveyed
-during Intra-Handshake Window or conveyed at the application layer in
+during the Intra-Handshake Window or conveyed at the application layer in
 the Post-Handshake Window.
 
 If the credential is Evidence, the Relying Party acts as or forwards
@@ -458,7 +466,7 @@ transport state machine permits application data to flow.
 
 {:aside}
 > Note: Regardless of the timing model, the deployment of any timing
-model is invariant to *what* is being signed, (i.e., measurements).
+model is invariant to *what* is being signed (i.e., measurements).
 See {{pre-handshake}} for further discussion.
 
 ## Intra-Handshake Attestation
@@ -659,7 +667,7 @@ When a transport session is resumed, a previously obtained
 Attestation Credential may no longer reflect the Attester's
 current state.
 
-### Re-Attestation in Long-Running Sessions
+### Re-Attestation in Long-Running Sessions {#reattestation}
 
 Initial attestation at Connection Establishment Time addresses
 the architectural invariants the Relying Party's policy
@@ -685,8 +693,9 @@ a matter of Relying Party policy; see {{failure-handling}}.
 
 ## Time-of-Check vs. Time-of-Use Considerations {#pre-handshake}
 
-Regardless of the attestation timing window (see , the deployment of any timing
-model is invariant to *what* is being signed (e.g., measurements).
+Regardless of the attestation timing window (see {{timing-models}}), the
+deployment of any timing model is invariant to *what* is being signed
+(e.g., measurements).
 
 Those measurements may be, and often are, generated at boot time. In cases
 where all/most measurements are fixed pre-handshake, that effectively means
@@ -702,7 +711,7 @@ compliance, such a change in posture may not be readily detectable even during
 real-time connection establishment (i.e., intra-handshake) or re-attestation
 (i.e., post-handshake).
 
-# Privacy Considerations
+# Privacy Considerations {#privacy}
 
 ## Evidence Payload Confidentiality
 
@@ -853,7 +862,7 @@ verification logic is dynamically delivered by the endpoint under
 appraisal (such as browser-based JavaScript), a circular trust
 dependency exists.  Unless the client's execution environment
 enforces an independent, orthogonal guarantee of code integrity
-and binary transparency, Application-layer attestation cannot
+and binary transparency, application-layer attestation cannot
 provide security assurance, as the Attester may serve malicious
 code that bypasses cryptographic validation.
 
@@ -963,8 +972,8 @@ it as an extension point.
 
 ### Session Binding in Intra-Handshake Solutions (informational)
 
-Cryptographic binding of Evidence with per-connection session can be
-achieved in TLS 1.3 as follows:
+Cryptographic binding of Evidence to a per-connection session can be
+achieved in TLS 1.3 {RFC9846}} as follows:
 
 1. **Binder Derivation:** The server computes the binder over the
    `ClientHello...ServerHello` transcript checkpoint, binding it
@@ -993,7 +1002,7 @@ attestation-specific protocol elements, are carried within this field.
 
 The transport stack extracts the field's contents and passes them
 to an adjacent component responsible for {{RFC9334}} semantics,
-without needing to parse or understand the contents itself.  As in
+without needing to parse or understand the contents themselves.  As in
 Extension-Based Conveyance, the transport state machine halts
 pending the outcome of this processing.  The distinction between
 the two patterns is where the extension point is anchored: an
@@ -1006,6 +1015,50 @@ be conveyed prior to the transition to application data exchange; the
 choice between them depends on the target transport protocol's
 extension model and is otherwise architecturally equivalent from an
 {{RFC9334}} perspective.
+
+# Adjacent Work {#adjacent-work}
+
+The SEAT WG is not the only WG within the IETF composing {{RFC9334}}
+Remote Attestation with established IETF building blocks.  Beyond
+the LAKE WG's own RA draft {{I-D.ietf-lake-ra}}, another promiment
+example is the Automated Certificate Management Environment (ACME) WG
+and their adopted protocol extension ACME RATS {{I-D.ietf-acme-rats}}.
+
+## ACME RATS
+
+The ACME protocol {{RFC8555}} is designed to allow a CA and an
+applicant to automate the process of verification and issuance
+of Public Key Infrastructure X.509 (PKIX) certificates.  An
+applicant requests a given identifier to appear in the certificate,
+and the ACME server provides a list of proof-of-control challenges.
+The ACME RATS extension defines a specialized RA challenge answered
+with a RATS Conceptual Message Wrapper (CMW) {{RFC9999}} capable of
+carrying Evidence, Endorsements, or an Attestation Result in any
+RATS-supported format.  This enables ACME RATS to provide a general,
+RATS-ecosystem-native framework for conveying supplemental trust and
+posture information, decoupled from certificate identifiers.  The
+extension also includes a property where the applicatant can fetch an
+encryption public key that it can use for encrypting the remote-
+attestation (CMW) challenge response (see {{Section 2.2.1 of I-D.ietf-acme-rats}}).
+
+## Architectual Comparisions
+
+In operation, an X.509 certificate enhanced with RA such as
+{{I-D.ietf-lamps-csr-attestation}} or obtained through ACME RATS
+represents a textbook example of the RATS Passport conveyance model.
+However, such a certificate has a fixed validity period.  If a
+Certificate Authority signs a standard 90-day certificate based on a
+boot-time measurement and a host later falls out of conformance with
+its expected security state 3 days later, then without continuous
+revocation mechanisms, a standard TLS 1.3 implementation will still
+accept the certicate, representing a significant TOCTOU risk
+(see {{pre-handshake}}).
+
+A complimentary approach in addressing these kinds of TOCTOU risks
+may be addressed by deploying a dedicated protocol solution such as
+Attested TLS or LAKE RA where either an intra-handshake or post-handshake
+Background-Check implementation would represent a form of re-attestation
+(see {{reattestation}}).
 
 # Acknowledgments
 {:numbered="false"}
