@@ -1056,9 +1056,12 @@ accept the certicate, representing a significant TOCTOU risk
 
 A complimentary approach in addressing these kinds of TOCTOU risks
 may be addressed by deploying a dedicated protocol solution such as
-Attested TLS or LAKE RA where either an intra-handshake or post-handshake
-Background-Check implementation would represent a form of re-attestation
-(see {{reattestation}}).
+Attested TLS. For example, executing an in-band attestation
+exchange during TLS establishment allows the relying party to request
+a real-time, connection-bound re-evaluation of Attester's
+security state against current appraisal policy. This would work as a
+form of reattestation (see {{reattestation}}) and enables reassessment
+of a given platform without having to reissue the identity certificate.
 
 # Acknowledgments
 {:numbered="false"}
