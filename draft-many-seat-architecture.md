@@ -588,25 +588,26 @@ Evidence payload, committing that Evidence to this specific session.
 For this condition to hold when using the Passport model, the Verifier
 must propagate this binding into the resulting Attestation Result,
 ensuring the final Attestation Credential presented to the Relying Party
-remains committed to the specific transport session. These conditions mitigate
-two primary attack vectors:
+remains committed to the specific transport session.
 
-The first is replay across sessions.  Because the Session Binding
-Value is unique to the session, an Attestation Credential committed
-to a binder derived from it cannot be presented in a different session.
-Where the Session Binding Value is secret, only the session participants
-can derive it.  Where it is public, for example, a handshake transcript,
-its uniqueness follows from the ephemeral keying material that the
-transport establishes per session, so the transcript, and hence the
-binder, cannot recur across sessions.
+The above conditions aim to mitigate two primary attack vectors:
 
-The second is a Key Substitution Attack: a valid Attestation Credential
-produced by a genuine attested execution environment is presented while
-the `TSK` (Subject Key) used for authentication was not generated or protected
-within that environment.  Session binding alone does not bind the
-Subject Key to the attested environment; this is handled at the RATS
-layer, as discussed under Key Non-exportability in
-{{security-considerations}}.
+1. *Replay Across Sessions:*  Because the Session Binding
+   Value is unique to the session, an Attestation Credential committed
+   to a binder derived from it cannot be presented in a different session.
+   Where the Session Binding Value is secret, only the session participants
+   can derive it.  Where it is public, for example, a handshake transcript,
+   its uniqueness follows from the ephemeral keying material that the
+   transport establishes per session, so the transcript, and hence the
+   binder, cannot recur across sessions.
+
+2. *Key Substitution:* A valid Attestation Credential
+   produced by a genuine attested execution environment is presented while
+   the `TSK` (Subject Key) used for authentication was not generated or protected
+   within that environment.  Session binding alone does not bind the
+   Subject Key to the attested environment; this is handled at the RATS
+   layer, as discussed under Key Non-exportability in
+   {{security-considerations}}.
 
 The Attestation Credential itself plays a critical role in verifying
 that these three session binding conditions have been successfully
@@ -684,7 +685,7 @@ a matter of Relying Party policy; see {{failure-handling}}.
 
 ## Time-of-Check vs. Time-of-Use Considerations {#pre-handshake}
 
-Regardless of the timing model, the deployment of any timing
+Regardless of the attestation timing window (see , the deployment of any timing
 model is invariant to *what* is being signed (e.g., measurements).
 
 Those measurements may be, and often are, generated at boot time. In cases
