@@ -575,10 +575,10 @@ Table of Contents
 
 6.1.  Protocol Attack Vectors
 
-   Protocol designers, implementers and operators must consider the
-   specific security goals and requirements for any given deployment and
-   understand the corresponding attacker models that may apply, such as
-   the potential threat and impact of network attackers or malicious
+   Protocol designers, implementers, operators, and users must consider
+   the specific security goals and requirements for any given deployment
+   and understand the corresponding attacker models that may apply, such
+   as the potential threat and impact of network attackers or malicious
    peers.  See Section 3 of [I-D.ietf-seat-use-cases] to review these
    considerations and their remedies.
 
@@ -766,8 +766,8 @@ Table of Contents
    For example, if an underlying platform vulnerability is disclosed,
    microcode is revoked, or the host platform's security state otherwise
    drops out of policy compliance, such a change in posture may not be
-   readily detectable even during real-time connection establishment
-   (i.e., intra-handshake) or re-attestation (i.e., post-handshake).
+   readily detectable even during real-time connection establishment or
+   re-attestation.
 
 7.  Privacy Considerations
 
