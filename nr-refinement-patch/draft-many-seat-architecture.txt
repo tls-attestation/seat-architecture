@@ -103,20 +103,20 @@ Table of Contents
        6.4.2.  Session resumption
        6.4.3.  Re-Attestation in Long-Running Sessions
      6.5.  Time-of-Check vs. Time-of-Use Considerations
-     6.6.  Privacy Considerations
-       6.6.1.  Evidence Payload Confidentiality
-       6.6.2.  Transport Metadata
-       6.6.3.  Attestation Key Correlation
-       6.6.4.  Anonymous Client Attestation
-       6.6.5.  Scope Boundary and Internet Openness
-   7.  Security Considerations
-     7.1.  Additional attacker models
-       7.1.1.  Unauthorized System Hosting of Valid Credentials
-       7.1.2.  Encrypted Evidence and Blind Envelope Substitution
-   8.  IANA Considerations
-   9.  References
-     9.1.  Normative References
-     9.2.  Informative References
+   7.  Privacy Considerations
+     7.1.  Evidence Payload Confidentiality
+     7.2.  Transport Metadata
+     7.3.  Attestation Key Correlation
+     7.4.  Anonymous Client Attestation
+     7.5.  Scope Boundary and Internet Openness
+   8.  Security Considerations
+     8.1.  Additional attacker models
+       8.1.1.  Unauthorized System Hosting of Valid Credentials
+       8.1.2.  Encrypted Evidence and Blind Envelope Substitution
+   9.  IANA Considerations
+   10. References
+     10.1.  Normative References
+     10.2.  Informative References
    Appendix A.  Implementing Transport Integration (informational)
      A.1.  Extension-Based Conveyance
        A.1.1.  Session Binding in Intra-Handshake Solutions
@@ -380,7 +380,7 @@ Table of Contents
    specific session.  In a Split Deployment, the transport stack is in
    the Target Environment and the interface between the transport stack
    and the Attesting Environment is a security-critical boundary.  See
-   Section 7.
+   Section 8.
 
    In mutual attestation deployments, both the Client and the Server
    simultaneously act as Attesters.  Each endpoint's Attesting
@@ -582,7 +582,7 @@ Table of Contents
    considerations and their remedies.
 
    For an architectural overview of additional security-related concerns
-   for attested transport channels, see Section 7.
+   for attested transport channels, see Section 8.
 
 6.2.  Failure handling
 
@@ -669,7 +669,7 @@ Table of Contents
    generated or protected within that environment.  Session binding
    alone does not bind the Subject Key to the attested environment; this
    is handled at the RATS layer, as discussed under Key Non-
-   exportability in Section 7.
+   exportability in Section 8.
 
    The Attestation Credential itself plays a critical role in verifying
    that these three session binding conditions have been successfully
@@ -765,9 +765,9 @@ Table of Contents
    readily detectable even during real-time connection establishment
    (i.e., intra-handshake) or re-attestation (i.e., post-handshake).
 
-6.6.  Privacy Considerations
+7.  Privacy Considerations
 
-6.6.1.  Evidence Payload Confidentiality
+7.1.  Evidence Payload Confidentiality
 
    The Evidence payload carries Claims about the Attester's state and is
    the most privacy-sensitive artifact in the protocol.  It is
@@ -784,14 +784,14 @@ Table of Contents
    Verifier management, and Attestation Credential minimization, is
    provided in [I-D.ounsworth-rats-privacy-framework].
 
-6.6.2.  Transport Metadata
+7.2.  Transport Metadata
 
    The transport connection discloses metadata — IP addresses, server
    name indications, and connection timing — that is visible to passive
    network observers.  This disclosure is inherent to the transport
    protocol and is not specific to the attestation layer.
 
-6.6.3.  Attestation Key Correlation
+7.3.  Attestation Key Correlation
 
    When the same attestation signing key is used across multiple
    sessions, any party with access to Evidence from more than one of
@@ -800,7 +800,7 @@ Table of Contents
    for client Attesters where privacy of individual connections is a
    concern.
 
-6.6.4.  Anonymous Client Attestation
+7.4.  Anonymous Client Attestation
 
    The SEAT architecture supports deployments where a client Attester
    attests to the trustworthiness of its Attesting Environment without
@@ -809,7 +809,7 @@ Table of Contents
    appraisal policy applies to the client's hardware and software state
    rather than to a disclosed identity.
 
-6.6.5.  Scope Boundary and Internet Openness
+7.5.  Scope Boundary and Internet Openness
 
    The IAB has issued a statement cautioning that using client
    attestation as a barrier to access for otherwise open protocols and
@@ -833,7 +833,7 @@ Table of Contents
    Attestation Credential minimization controls described in this
    section and in [I-D.ounsworth-rats-privacy-framework].
 
-7.  Security Considerations
+8.  Security Considerations
 
    This section enumerates the security properties and considerations of
    the SEAT architecture.  Security goals state outcomes the
@@ -921,14 +921,14 @@ Table of Contents
    security assurance, as the Attester may serve malicious code that
    bypasses cryptographic validation.
 
-7.1.  Additional attacker models
+8.1.  Additional attacker models
 
    The following adopts the attacker model of Section 3 of
    [I-D.ietf-seat-use-cases] and evaluates security goals that are
    broadly inherited from the Security Considerations extending the
    broader RATS ecosystem.  See Section 12 of [RFC9334].
 
-7.1.1.  Unauthorized System Hosting of Valid Credentials
+8.1.1.  Unauthorized System Hosting of Valid Credentials
 
    *Attacker capabilities:* A malicious peer possesses a valid, CA-
    endorsed authentication private key for an authorized peer identity
@@ -960,7 +960,7 @@ Table of Contents
    system, compound authentication requires joint evaluation of the peer
    identity and platform measurements.
 
-7.1.2.  Encrypted Evidence and Blind Envelope Substitution
+8.1.2.  Encrypted Evidence and Blind Envelope Substitution
 
    *Attacker capabilities:* A network attacker or untrusted intermediary
    that can obtain or induce valid encrypted Evidence envelopes
@@ -996,13 +996,13 @@ Table of Contents
    Attestation Result, establishing transitive cryptographic closure
    between the channel transcript and the appraised payload.
 
-8.  IANA Considerations
+9.  IANA Considerations
 
    This document has no IANA actions.
 
-9.  References
+10.  References
 
-9.1.  Normative References
+10.1.  Normative References
 
    [I-D.ietf-seat-use-cases]
               Mihalcea, I., "Security Goals and Use Cases for
@@ -1026,7 +1026,7 @@ Table of Contents
               Architecture", RFC 9334, DOI 10.17487/RFC9334, January
               2023, <https://www.rfc-editor.org/rfc/rfc9334>.
 
-9.2.  Informative References
+10.2.  Informative References
 
    [I-D.ounsworth-rats-privacy-framework]
               Ounsworth, M., Tschofenig, H., and G. Lehmann, "Privacy
