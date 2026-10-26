@@ -138,12 +138,6 @@ Table of Contents
    |  
    |  — Gene Spafford
 
-      "Cryptography _without system integrity_ is like investing in an
-      armored car to carry money between a customer living in a
-      cardboard box and a person doing business on a park bench."
-
-      — Gene Spafford
-
    Traditional secure channel protocols, such as those based on
    authenticated key exchange (AKE), primarily establish trust in a
    peer's cryptographic identity.  This is typically achieved through

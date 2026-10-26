@@ -1377,31 +1377,23 @@ given transport connection.<a href="#section-abstract-1" class="pilcrow">¶</a><
         </h3>
 <blockquote id="section-1.1-1">
           <p id="section-1.1-1.1">"Cryptography <em>without system integrity</em> is like investing in an
-  armored car to carry money between a customer living in a cardboard
-  box and a person doing business on a park bench."<a href="#section-1.1-1.1" class="pilcrow">¶</a></p>
+armored car to carry money between a customer living in a cardboard
+box and a person doing business on a park bench."<a href="#section-1.1-1.1" class="pilcrow">¶</a></p>
 <p id="section-1.1-1.2">— Gene Spafford<a href="#section-1.1-1.2" class="pilcrow">¶</a></p>
 </blockquote>
-<ul class="normal ulEmpty">
-<li class="normal ulEmpty" id="section-1.1-2.1">
-            <p id="section-1.1-2.1.1">"Cryptography <em>without system integrity</em> is like investing in an
-armored car to carry money between a customer living in a cardboard
-box and a person doing business on a park bench."<a href="#section-1.1-2.1.1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2.1.2">— Gene Spafford<a href="#section-1.1-2.1.2" class="pilcrow">¶</a></p>
-</li>
-        </ul>
-<p id="section-1.1-3">Traditional secure channel protocols, such as those based on authenticated
+<p id="section-1.1-2">Traditional secure channel protocols, such as those based on authenticated
 key exchange (AKE), primarily establish trust in a peer's cryptographic
 identity. This is typically achieved through mechanisms like Public Key
 Infrastructure (PKI), where a trusted Certification Authority (CA)
 vouches for the binding between a public key and an identifier such as
-a hostname (e.g., <span>[<a href="#RFC9525" class="cite xref">RFC9525</a>]</span>).<a href="#section-1.1-3" class="pilcrow">¶</a></p>
-<p id="section-1.1-4">However, this model has a core limitation: identity authentication
+a hostname (e.g., <span>[<a href="#RFC9525" class="cite xref">RFC9525</a>]</span>).<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-3">However, this model has a core limitation: identity authentication
 provides no assurance about the peer's internal state or the
 integrity of its software stack.  A compromised server, for instance,
 can still present a valid X.509 certificate and be considered
 "trusted" by a client.  This gap allows compromised endpoints to
 maintain network access and the trust of their peers, posing a
-significant security risk in many environments.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+significant security risk in many environments.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="the-role-of-remote-attestation">
