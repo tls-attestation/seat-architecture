@@ -85,7 +85,12 @@ given transport connection.
   box and a person doing business on a park bench."
 >
 > — Gene Spafford
-{: =aside}
+{:quote}
+> "Cryptography *without system integrity* is like investing in an
+armored car to carry money between a customer living in a cardboard
+box and a person doing business on a park bench."
+>
+> — Gene Spafford
 
 Traditional secure channel protocols, such as those based on authenticated
 key exchange (AKE), primarily establish trust in a peer's cryptographic
@@ -121,7 +126,7 @@ By integrating RA into a secure channel establishment protocol,
 a second dimension of trust is added to complement regular peer authentication:
 trustworthiness. This allows a Relying Party to make authorization decisions
 based not just on the Attester's cryptographic identity, but also on what
-it is (such as an AMD SEV-SNP-based server or a specific device) and
+its security capabilities are (e.g., whether it is a Confidential Computing-capable server) and
 whether its security state is acceptable.
 
 This document is intended as an input to the design of protocol
@@ -451,6 +456,7 @@ Appraisal Policy for Attestation Results.
 In both cases, an authorization decision must be made before the
 transport state machine permits application data to flow.
 
+{:aside}
 > Note: Regardless of the timing model, the deployment of any timing
 model is invariant to *what* is being signed, (i.e., measurements).
 See {{pre-handshake}} for further discussion.
