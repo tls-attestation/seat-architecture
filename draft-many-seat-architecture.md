@@ -701,9 +701,9 @@ compliance, such a change in posture may not be readily detectable even during
 real-time connection establishment (i.e., intra-handshake) or re-attestation
 (i.e., post-handshake).
 
-## Privacy Considerations
+# Privacy Considerations
 
-### Evidence Payload Confidentiality
+## Evidence Payload Confidentiality
 
 The Evidence payload carries Claims about the Attester's state and is
 the most privacy-sensitive artifact in the protocol.  It is
@@ -720,14 +720,14 @@ including claim classification, Trusted Verifier management, and
 Attestation Credential minimization, is provided in
 {{I-D.ounsworth-rats-privacy-framework}}.
 
-### Transport Metadata
+## Transport Metadata
 
 The transport connection discloses metadata — IP addresses, server
 name indications, and connection timing — that is visible to passive
 network observers.  This disclosure is inherent to the transport
 protocol and is not specific to the attestation layer.
 
-### Attestation Key Correlation
+## Attestation Key Correlation
 
 When the same attestation signing key is used across multiple
 sessions, any party with access to Evidence from more than one of
@@ -736,7 +736,7 @@ Environment.  This linkability consideration is particularly relevant
 for client Attesters where privacy of individual connections is a
 concern.
 
-### Anonymous Client Attestation
+## Anonymous Client Attestation
 
 The SEAT architecture supports deployments where a client Attester
 attests to the trustworthiness of its Attesting Environment without
@@ -745,7 +745,7 @@ client attestation.  In this deployment, the Relying Party's
 appraisal policy applies to the client's hardware and software state
 rather than to a disclosed identity.
 
-### Scope Boundary and Internet Openness
+## Scope Boundary and Internet Openness
 
 The IAB has issued a statement cautioning that using client
 attestation as a barrier to access for otherwise open protocols and
