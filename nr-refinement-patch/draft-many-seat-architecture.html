@@ -2171,23 +2171,29 @@ Evidence payload, committing that Evidence to this specific session.<a href="#se
 <p id="section-6.3.1-5">For this condition to hold when using the Passport model, the Verifier
 must propagate this binding into the resulting Attestation Result,
 ensuring the final Attestation Credential presented to the Relying Party
-remains committed to the specific transport session. These conditions mitigate
-two primary attack vectors:<a href="#section-6.3.1-5" class="pilcrow">¶</a></p>
-<p id="section-6.3.1-6">The first is replay across sessions.  Because the Session Binding
+remains committed to the specific transport session.<a href="#section-6.3.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.3.1-6">The above conditions aim to mitigate two primary attack vectors:<a href="#section-6.3.1-6" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-6.3.1-7">
+<li id="section-6.3.1-7.1">
+              <p id="section-6.3.1-7.1.1"><em>Replay Across Sessions:</em>  Because the Session Binding
 Value is unique to the session, an Attestation Credential committed
 to a binder derived from it cannot be presented in a different session.
 Where the Session Binding Value is secret, only the session participants
 can derive it.  Where it is public, for example, a handshake transcript,
 its uniqueness follows from the ephemeral keying material that the
 transport establishes per session, so the transcript, and hence the
-binder, cannot recur across sessions.<a href="#section-6.3.1-6" class="pilcrow">¶</a></p>
-<p id="section-6.3.1-7">The second is a Key Substitution Attack: a valid Attestation Credential
+binder, cannot recur across sessions.<a href="#section-6.3.1-7.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-6.3.1-7.2">
+              <p id="section-6.3.1-7.2.1"><em>Key Substitution:</em> A valid Attestation Credential
 produced by a genuine attested execution environment is presented while
 the <code>TSK</code> (Subject Key) used for authentication was not generated or protected
 within that environment.  Session binding alone does not bind the
 Subject Key to the attested environment; this is handled at the RATS
 layer, as discussed under Key Non-exportability in
-<a href="#security-considerations" class="auto internal xref">Section 8</a>.<a href="#section-6.3.1-7" class="pilcrow">¶</a></p>
+<a href="#security-considerations" class="auto internal xref">Section 8</a>.<a href="#section-6.3.1-7.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
 <p id="section-6.3.1-8">The Attestation Credential itself plays a critical role in verifying
 that these three session binding conditions have been successfully
 achieved. Beyond the cryptographic inclusion of the Attestation Binder,
@@ -2282,7 +2288,7 @@ a matter of Relying Party policy; see <a href="#failure-handling" class="auto in
         <h3 id="name-time-of-check-vs-time-of-us">
 <a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-time-of-check-vs-time-of-us" class="section-name selfRef">Time-of-Check vs. Time-of-Use Considerations</a>
         </h3>
-<p id="section-6.5-1">Regardless of the timing model, the deployment of any timing
+<p id="section-6.5-1">Regardless of the attestation timing window (see , the deployment of any timing
 model is invariant to <em>what</em> is being signed (e.g., measurements).<a href="#section-6.5-1" class="pilcrow">¶</a></p>
 <p id="section-6.5-2">Those measurements may be, and often are, generated at boot time. In cases
 where all/most measurements are fixed pre-handshake, that effectively means
