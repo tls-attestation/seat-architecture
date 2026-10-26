@@ -5,14 +5,14 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                               Independent
 Intended status: Informational                                T. Fossati
-Expires: 28 April 2027                                            NVIDIA
+Expires: 29 April 2027                                            NVIDIA
                                                                 T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
                                                                  Y. Song
                                                                    Inria
-                                                         25 October 2026
+                                                         26 October 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 April 2027.
+   This Internet-Draft will expire on 29 April 2027.
 
 Copyright Notice
 
@@ -129,6 +129,12 @@ Table of Contents
 
 1.1.  Establishing Trust in Secure Communications
 
+   |  "Cryptography _without system integrity_ is like investing in an
+   |  armored car to carry money between a customer living in a
+   |  cardboard box and a person doing business on a park bench."
+   |  
+   |  — Gene Spafford
+
       "Cryptography _without system integrity_ is like investing in an
       armored car to carry money between a customer living in a
       cardboard box and a person doing business on a park bench."
@@ -169,9 +175,9 @@ Table of Contents
    second dimension of trust is added to complement regular peer
    authentication: trustworthiness.  This allows a Relying Party to make
    authorization decisions based not just on the Attester's
-   cryptographic identity, but also on what it is (such as an AMD SEV-
-   SNP-based server or a specific device) and whether its security state
-   is acceptable.
+   cryptographic identity, but also on what its security capabilities
+   are (e.g., whether it is a Confidential Computing-capable server) and
+   whether its security state is acceptable.
 
    This document is intended as an input to the design of protocol
    solutions within the SEAT working group.  One primary goal is to
@@ -513,9 +519,9 @@ Table of Contents
    In both cases, an authorization decision must be made before the
    transport state machine permits application data to flow.
 
-      Note: Regardless of the timing model, the deployment of any timing
-      model is invariant to _what_ is being signed, (i.e.,
-      measurements).  See Section 6.5 for further discussion.
+      |  Note: Regardless of the timing model, the deployment of any
+      |  timing model is invariant to _what_ is being signed, (i.e.,
+      |  measurements).  See Section 6.5 for further discussion.
 
 5.1.  Intra-Handshake Attestation
 
