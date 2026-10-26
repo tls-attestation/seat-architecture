@@ -608,18 +608,17 @@ Table of Contents
    When attestation occurs within the Post-Handshake Window, or when Re-
    attestation fails during the Lifetime of Connection, the transport
    session already exists and application data may already be flowing.
-   [RFC9334] expects a failed Attester appraisal to result in reduced
-   access or privileges rather than outright rejection.  In the event of
-   failures occurring within the Post-Handshake Window, this behaviour
-   is to be handled at the transport layer.
 
-   As the Relying Party's enforcement point sits outside the transport
-   handshake, operating on already-established application-layer
-   traffic, the Appraisal Policy determines whether the connection is
-   torn down, or restricted to a subset of application-layer
-   functionality.  Failure handling of Post-Handshake Attestation does
-   not retroactively protect application data already exchanged prior to
-   the failed appraisal; it bounds further exposure going forward.
+   Section 1-2 of [RFC9334] allows a failed Attester appraisal to result
+   in reduced access or privileges rather than outright rejection.  As
+   the Relying Party's enforcement point sits outside the transport
+   connection establishment window, the Appraisal Policy determines
+   whether the connection is torn down, or restricted to a subset of
+   application-layer functionality.
+
+   Failure handling of Post-Handshake Attestation does not retroactively
+   protect application data already exchanged prior to the failed
+   appraisal; it bounds further exposure going forward.
 
 6.3.  Session Binding
 
