@@ -5,14 +5,14 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                               Independent
 Intended status: Informational                                T. Fossati
-Expires: 28 April 2027                                            NVIDIA
+Expires: 30 April 2027                                            NVIDIA
                                                                 T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
                                                                  Y. Song
                                                                    Inria
-                                                         25 October 2026
+                                                         27 October 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -24,9 +24,9 @@ Abstract
    ATtestation procedureS (RATS) with Secure Evidence and Attestation
    Transport (SEAT).  The document establishes normalized terminology
    for SEAT, aligns RATS roles to transport endpoints, outlines
-   topological patterns for attestation delivery timing, characterizes
-   the abstract cryptographic pattern by which Evidence is bound to a
-   given transport connection.
+   topological patterns for attestation delivery timing, and
+   characterizes the abstract cryptographic pattern by which Evidence is
+   bound to a given transport connection.
 
 About This Document
 
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 28 April 2027.
+   This Internet-Draft will expire on 30 April 2027.
 
 Copyright Notice
 
@@ -91,28 +91,40 @@ Table of Contents
      5.1.  Intra-Handshake Attestation
      5.2.  Post-Handshake Attestation
      5.3.  Combining Timing Models
-   6.  Failure handling considerations
-     6.1.  Failure handing within Intra-Handshake Window
-     6.2.  Failure handing within Post-Handshake Window
-   7.  Attestation Session Binding
-   8.  Freshness
-     8.1.  Per-session freshness
-     8.2.  Session resumption
-     8.3.  Re-Attestation in Long-Running Sessions
-   9.  Privacy Considerations
-     9.1.  Evidence Payload Confidentiality
-     9.2.  Transport Metadata
-     9.3.  Attestation Key Correlation
-     9.4.  Anonymous Client Attestation
-     9.5.  Scope Boundary and Internet Openness
-   10. Security Considerations
-   11. IANA Considerations
-   12. References
-     12.1.  Normative References
-     12.2.  Informative References
+   6.  Operational Considerations
+     6.1.  Protocol Attack Vectors
+     6.2.  Failure handling
+       6.2.1.  Failure handling within Intra-Handshake Window
+       6.2.2.  Failure handling within Post-Handshake Window
+     6.3.  Session Binding
+       6.3.1.  Attestation Session Binding
+     6.4.  Freshness
+       6.4.1.  Per-session freshness
+       6.4.2.  Session resumption
+       6.4.3.  Re-Attestation in Long-Running Sessions
+     6.5.  Time-of-Check vs. Time-of-Use Considerations
+   7.  Privacy Considerations
+     7.1.  Evidence Payload Confidentiality
+     7.2.  Transport Metadata
+     7.3.  Attestation Key Correlation
+     7.4.  Anonymous Client Attestation
+     7.5.  Scope Boundary and Internet Openness
+   8.  Security Considerations
+     8.1.  Additional attacker models
+       8.1.1.  Unauthorized System Hosting of Valid Credentials
+       8.1.2.  Encrypted Evidence and Blind Envelope Substitution
+   9.  IANA Considerations
+   10. References
+     10.1.  Normative References
+     10.2.  Informative References
    Appendix A.  Implementing Transport Integration (informational)
      A.1.  Extension-Based Conveyance
+       A.1.1.  Session Binding in Intra-Handshake Solutions
+               (informational)
      A.2.  Structured Payload Conveyance
+   Appendix B.  Adjacent Work
+     B.1.  ACME RATS
+     B.2.  Architectual Comparisions
    Acknowledgments
    Authors' Addresses
 
@@ -120,18 +132,18 @@ Table of Contents
 
 1.1.  Establishing Trust in Secure Communications
 
-      "Cryptography _without system integrity_ is like investing in an
-      armored car to carry money between a customer living in a
-      cardboard box and a person doing business on a park bench."
+   |  "Cryptography _without system integrity_ is like investing in an
+   |  armored car to carry money between a customer living in a
+   |  cardboard box and a person doing business on a park bench."
+   |  
+   |  — Gene Spafford
 
-      — Gene Spafford
-
-   Traditional secure channel protocols, such as Transport Layer
-   Security (TLS), primarily establish trust in a peer's identity.  This
-   is typically achieved through mechanisms like a Public Key
-   Infrastructure (PKI), where a trusted Certification Authority (CA)
-   vouches for the binding between a public key and an identifier (e.g.,
-   a hostname).
+   Traditional secure channel protocols, such as those based on
+   authenticated key exchange (AKE), primarily establish trust in a
+   peer's cryptographic identity.  This is typically achieved through
+   mechanisms like Public Key Infrastructure (PKI), where a trusted
+   Certification Authority (CA) vouches for the binding between a public
+   key and an identifier such as a hostname (e.g., [RFC9525]).
 
    However, this model has a core limitation: identity authentication
    provides no assurance about the peer's internal state or the
@@ -146,40 +158,40 @@ Table of Contents
    Remote Attestation (RA), as described in the RATS architecture
    [RFC9334], is a mechanism designed to fill this gap.  RA allows an
    entity (the "Attester") to produce verifiable "Evidence" about its
-   current runtime state.  This Evidence covers the Attester's TCB, and
-   can thus include measurements of its firmware, operating system, and
-   application code, as well as the configuration of its hardware and
-   software security features (e.g., secure boot status, memory
-   isolation).  A "Relying Party" can then use this Evidence, often with
-   the help of a trusted "Verifier", to appraise the Attester's
-   trustworthiness.
-
-   By integrating RA into a secure channel establishment protocol, a
-   second dimension of trust—trustworthiness—is added to complement
-   regular peer authentication.  This allows a peer to make
-   authorization decisions based not just on who the other party is, but
-   also on what it is (e.g., an AMD SEV-SNP-based server running in some
-   known datacenter) and whether its state is acceptable.
+   current runtime state.  This Evidence covers the Attester's security
+   state, and can thus include measurements of its firmware, operating
+   system, application code, as well as the configuration of its
+   hardware and software security features (e.g., secure boot status,
+   memory isolation).  A "Relying Party" can then use this Evidence,
+   often with the help of a trusted "Verifier", to appraise the
+   Attester's trustworthiness.
 
 1.3.  Purpose and Scope
 
+   By integrating RA into a secure channel establishment protocol, a
+   second dimension of trust is added to complement regular peer
+   authentication: trustworthiness.  This allows a Relying Party to make
+   authorization decisions based not just on the Attester's
+   cryptographic identity, but also on what its security capabilities
+   are (e.g., whether it is a Confidential Computing-capable server) and
+   whether its security state is acceptable.
+
    This document is intended as an input to the design of protocol
-   solutions within the SEAT working group.  A key goal is to define
-   requirements for a solution that is agnostic to any specific
-   attestation technology (e.g., Trusted Platform Modules (TPMs), Intel
-   TDX, AMD SEV, Arm CCA, etc.).
+   solutions within the SEAT working group.  One primary goal is to
+   define operational considerations that remain agnostic to any
+   specific attestation technology (e.g., Trusted Platform Modules
+   (TPMs), Intel TDX, AMD SEV, Arm CCA, etc.).
 
    For the scope of this architecture, the term "transport" is used
    interchangeably with "secure transport" to refer to secure channel
-   establishment protocols.
+   establishment protocols such as TLS [RFC9846] and LAKE [RFC9528].
 
 1.4.  Use Cases
 
    The use cases motivating this architecture are defined in
-   [I-D.mihalcea-seat-use-cases].  Readers are directed there for the
-   full enumeration of deployment scenarios, requirements, and
-   properties that protocol work in the SEAT working group is expected
-   to satisfy.
+   [I-D.ietf-seat-use-cases].  Readers are directed there to review the
+   security property goals and various deployment scenarios that the
+   protocol work in the SEAT working group is expected to satisfy.
 
 2.  Conventions and Definitions
 
@@ -197,31 +209,37 @@ Table of Contents
    This document adopts terms of art such as intra- and post- as coined
    by [NIEME2021].
 
-   Target/TEE-Bound Key (tbK):  An asymmetric key pair whose private key
-      is generated and maintained exclusively within the Target
-      Environment (e.g., a TEE).  The tbK is used to authenticate the
-      Attester’s transport endpoint (for example, signing the TLS
-      CertificateVerify message).  Evidence produced by the Attesting
-      Environment MUST include a binding to the tbK.
+   Transport Signing Key (TSK):  An asymmetric key pair whose private
+      key is used to authenticate the Attester’s transport endpoint (for
+      example, signing the TLS CertificateVerify message).  Evidence
+      produced by the Attesting Environment MUST include a binding to
+      the TSK.  It is RECOMMENDED that the TSK be generated and
+      maintained exclusively within the Target Environment (e.g., a
+      TEE).
 
-   Hardware-Bound Key (hbK):  A long-lived asymmetric key pair whose
-      private key resides outside the Target Environment, typically in a
-      Hardware Security Module (HSM) or similar hardened service.  The
-      hbK’s certificate provides the conventional identity (e.g., a
-      WebPKI domain validation) to the Relying Party.  In deployments
-      where a short-lived tbK is used, the hbK MAY authorise the tbK.
-
-   Attesting Environment Key (aeK):  The asymmetric key used by the
+   Attesting Environment Key (AEK):  The asymmetric key used by the
       Attesting Environment to sign Evidence.  The Verifier trusts the
-      aeK through an Endorsement chain that typically roots in a
-      hardware manufacturer or a device-specific CA.  The aeK is used
+      AEK through an Endorsement chain that typically roots in a
+      hardware manufacturer or a device-specific CA.  The AEK is used
       solely for attestation and is distinct from any key used for
       transport authentication.
 
-   Attestation Result Key (arK):  The asymmetric key used by a Verifier
+   Attestation Result Key (ARK):  The asymmetric key used by a Verifier
       to sign Attestation Results.  The Relying Party must possess the
-      corresponding trust anchor for the arK so that it can verify the
+      corresponding trust anchor for the ARK so that it can verify the
       integrity and authenticity of received Attestation Results.
+
+   Authenticated Identity ("identity"):  The identity of a peer as
+      established by the secure channel establishment protocol's
+      authentication (for example, TLS handshake authentication, see
+      Appendix F.1 of [RFC9846]).  I.e., a name cryptographically bound
+      to the key or credential the peer authenticates with (for example,
+      a certificate subject as in [RFC9525]).
+
+      How authenticated identity and those credentials are issued is
+      outside the scope of this document.  For some additional
+      discussion of adjacent work related to RA and identity, see
+      Appendix B.
 
    Attestation Credential:  The attestation payload conveyed by the
       Attester to the Relying Party across the transport connection.
@@ -283,7 +301,7 @@ Table of Contents
       transport session, from which Attestation Binders are derived.  A
       Session Binding Value may be public or secret depending on the
       topology; what is required is that it cannot be known before the
-      session is initiated.  See Section 7.
+      session is initiated.  See Section 6.3.1.
 
    Attestation Binder:  A cryptographic value derived from a Session
       Binding Value and committed to by the Attesting Environment into
@@ -315,29 +333,32 @@ Table of Contents
    transport protocol entities.  The subsections below describe each
    role and its specific character in the transport context.
 
-   The overarching SEAT goal is to establish an Attested Channel between
-   two entities.  Figure 1 shows the TLS and RATS roles that are
-   involved in achieving this goal, and how they interact.
+   The overarching goal for SEAT is to establish an attested channel
+   between an Attester and a Relying Party (or between two endpoints
+   acting mutually in both roles).  Figure 1 shows the transport and
+   RATS roles that are involved in achieving this goal, and how they
+   interact.
 
                                 .--------.
                .---------------+ Verifier +---------------.
-              |                |  [arK]   |                |
+              |                |  [ARK]   |                |
               |                 '--------'                 |
               |                                            |
               |                                            |
-   .----------|----------.  Nonce-based         .----------|----------.
-   |   .------+------.   |  Remote Attestation  |   .------+------.   |
+   .----------|----------.  Session-bound       .----------|----------.
+   |   .------+------.   |  Attestation nonce   |   .------+------.   |
    |  |   Attesting   |<-+----------------------+->| Relying Party |  |
    |  |  Environment  |  |          ^           |   '-------------'   |
-   |  |     [aeK]     |  |          |           |                     |
-   |   '-+-----------'   |          |           |                     |
+   |  |     [AEK]     |  |          |           |                     |
+   |   '-^-----------'   |          |           |                     |
    |     | Collect       |          | Attest'n  |                     |
-   |     v Claims        |          | Binder    |                     |
-   |   .-------------.   |          |           |                     |
-   |  |  .--------.   |  |          |           |   .-------------.   |
-   |  | | TLS peer |<-+--+----------+------------->|   TLS peer    |  |
-   |  |  '--------'   |  |    Secure Channel    |   '-------------'   |
-   |  |  [tbK / hbK]  |  |                      |                     |
+   |     | Claims        |          | Binder    |                     |
+   |   .-+-----------.   |          |           |                     |
+   |  |  .---------.  |  |          |           |     .---------.     |
+   |  | | Transport | |  |          |           |    | Transport |    |
+   |  | |   peer    |<+--+----------+-----------+--->|   peer    |    |
+   |  |  '---------'  |  |    Secure Channel    |     '---------'     |
+   |  |     [TSK]     |  |                      |                     |
    |  |               |  |                      |                     |
    |  |    Target     |  |                      |                     |
    |  |  Environment  |  |                      |                     |
@@ -360,7 +381,7 @@ Table of Contents
    specific session.  In a Split Deployment, the transport stack is in
    the Target Environment and the interface between the transport stack
    and the Attesting Environment is a security-critical boundary.  See
-   Section 10.
+   Section 8.
 
    In mutual attestation deployments, both the Client and the Server
    simultaneously act as Attesters.  Each endpoint's Attesting
@@ -454,9 +475,9 @@ Table of Contents
    Attestation Credential is bound to the current session — that it has
    not been replayed from a different session or transferred from a
    different endpoint.  This assurance is provided by the session
-   binding mechanism described in Section 7; the check may be performed
-   by the Relying Party itself or delegated to the Verifier, but it
-   cannot be pre-computed independently of the session.
+   binding mechanism described in Section 6.3.1; the check may be
+   performed by the Relying Party itself or delegated to the Verifier,
+   but it cannot be pre-computed independently of the session.
 
 4.2.  Attester Trust
 
@@ -488,8 +509,8 @@ Table of Contents
    this architecture.
 
    Depending on the approach, an Attestation Credential may be conveyed
-   during Intra-Handshake Window or conveyed at the application layer in
-   the Post-Handshake Window.
+   during the Intra-Handshake Window or conveyed at the application
+   layer in the Post-Handshake Window.
 
    If the credential is Evidence, the Relying Party acts as or forwards
    it to a Verifier to appraise the Evidence.  If the credential is an
@@ -498,6 +519,10 @@ Table of Contents
 
    In both cases, an authorization decision must be made before the
    transport state machine permits application data to flow.
+
+      |  Note: Regardless of the timing model, the deployment of any
+      |  timing model is invariant to _what_ is being signed (i.e.,
+      |  measurements).  See Section 6.5 for further discussion.
 
 5.1.  Intra-Handshake Attestation
 
@@ -537,15 +562,32 @@ Table of Contents
    must accept the Attester's Attestation Credential before application
    data can flow.  The combined model suits constrained device and IoT
    deployments where a single attestation protocol handles both initial
-   session trust and ongoing periodic re-attestion, avoiding separate
+   session trust and ongoing periodic re-attestation, avoiding separate
    code paths for onboarding and normal operation.
 
    Protocol specifications building on this architecture MAY support one
    or both timing models.
 
-6.  Failure handling considerations
+6.  Operational Considerations
 
-6.1.  Failure handing within Intra-Handshake Window
+   This document introduces several operational and manageability
+   considerations for deploying attested secure channels.
+
+6.1.  Protocol Attack Vectors
+
+   Protocol designers, implementers, operators, and users must consider
+   the specific security goals and requirements for any given deployment
+   and understand the corresponding attacker models that may apply, such
+   as the potential threat and impact of network attackers or malicious
+   peers.  See Section 3 of [I-D.ietf-seat-use-cases] to review these
+   considerations and their remedies.
+
+   For an architectural overview of additional security-related concerns
+   for attested transport channels, see Section 8.
+
+6.2.  Failure handling
+
+6.2.1.  Failure handling within Intra-Handshake Window
 
    When remote attestation occurs within the Intra-Handshake Window, the
    transport handshake withholds progression to application data
@@ -561,25 +603,26 @@ Table of Contents
    application-layer policies, and assists in auditing and general
    debugging.
 
-6.2.  Failure handing within Post-Handshake Window
+6.2.2.  Failure handling within Post-Handshake Window
 
    When attestation occurs within the Post-Handshake Window, or when Re-
    attestation fails during the Lifetime of Connection, the transport
    session already exists and application data may already be flowing.
-   [RFC9334] expects a failed Attester appraisal to result in reduced
-   access or privileges rather than outright rejection.  In the event of
-   failures occurring within the Post-Handshake Window, this behaviour
-   is to be handled at the transport layer.
 
-   As the Relying Party's enforcement point sits outside the transport
-   handshake, operating on already-established application-layer
-   traffic, the Appraisal Policy determines whether the connection is
-   torn down, or restricted to a subset of application-layer
-   functionality.  Failure handling of Post-Handshake Attestation does
-   not retroactively protect application data already exchanged prior to
-   the failed appraisal; it bounds further exposure going forward.
+   Section 1-2 of [RFC9334] allows a failed Attester appraisal to result
+   in reduced access or privileges rather than outright rejection.  As
+   the Relying Party's enforcement point sits outside the transport
+   connection establishment window, the Appraisal Policy determines
+   whether the connection is torn down, or restricted to a subset of
+   application-layer functionality.
 
-7.  Attestation Session Binding
+   Failure handling of Post-Handshake Attestation does not retroactively
+   protect application data already exchanged prior to the failed
+   appraisal; it bounds further exposure going forward.
+
+6.3.  Session Binding
+
+6.3.1.  Attestation Session Binding
 
    Regardless of which timing model is used or which transport protocol
    is in use, a correctly bound attested channel requires that three
@@ -610,22 +653,25 @@ Table of Contents
    Result, ensuring the final Attestation Credential presented to the
    Relying Party remains committed to the specific transport session.
 
-   The first is replay across sessions.  Because the Session Binding
-   Value is unique to the session, an Attestation Credential committed
-   to a binder derived from it cannot be presented in a different
-   session.  Where the Session Binding Value is secret, only the session
-   participants can derive it.  Where it is public, for example, a
-   handshake transcript, its uniqueness follows from the ephemeral
-   keying material that the transport establishes per session, so the
-   transcript, and hence the binder, cannot recur across sessions.
+   The above conditions aim to mitigate two primary attack vectors:
 
-   The second is a Key Substitution Attack: a valid Attestation
-   Credential produced by a genuine attested execution environment is
-   presented while the Subject Key used for authentication was not
-   generated or protected within that environment.  Session binding
-   alone does not bind the Subject Key to the attested environment; this
-   is handled at the RATS layer, as discussed under Key Non-
-   exportability in Section 10.
+   1.  _Replay Across Sessions:_ Because the Session Binding Value is
+       unique to the session, an Attestation Credential committed to a
+       binder derived from it cannot be presented in a different
+       session.  Where the Session Binding Value is secret, only the
+       session participants can derive it.  Where it is public, for
+       example, a handshake transcript, its uniqueness follows from the
+       ephemeral keying material that the transport establishes per
+       session, so the transcript, and hence the binder, cannot recur
+       across sessions.
+
+   2.  _Key Substitution:_ A valid Attestation Credential produced by a
+       genuine attested execution environment is presented while the TSK
+       (Subject Key) used for authentication was not generated or
+       protected within that environment.  Session binding alone does
+       not bind the Subject Key to the attested environment; this is
+       handled at the RATS layer, as discussed under Key Non-
+       exportability in Section 8.
 
    The Attestation Credential itself plays a critical role in verifying
    that these three session binding conditions have been successfully
@@ -641,44 +687,44 @@ Table of Contents
    a session participant, the Relying Party holds the Session Binding
    Value and can compute the binder locally and MAY send it to the
    Verifier which compares it with the binder in the Evidence, avoiding
-   the need requiring that the Relying Party decode the Evidence first.
+   the need for the Relying Party to decode the Evidence first.
 
    If the Relying Party is directly consuming Evidence (Background-Check
    model), it rejects Evidence whose binder does not match.  If the
    Relying Party is consuming an Attestation Result (Passport model) and
-   expects per-session freshness (see Section 8.1), it MUST reject the
+   expects per-session freshness (see Section 6.4.1), it MUST reject the
    Attestation Result if it cannot affirmatively evaluate that the
    Verifier explicitly tied the Attestation Result to the current
    session's Attestation Binder.
 
-8.  Freshness
+6.4.  Freshness
 
    The freshness of Evidence is critical to its value as a
    trustworthiness signal.  In the transport context, freshness has
    several distinct scopes that must be addressed separately.
 
-8.1.  Per-session freshness
+6.4.1.  Per-session freshness
 
    Per-session freshness ensures that Evidence is bound to the specific
    session being evaluated and cannot be replayed from a prior session.
    This property is addressed directly by the session binding mechanism
-   of Section 7.  The Session Binding Value is specific to the session
-   and cannot be known before the session is initiated, providing nonce-
-   style freshness in the sense of [RFC9334] Section 10.  Evidence
-   committed to an Attestation Binder derived from the Session Binding
-   Value is therefore intrinsically fresh with respect to the session: a
-   replay from a different session will carry an Attestation Binder
-   derived from a different Session Binding Value, and appraisal will
-   fail.
+   of Section 6.3.1.  The Session Binding Value is specific to the
+   session and cannot be known before the session is initiated,
+   providing nonce-style freshness in the sense of [RFC9334] Section 10.
+   Evidence committed to an Attestation Binder derived from the Session
+   Binding Value is therefore intrinsically fresh with respect to the
+   session: a replay from a different session will carry an Attestation
+   Binder derived from a different Session Binding Value, and appraisal
+   will fail.
 
-8.2.  Session resumption
+6.4.2.  Session resumption
 
    Session resumption introduces a specific freshness consideration.
    When a transport session is resumed, a previously obtained
    Attestation Credential may no longer reflect the Attester's current
    state.
 
-8.3.  Re-Attestation in Long-Running Sessions
+6.4.3.  Re-Attestation in Long-Running Sessions
 
    Initial attestation at Connection Establishment Time addresses the
    architectural invariants the Relying Party's policy requires before
@@ -699,11 +745,32 @@ Table of Contents
    continued sensitive data transmission on a current trust assessment.
    Whether to terminate a session upon re-attestation failure or
    continue with reduced privilege is a matter of Relying Party policy;
-   see Section 6.
+   see Section 6.2.
 
-9.  Privacy Considerations
+6.5.  Time-of-Check vs. Time-of-Use Considerations
 
-9.1.  Evidence Payload Confidentiality
+   Regardless of the attestation timing window (see Section 5), the
+   deployment of any timing model is invariant to _what_ is being signed
+   (e.g., measurements).
+
+   Those measurements may be, and often are, generated at boot time.  In
+   cases where all/most measurements are fixed pre-handshake, that
+   effectively means that the attested exchange is "pre-handshake"
+   conceptually, even if the Evidence is collected and appraised
+   following the use of the Background-Check conveyance model.
+   Operators should be aware that this may introduce a Time-of-Check vs.
+   Time-of-Use (TOCTOU) challenge which may not be readily mitigated by
+   choice of attestation timing.
+
+   For example, if an underlying platform vulnerability is disclosed,
+   microcode is revoked, or the host platform's security state otherwise
+   drops out of policy compliance, such a change in posture may not be
+   readily detectable even during real-time connection establishment or
+   re-attestation.
+
+7.  Privacy Considerations
+
+7.1.  Evidence Payload Confidentiality
 
    The Evidence payload carries Claims about the Attester's state and is
    the most privacy-sensitive artifact in the protocol.  It is
@@ -720,14 +787,14 @@ Table of Contents
    Verifier management, and Attestation Credential minimization, is
    provided in [I-D.ounsworth-rats-privacy-framework].
 
-9.2.  Transport Metadata
+7.2.  Transport Metadata
 
    The transport connection discloses metadata — IP addresses, server
    name indications, and connection timing — that is visible to passive
    network observers.  This disclosure is inherent to the transport
    protocol and is not specific to the attestation layer.
 
-9.3.  Attestation Key Correlation
+7.3.  Attestation Key Correlation
 
    When the same attestation signing key is used across multiple
    sessions, any party with access to Evidence from more than one of
@@ -736,7 +803,7 @@ Table of Contents
    for client Attesters where privacy of individual connections is a
    concern.
 
-9.4.  Anonymous Client Attestation
+7.4.  Anonymous Client Attestation
 
    The SEAT architecture supports deployments where a client Attester
    attests to the trustworthiness of its Attesting Environment without
@@ -745,7 +812,7 @@ Table of Contents
    appraisal policy applies to the client's hardware and software state
    rather than to a disclosed identity.
 
-9.5.  Scope Boundary and Internet Openness
+7.5.  Scope Boundary and Internet Openness
 
    The IAB has issued a statement cautioning that using client
    attestation as a barrier to access for otherwise open protocols and
@@ -769,7 +836,7 @@ Table of Contents
    Attestation Credential minimization controls described in this
    section and in [I-D.ounsworth-rats-privacy-framework].
 
-10.  Security Considerations
+8.  Security Considerations
 
    This section enumerates the security properties and considerations of
    the SEAT architecture.  Security goals state outcomes the
@@ -789,25 +856,27 @@ Table of Contents
    Consequently, a valid Attestation Credential from one session cannot
    satisfy a Verifier or Relying Party on a different session or from a
    different endpoint; a replay carries a Binder derived from a
-   different Session Binding Value and MUST be rejected.  See Section 7.
+   different Session Binding Value and MUST be rejected.  See
+   Section 6.3.1.
 
    *Split-Deployments.* Because a compromised host could attempt to use
    the Attesting Environment as a signing oracle by substituting the
    attestation binder input, the architecture relies on cryptographic
    binding rather than continuous state monitoring.  The Attesting
    Environment MUST bind the Attestation Credential to the private
-   identity key it holds to authenticate a connection (for example, by
-   including a hash of the associated public key in the signed payload).
+   identity key (TSK) it holds to authenticate a connection (for
+   example, by including a hash of the associated public key in the
+   signed payload).
 
    The Relying Party then verifies that this claim matches the identity
    key presented in the transport handshake, preventing an untrusted
    host from successfully substituting the binder.
 
    *Key Non-exportability (informative).* The specific concern of
-   demonstrating that the Subject Key used for transport authentication
-   is physically confined within the attested execution environment is
-   addressed at the RATS layer by [I-D.reddy-rats-key-binding] and is
-   not re-specified here.
+   demonstrating that the Subject Key (TSK) used for transport
+   authentication is physically confined within the attested execution
+   environment is addressed at the RATS layer by
+   [I-D.reddy-rats-key-binding] and is not re-specified here.
 
    *Evidence Freshness.* Evidence reflects the Attester's state at or
    near the Evidence Generation Time for the session in which it is
@@ -821,16 +890,16 @@ Table of Contents
    object-level encryption to a key held exclusively by the intended
    recipient.  See [I-D.ounsworth-rats-privacy-framework].
 
-   *Session Resumption.* When a transport session is resumed, previously
-   obtained Attestation Credential may no longer reflect the Attester's
-   current state.  Attestation from a prior session does not carry over
-   to a resumed session.
+   *Session Resumption.* When a transport session is resumed, a
+   previously obtained Attestation Credential may no longer reflect the
+   Attester's current state.  Attestation from a prior session does not
+   carry over to a resumed session.
 
    *Directional Endpoint Binding.* Distinct Attestation Binders MUST be
    derived for the initiator and the responder from the same Session
    Binding Value using distinct inputs.  Evidence produced by one
    endpoint MUST NOT satisfy the verification requirement for the
-   opposite endpoint.  See Section 7.
+   opposite endpoint.  See Section 6.3.1.
 
    *Transmission and Verification Anchor Soundness.* An Attestation
    Binder may be included in a transport message before peer
@@ -851,26 +920,100 @@ Table of Contents
    appraisal (such as browser-based JavaScript), a circular trust
    dependency exists.  Unless the client's execution environment
    enforces an independent, orthogonal guarantee of code integrity and
-   binary transparency, Application-layer attestation cannot provide
+   binary transparency, application-layer attestation cannot provide
    security assurance, as the Attester may serve malicious code that
    bypasses cryptographic validation.
 
-11.  IANA Considerations
+8.1.  Additional attacker models
+
+   The following adopts the attacker model of Section 3 of
+   [I-D.ietf-seat-use-cases] and evaluates security goals that are
+   broadly inherited from the Security Considerations extending the
+   broader RATS ecosystem.  See Section 12 of [RFC9334].
+
+8.1.1.  Unauthorized System Hosting of Valid Credentials
+
+   *Attacker capabilities:* A malicious peer possesses a valid, CA-
+   endorsed authentication private key for an authorized peer identity
+   and controls an endorsed Target Environment capable of producing
+   authentic, fresh Evidence.
+
+   *Targeted assurance:* The Relying Party verifies that the specific
+   Target Environment is authorized to execute operations under the
+   authenticated peer identity, preventing communication with an
+   unauthorized system.
+
+   *Preconditions and attack:* The Relying Party validates identity
+   credentials and platform Evidence independently.  The attacker hosts
+   the valid key inside an unapproved confidential workload, completes
+   the cryptographic transcript binding, and establishes the TLS
+   connection.  When the Relying Party's policy checks pass in
+   isolation, it authorizes the session.
+
+   *Why validation succeeds:* TLS proof of possession and platform
+   Evidence verify against their respective independent trust roots, and
+   the connection binder confirms channel co-location.  Validation
+   succeeds because neither root evaluates the other's domain, and the
+   Relying Party lacks a policy rule linking them.  Cryptographic
+   channel binding alone is insufficient to establish that an attested
+   environment is an authorized system for a given Authenticated
+   Identity.
+
+   *Mitigation strategy:* To prevent communication with an unauthorized
+   system, compound authentication requires joint evaluation of the peer
+   identity and platform measurements.
+
+8.1.2.  Encrypted Evidence and Blind Envelope Substitution
+
+   *Attacker capabilities:* A network attacker or untrusted intermediary
+   that can obtain or induce valid encrypted Evidence envelopes
+   constructed against the current connection challenge.  The attacker
+   does not possess the Verifier's private decryption key, the
+   Attestation Key, or the peer authentication key.
+
+   *Targeted assurance:* The Evidence evaluated by the Verifier
+   corresponds strictly to the encrypted payload conveyed across the
+   secure channel.
+
+   *Preconditions and attack:* When a Relying Party is restricted from
+   handling claims directly, Evidence may be encrypted for an external
+   Verifier to protect claim privacy (see Section 11 of [RFC9334]),
+   leaving the Relying Party as a blind forwarder.  The attacker
+   intercepts the encrypted Evidence envelope and substitutes a
+   different valid envelope constructed against the same connection
+   challenge.  The Relying Party forwards the substituted envelope to
+   the Verifier, which decrypts it and returns an Attestation Result
+   confirming valid Evidence for that challenge.  The Relying Party
+   completes the connection, falsely attributing the substituted posture
+   to the peer.
+
+   *Why validation succeeds:* The Relying Party cannot inspect inner
+   claims.  Verifier appraisal succeeds because the substituted payload
+   contains valid signatures and matches the expected challenge.
+   Standard channel authentication confirms control of the identity key,
+   but remains cryptographically uncoupled from the inner Evidence.
+
+   *Mitigation strategy:* The Relying Party computes a cryptographic
+   commitment directly over the opaque encrypted Evidence bytes on the
+   wire, and the Verifier binds this commitment into the signed
+   Attestation Result, establishing transitive cryptographic closure
+   between the channel transcript and the appraised payload.
+
+9.  IANA Considerations
 
    This document has no IANA actions.
 
-12.  References
+10.  References
 
-12.1.  Normative References
+10.1.  Normative References
 
-   [I-D.mihalcea-seat-use-cases]
-              Mihalcea, I., Sardar, M. U., Fossati, T., Reddy.K, T.,
-              Jiang, Y., and M. Chen, "Security Goals and Use Cases for
+   [I-D.ietf-seat-use-cases]
+              Mihalcea, I., "Security Goals and Use Cases for
               Integrating Remote Attestation with Secure Channel
-              Protocols", Work in Progress, Internet-Draft, draft-
-              mihalcea-seat-use-cases-03, 16 June 2026,
-              <https://datatracker.ietf.org/doc/html/draft-mihalcea-
-              seat-use-cases-03>.
+              Protocols", Work in Progress, Internet-Draft, draft-ietf-
+              seat-use-cases-01, 15 September 2026,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-seat-
+              use-cases-01>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -886,7 +1029,29 @@ Table of Contents
               Architecture", RFC 9334, DOI 10.17487/RFC9334, January
               2023, <https://www.rfc-editor.org/rfc/rfc9334>.
 
-12.2.  Informative References
+10.2.  Informative References
+
+   [I-D.ietf-acme-rats]
+              Liu, P. C., Ounsworth, M., Richardson, M., and G. Mallaya,
+              "Automated Certificate Management Environment (ACME)
+              Remote Attestation Identifier and Challenge Type", Work in
+              Progress, Internet-Draft, draft-ietf-acme-rats-02, 10
+              September 2026, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-acme-rats-02>.
+
+   [I-D.ietf-lake-ra]
+              Song, Y. and G. Selander, "Remote attestation over EDHOC",
+              Work in Progress, Internet-Draft, draft-ietf-lake-ra-06, 6
+              July 2026, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-lake-ra-06>.
+
+   [I-D.ietf-lamps-csr-attestation]
+              Ounsworth, M., Tschofenig, H., Birkholz, H., Wiseman, M.,
+              and N. Smith, "Use of Remote Attestation with
+              Certification Signing Requests", Work in Progress,
+              Internet-Draft, draft-ietf-lamps-csr-attestation-32, 22
+              October 2026, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-lamps-csr-attestation-32>.
 
    [I-D.ounsworth-rats-privacy-framework]
               Ounsworth, M., Tschofenig, H., and G. Lehmann, "Privacy
@@ -920,6 +1085,29 @@ Table of Contents
               ISBN ["9783030916244", "9783030916251"], 2021,
               <https://doi.org/10.1007/978-3-030-91625-1_10>.
 
+   [RFC8555]  Barnes, R., Hoffman-Andrews, J., McCarney, D., and J.
+              Kasten, "Automatic Certificate Management Environment
+              (ACME)", RFC 8555, DOI 10.17487/RFC8555, March 2019,
+              <https://www.rfc-editor.org/rfc/rfc8555>.
+
+   [RFC9525]  Saint-Andre, P. and R. Salz, "Service Identity in TLS",
+              RFC 9525, DOI 10.17487/RFC9525, November 2023,
+              <https://www.rfc-editor.org/rfc/rfc9525>.
+
+   [RFC9528]  Selander, G., Preuß Mattsson, J., and F. Palombini,
+              "Ephemeral Diffie-Hellman Over COSE (EDHOC)", RFC 9528,
+              DOI 10.17487/RFC9528, March 2024,
+              <https://www.rfc-editor.org/rfc/rfc9528>.
+
+   [RFC9846]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", RFC 9846, DOI 10.17487/RFC9846, July 2026,
+              <https://www.rfc-editor.org/rfc/rfc9846>.
+
+   [RFC9999]  Birkholz, H., Smith, N., Fossati, T., and H. Tschofenig,
+              "Remote ATtestation procedureS (RATS) Conceptual Message
+              Wrapper (CMW)", RFC 9999, DOI 10.17487/RFC9999, July 2026,
+              <https://www.rfc-editor.org/rfc/rfc9999>.
+
 Appendix A.  Implementing Transport Integration (informational)
 
    The Timing Models of Section 5 describe when an Attestation
@@ -951,6 +1139,28 @@ A.1.  Extension-Based Conveyance
    not be specified by the transport protocol itself, only supported by
    it as an extension point.
 
+A.1.1.  Session Binding in Intra-Handshake Solutions (informational)
+
+   Cryptographic binding of Evidence to a per-connection session can be
+   achieved in TLS 1.3 {RFC9846}} as follows:
+
+   1.  *Binder Derivation:* The server computes the binder over the
+       ClientHello...ServerHello transcript checkpoint, binding it
+       directly to the hash of the server's public key.
+
+   2.  *Evidence Transmission:* The Evidence containing this binder is
+       conveyed within a dedicated Remote Attestation extension of the
+       Certificate message.
+
+   3.  *Cumulative Transcript Incorporation:* The Certificate message
+       (carrying the Evidence and binder) becomes an immutable input
+       into the running handshake transcript.
+
+   4.  *Transcript Sealing and Key Derivation:* That cumulative
+       transcript is signed by CertificateVerify and authenticated by
+       the Finished MAC.  The very same transcript snapshot directly
+       derives the application traffic keys.
+
 A.2.  Structured Payload Conveyance
 
    In this pattern, the transport protocol defines a dedicated, opaque
@@ -962,19 +1172,67 @@ A.2.  Structured Payload Conveyance
 
    The transport stack extracts the field's contents and passes them to
    an adjacent component responsible for [RFC9334] semantics, without
-   needing to parse or understand the contents itself.  As in Extension-
-   Based Conveyance, the transport state machine halts pending the
-   outcome of this processing.  The distinction between the two patterns
-   is where the extension point is anchored: an existing identity
-   structure being overloaded (Extension-Based Conveyance) versus a
-   field purpose-defined by the transport protocol for authorization
-   data (Structured Payload Conveyance).
+   needing to parse or understand the contents themselves.  As in
+   Extension-Based Conveyance, the transport state machine halts pending
+   the outcome of this processing.  The distinction between the two
+   patterns is where the extension point is anchored: an existing
+   identity structure being overloaded (Extension-Based Conveyance)
+   versus a field purpose-defined by the transport protocol for
+   authorization data (Structured Payload Conveyance).
 
    Both patterns satisfy the requirement that an Attestation Credential
    be conveyed prior to the transition to application data exchange; the
    choice between them depends on the target transport protocol's
    extension model and is otherwise architecturally equivalent from an
    [RFC9334] perspective.
+
+Appendix B.  Adjacent Work
+
+   The SEAT WG is not the only WG within the IETF composing [RFC9334]
+   Remote Attestation with established IETF building blocks.  Beyond the
+   LAKE WG's own RA draft [I-D.ietf-lake-ra], another promiment example
+   is the Automated Certificate Management Environment (ACME) WG and
+   their adopted protocol extension ACME RATS [I-D.ietf-acme-rats].
+
+B.1.  ACME RATS
+
+   The ACME protocol [RFC8555] is designed to allow a CA and an
+   applicant to automate the process of verification and issuance of
+   Public Key Infrastructure X.509 (PKIX) certificates.  An applicant
+   requests a given identifier to appear in the certificate, and the
+   ACME server provides a list of proof-of-control challenges.  The ACME
+   RATS extension defines a specialized RA challenge answered with a
+   RATS Conceptual Message Wrapper (CMW) [RFC9999] capable of carrying
+   Evidence, Endorsements, or an Attestation Result in any RATS-
+   supported format.  This enables ACME RATS to provide a general, RATS-
+   ecosystem-native framework for conveying supplemental trust and
+   posture information, decoupled from certificate identifiers.  The
+   extension also includes a property where the applicatant can fetch an
+   encryption public key that it can use for encrypting the remote-
+   attestation (CMW) challenge response (see Section 2.2.1 of
+   [I-D.ietf-acme-rats]).
+
+B.2.  Architectual Comparisions
+
+   In operation, an X.509 certificate enhanced with RA such as
+   [I-D.ietf-lamps-csr-attestation] or obtained through ACME RATS
+   represents a textbook example of the RATS Passport conveyance model.
+   However, such a certificate has a fixed validity period.  If a
+   Certificate Authority signs a standard 90-day certificate based on a
+   boot-time measurement and a host later falls out of conformance with
+   its expected security state 3 days later, then without continuous
+   revocation mechanisms, a standard TLS 1.3 implementation will still
+   accept the certicate, representing a significant TOCTOU risk (see
+   Section 6.5).
+
+   A complimentary approach in addressing these kinds of TOCTOU risks
+   may be addressed by deploying a dedicated protocol solution such as
+   Attested TLS.  For example, executing an in-band attestation exchange
+   during TLS establishment allows the relying party to request a real-
+   time, connection-bound re-evaluation of Attester's security state
+   against current appraisal policy.  This would work as a form of
+   reattestation (see Section 6.4.3) and enables reassessment of a given
+   platform without having to reissue the identity certificate.
 
 Acknowledgments
 
