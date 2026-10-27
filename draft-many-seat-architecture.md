@@ -396,50 +396,141 @@ under the two conveyance models.
 ~~~
 {: #fig-roles title="RATS Conveyance Models in the Transport Context"}
 
-# Trust Model
+# The Interface Between RATS and SEAT {#seat-rats-interface}
+
+Integrating Remote Attestation with secure transport requires a clean
+separation of concerns between transport state and platform appraisal. The
+transport protocol maintains channel confidentiality, message integrity, and
+session uniqueness, but remains agnostic to internal platform measurement
+formats (see {{protocol-scope-boundaries}}).
+
+Conversely, the RATS layer collects and appraises Evidence, relying on the
+transport layer to anchor that appraisal to a specific connection
+(see {{RFC9334}}).
+
+## Composite Trust Anchors
+
+An Attested Channel requires the Relying Party to evaluate orthogonal
+dimensions of trust, each rooting in a distinct cryptographic anchor:
+
+- **The Transport Anchor (Identity):** The trust anchor (typically a WebPKI or
+  enterprise CA) that vouches for the binding between the peer's Authenticated
+  Identity and its Transport Signing Key (`TSK`).
+
+- **The Attestation Anchor (Posture):** The trust anchor (typically a hardware
+  manufacturer root, device-specific CA, or configured Verifier key) that vouches
+  for the integrity of the Attesting Environment and its Attesting Environment Key (`AEK`).
+
+Such anchors operate independently. For example, a CA issuing the transport
+certificate is generally unaware of the platform's hardware state, and the hardware
+manufacturer issuing the attestation endorsement is unaware of the application-level
+identity the platform is hosting.
+
+## Transport-to-Attestation Invocation
+
+When attestation is negotiated, the transport stack supplies two inputs across
+the boundary to the Attesting Environment: a session-unique Session Binding
+Value and the public component of the Transport Signing Key (`TSK`)
+(see {{definitions}} and {{channel-binding-pattern}}).
+
+The Attesting Environment commits both parameters into its Evidence payload.
+This asserts that the attested execution state is bound to the endpoint
+controlling `TSK` on that active session.
+
+## Conveyance Interfaces
+
+Under the Background-Check model, the Relying Party extracts the opaque
+credential and passes it alongside its local Session Binding Value to the
+Verifier (see Section 5.2 of {{RFC9334}} and {{fig-roles}}). The Verifier
+validates endorsements, reference values, and session equality before
+returning an Attestation Result.
+
+Under the Passport model, the Attester presents a pre-appraised Attestation
+Result directly to the Relying Party (see Section 5.1 of {{RFC9334}} and
+{{fig-roles}}). The Attester supplies proof of possession of the certified
+Transport Signing Key (`TSK`) bound inside the signed Attestation Result.
+
+## Fail-Closed Binding Semantics {#fail-closed-semantics}
+
+A transport session achieves the status of an Attested Channel only when the
+cryptographic binder is evaluated as a strict, non-optional invariant by the
+appraisal engine (see {{definitions}}).
+
+Appraisal interfaces must not treat session challenges as optional filters.
+If a verification interface permits an empty, null, or zero-length session
+challenge to proceed without failure, or if an unconfigured verifier evaluates
+platform signatures while skipping the equality assertion against session
+context, the channel binding guarantee fails silently. Under such conditions,
+the system evaluates platform execution state in the abstract, but fails to
+prove that the platform is attached to the live communication session.
+
+To preserve the integrity of an Attested Channel, appraisal implementations
+must enforce fail-closed semantics (see {{failure-handling}}):
+
+* Mandatory Challenge Presence: The appraisal engine must treat the presence
+  of a non-empty, well-formed Session Binding Value as a prerequisite for
+  successful verification (see {{channel-binding-pattern}}).
+
+* Complete Parameter Matching: The comparison between the connection-derived
+  binder and the value committed within the Attestation Credential must be
+  evaluated as a strict equality check.
+
+* Terminal Abort: If an incoming credential omits the binder, presents an
+  unparseable challenge structure, or fails the equality comparison, the
+  appraisal engine must report a terminal verification failure, prompting the
+  transport layer to terminate the session (see {{failure-handling}}).
+
+## RATS Trust Model
 
 This section describes the trust relationships required to establish
-an Attested Channel.  The general trust model of {{RFC9334}} Section 7
-applies; the subsections below specialise it for the transport
-context.
+an Attested Channel.  The general trust model of described in
+{{Section 7 of RFC9334}} applies; the subsections below specialise it
+for the transport context.
+
+### Attester Trust and Key Provenance
+
+For an Attesting Environment to be trustworthy to a Verifier, the Verifier
+relies on an Endorsement chain linking the Attesting Environment Key (`AEK`)
+to the Attestation Anchor. This chain provides cryptographic proof of the
+environment's manufacturer, model, and security capabilities.
+
+In the transport context, the Attester also holds a Transport Signing Key (`TSK`).
+Because the `TSK` and the `AEK` root in different trust domains,
+the Attesting Environment is responsible for cryptographically linking them.
+By generating the `TSK` internally and including a commitment to it
+(e.g., a public key hash) within the signed Evidence, the Attester provides
+proof of key provenance. This assures the Verifier and Relying Party that
+the transport identity is physically confined within the endorsed environment.
+
+### Verifier Trust and Appraisal Policy
+
+The Relying Party relies on the Verifier to appraise the Attester's Evidence.
+This reliance requires the Relying Party to trust both the Verifier's cryptographic
+signature (the Attestation Result Key, or `ARK`) and the Verifier's Appraisal Policy.
+
+In a co-located Verifier deployment (Background-Check Model), this trust
+relationship is implicit, as the verification logic and appraisal policy are local
+to the Relying Party. In a remote Verifier deployment, the Relying Party authenticates
+the Verifier's ARK against its local trust anchors and relies on the assumption that
+the Verifier's configured Appraisal Policy enforces the Relying Party's minimum
+security requirements for the session.
+
+### Compound Trust and Cross-Domain Authorization
+
+The defining characteristic of the SEAT trust model is compound authorization.
+Trusting the transport identity does not imply trusting the execution environment,
+and verifying the execution environment does not authorize the transport identity
+for a given service.
 
 ## Relying Party Trust
 
-The Relying Party must trust that the Attestation Credential it receives
-accurately reflects the Attester's state, which depends on its trust
-in the Verifier and in the Endorsement chain for the Attesting
-Environment.
-
-The Relying Party must additionally satisfy itself that
-the Attestation Credential is bound to the current session — that it has not been
-replayed from a different session or transferred from a different
-endpoint.  This assurance is provided by the session binding mechanism
-described in {{channel-binding-pattern}}; the check may be performed by
-the Relying Party itself or delegated to the Verifier, but it cannot
-be pre-computed independently of the session.
-
-## Attester Trust
-
-For an Attesting Environment to be trustworthy to a Verifier, the
-Verifier must be able to establish trust in the signing key the
-Attesting Environment uses to produce Evidence.  This is accomplished
-via an Endorsement chain from a hardware manufacturer or certificate
-authority that attests to the Attesting Environment's properties and
-the provenance of its attestation key.  In the transport context,
-Endorsements may be conveyed alongside Evidence in the same transport
-message, or fetched out-of-band by the Verifier prior to or during
-appraisal.
-
-## Verifier Trust
-
-The Relying Party must have a trust relationship with the Verifier
-commensurate with the sensitivity of the authorization decision.  In
-the co-located Verifier deployment, this relationship is implicit:
-the Verifier's logic is part of the Relying Party's own
-implementation.  In the remote Verifier deployment, the Relying Party
-must authenticate the Verifier and confirm that the Verifier's
-Appraisal Policy for Evidence is consistent with the Relying Party's
-own requirements before accepting any Attestation Credentials.
+The Relying Party evaluates both trust domains jointly. It validates the `TSK`
+against its Transport Anchor to confirm the peer's identity (e.g., verifying
+the reference identifier per {{RFC9525}}), evaluates the Attestation Credential
+against its Attestation Anchor to confirm platform integrity, and verifies the
+session binder to confirm they are co-located. Only when all elements satisfy
+their respective trust anchors does the session achieve the status of
+an Attested Channel.
 
 # Timing Models {#timing-models}
 
@@ -462,7 +553,7 @@ transport state machine permits application data to flow.
 {:aside}
 > Note: Regardless of the timing model, the deployment of any timing
 model is invariant to *what* is being signed (i.e., measurements).
-See {{pre-handshake}} for further discussion.
+See {{lifecycle-boundaries}} for further discussion.
 
 ## Intra-Handshake Attestation
 
@@ -512,6 +603,48 @@ or both timing models.
 
 This document introduces several operational and manageability
 considerations for deploying attested secure channels.
+
+## Protocol Scope and Operational Trust Boundaries {#protocol-scope-boundaries}
+
+Designing and evaluating an attested transport protocol requires a precise
+distinction between the cryptographic guarantees provided by the transport
+design and the operational assumptions required of the surrounding deployment.
+
+The SEAT protocol layer provides channel binding:
+
+* Deriving a Session Binding Value that commits to two-sided session
+  randomness (see {{channel-binding-pattern}}).
+* Binding the Transport Signing Key (`TSK`) to the attested execution
+  environment.
+* Injecting the Session Binding Value into the attestation challenge
+  (see {{seat-rats-interface}}).
+* Ensuring that Evidence presented on one transport session cannot be relayed
+  or replayed on a different session (see {{channel-binding-pattern}}).
+
+Under its stated cryptographic assumptions, SEAT guarantees session
+co-presence: the entity completing transport authentication is the entity
+possessing the attested platform state.
+
+However, the overall security of an attested connection depends on operational
+and appraisal layers that sit outside the transport protocol. Failures at
+these external layers result in operational breakdowns in prerequisite trust
+domains:
+
+* Appraisal Engine Mechanics: If an appraisal library contains implementation
+  flaws—such as permitting an empty, null, or uninspected challenge parameter
+  to bypass verification. (see {{fail-closed-semantics}}).
+
+* Policy Specification: If an operator configures an appraisal policy that
+  accepts unmeasured container images, outdated firmware, or loose software
+  digests, the verifier will faithfully certify an unapproved workload
+  (see Section 4 of {{RFC9334}} and {{I-D.ietf-seat-use-cases}}).
+
+* Destination Identity Validation: Transport binding
+  proves that an enclave is present, not that it is the destination the client
+  intended to reach. If a relying party validates a genuine
+  hardware quote but omits matching the peer's certificate identity against
+  its intended application reference identity, the connection is vulnerable
+  to diversion attacks.
 
 ## Protocol Attack Vectors
 
@@ -683,24 +816,35 @@ trust assessment.  Whether to terminate a session upon
 re-attestation failure or continue with reduced privilege is
 a matter of Relying Party policy; see {{failure-handling}}.
 
-## Time-of-Check vs. Time-of-Use Considerations {#pre-handshake}
+## Attestation Credential Lifecycle Boundaries {#lifecycle-boundaries}
 
-Regardless of the attestation timing window (see {{timing-models}}), the
-deployment of any timing model is invariant to *what* is being signed
-(e.g., measurements).
+Remote attestation provides a point-in-time observation of the target
+platform's security state. The interval between Evidence Generation Time and
+subsequent application data exchange introduces a theoretical Time-of-Check
+to Time-of-Use (TOCTOU) gap (see {{definitions}}).
 
-Those measurements may be, and often are, generated at boot time. In cases
-where all/most measurements are fixed pre-handshake, that effectively means
-that the attested exchange is "pre-handshake" conceptually, even if the
-Evidence is collected and appraised following the use of the Background-Check
-conveyance model. Operators should be aware that this may introduce a
-Time-of-Check vs. Time-of-Use (TOCTOU) challenge which may not be readily
-mitigated by choice of attestation timing.
+In typical attestation architectures, this gap is bounded by hardware- and
+platform-enforced immutability critical sections:
 
-For example, if an underlying platform vulnerability is disclosed, microcode
-is revoked, or the host platform's security state otherwise drops out of policy
-compliance, such a change in posture may not be readily detectable even during
-real-time connection establishment or re-attestation.
+* Hardware-Latched State: Sensitive platform state, including secure boot
+  measurements and platform configuration, is cryptographically latched into
+  write-once hardware registers that cannot be altered without resetting the
+  platform.
+
+* Memory Isolation: Memory encryption and execution boundaries prevent an
+  untrusted host from altering enclave memory during execution.
+
+* Deferred Updates: Critical software updates require an instance restart
+  that resets the measurement latch.
+
+Point-in-time measurements therefore provide durable security assurances for
+properties governed by platform immutability latches.
+
+The primary operational concern over long-running sessions is not instability
+in underlying hardware or boot measurements, but runtime state drift, such as
+policy expiration or endorsement revocation. In such deployments, re-attestation
+during the connection lifetime serves as a periodic policy refresh, confirming
+that long-lived sessions remain aligned with current appraisal criteria (see {{reattestation}}).
 
 # Privacy Considerations {#privacy}
 
@@ -1043,7 +1187,7 @@ boot-time measurement and a host later falls out of conformance with
 its expected security state 3 days later, then without continuous
 revocation mechanisms, a standard TLS 1.3 implementation will still
 accept the certicate, representing a significant TOCTOU risk
-(see {{pre-handshake}}).
+(see {{lifecycle-boundaries}}).
 
 A complimentary approach in addressing these kinds of TOCTOU risks
 may be addressed by deploying a dedicated protocol solution such as
