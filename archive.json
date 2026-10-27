@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-18T03:20:51.762833+00:00",
+  "timestamp": "2026-10-27T03:58:10.430919+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -344,6 +344,70 @@
       "body": "As currently specified, no concrete TLSa proposal submitted to the SEAT WG allows for per-session freshness with the Passport conveyance model.\n\n* **[SEAT WG Charter](https://datatracker.ietf.org/doc/charter-ietf-seat/)**: Explicitly requires that the solution \"will allow per-connection freshness of Evidence and **Attestation Results**.\"\n\nThe current protocol drafts successfully achieve per-session freshness for the Background-Check model by binding live TLS session nonces to dynamically generated platform Evidence. However, the drafts are currently *incomplete* regarding the Passport model, lacking the necessary cryptographic or interactive challenge mechanics to securely tie a pre-computed Attestation Result back to a live, active TLS session. \n\n##  Undefined Mechanics in existing individual Internet-Drafts\n\n* **[Early Attestation (Section 4)](https://datatracker.ietf.org/doc/html/draft-fossati-seat-early-attestation-05#section-4)**: Explicitly bypasses the gap by stating that for the Passport model, \"freshness expectations are more relaxed and are governed by the lifetime of the signed Attestation Results.\"\n* **[Early Attestation (Section 8.2)](https://datatracker.ietf.org/doc/html/draft-fossati-seat-early-attestation-05#section-8.2)**: Flags this as an outstanding problem via an explicit inline placeholder: \n   `// TODO: Discuss freshness guarantees provided by the Attestation Binder. Differences between Background Check and Passport mode.`\n\n* **[Exported Authenticators (Section 7.4)](https://www.ietf.org/archive/id/draft-fossati-seat-expat-03.html#section-7.4)**: Asserts that freshness is completely handled by the active connection exporter. However, the section\u2019s actual language defines the mechanics **exclusively** for *Evidence* generation, completely omitting the protocol steps required to validate cached Attestation Results.\n* **[Exported Authenticators (Section 4.3)](https://www.ietf.org/archive/id/draft-fossati-seat-expat-03.html#section-4.3)**: Outlines the validation API requirements for the protocol framework, but frames them strictly around Evidence validation, mandating that the API verify that \"the Evidence in the Certificate message is cryptographically valid and correctly bound.\" No corresponding validation mechanics or requirements are defined for binding or authenticating cached Attestation Results.\n\n###  Other references\n\n* **[SEAT Use Cases (Section 3.1)](https://datatracker.ietf.org/doc/html/draft-mihalcea-seat-use-cases-03#section-3.1)**: Asks that the \"Evidence or Attestation Result is cryptographically bound to the specific secure connection.\"\n* **[SEAT Use Cases (Section 3.6)](https://datatracker.ietf.org/doc/html/draft-mihalcea-seat-use-cases-03#section-3.6)**: Suggests a need for operational flexibility and flexible freshness options for both Background-Check and Passport models.\n\n---\n\nPotential solutions:\n\n- A proposal to address this is found with this PR at an architectural level: https://github.com/tls-attestation/seat-architecture/pull/26 \n- LAKE RA [specifies a 3-party-loop ](https://www.ietf.org/archive/id/draft-ietf-lake-ra-05.html#section-5.4-3) to enable for per-session freshness with the passport model\n\n\n\n",
       "createdAt": "2026-07-07T03:52:56Z",
       "updatedAt": "2026-07-07T04:52:10Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 36,
+      "id": "I_kwDOTCeSC88AAAABZ7HtXg",
+      "title": "Explore interface between SEAT and RATS for BC and Passport Models",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/36",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "per @thomas-fossati \n\n> \"one architectural aspect which is not covered by the document is a thorough exploration of the interface between SEAT and RATS in both the BC and passport models, i.e., high-level input and output. This would then inform the requirements in terms of conceptual messages, claims, etc. and give us rats a solid ground on which to build the necessary documents\"\n",
+      "createdAt": "2026-10-26T06:38:47Z",
+      "updatedAt": "2026-10-26T06:38:47Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 37,
+      "id": "I_kwDOTCeSC88AAAABaEYm6Q",
+      "title": "Trust model observations",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/37",
+      "state": "OPEN",
+      "author": "ionut-arm",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "In the section on Trust Model, the subsections seem somewhat inconsistent. For example, the subsection about RP trust talks about how the RP established trust in the attester, but the Attester trust subsection talks about how the Verifier makes its trust decision about the attester.",
+      "createdAt": "2026-10-26T17:01:36Z",
+      "updatedAt": "2026-10-26T17:01:36Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 38,
+      "id": "I_kwDOTCeSC88AAAABaEY2Aw",
+      "title": "AK leaking",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/38",
+      "state": "OPEN",
+      "author": "ionut-arm",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I think it would be worth discussing in security considerations the \"AK leak\" issue - how should that be handled? Who's responsible for handling it? Seems like a difficult problem that is maybe more RATS-suited. ",
+      "createdAt": "2026-10-26T17:01:50Z",
+      "updatedAt": "2026-10-26T17:01:50Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 39,
+      "id": "I_kwDOTCeSC88AAAABaFI8nA",
+      "title": "Remove editorial slant that bifercates intra-handshake with the library/transport level and isolates post-handshake with the application level",
+      "url": "https://github.com/tls-attestation/seat-architecture/issues/39",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Discussion originally started by @yaronf in https://github.com/tls-attestation/seat-architecture/pull/35#discussion_r4377866452 identified an editorial slant that needs a thorough review.\r\n            ",
+      "createdAt": "2026-10-26T17:51:10Z",
+      "updatedAt": "2026-10-26T17:51:10Z",
       "closedAt": null,
       "comments": []
     }
@@ -2651,24 +2715,26 @@
       "id": "PR_kwDOTCeSC87ymzPR",
       "title": "Update authors",
       "url": "https://github.com/tls-attestation/seat-architecture/pull/29",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "telephonicrobotics",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Add Yuxuan Song to authors",
       "createdAt": "2026-07-16T16:17:16Z",
-      "updatedAt": "2026-10-16T00:40:15Z",
+      "updatedAt": "2026-10-25T18:06:23Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "969d25fa6ff243949f7cda10e8a0b5264903076d",
       "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "author-update-02",
-      "headRefOid": "b5c96324f8e74ef765343a8a0370b757ff2d5169",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "800c7439ef7bc65844cb3c47d480e6ce53e01955",
+      "closedAt": "2026-10-25T18:06:23Z",
+      "mergedAt": "2026-10-25T18:06:23Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "fd8dea1800676155749c070cb0d7cacb1d9419d6"
+      },
       "comments": [],
       "reviews": [
         {
@@ -2840,6 +2906,343 @@
       },
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 35,
+      "id": "PR_kwDOTCeSC88AAAABKouTOQ",
+      "title": "Refreshed document content",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/35",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This update is largely structural and intended to align with the current direction of the [seat-use-cases official work item](https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases). It also addresses some of the feedback from various authors including those from Yuxuan Song who has been recently added as a co-author to the draft.\r\n\r\n## Initial edit\r\n\r\n### Scope and Architecture\r\n\r\n* Generalized the architecture from TLS-specific mechanics to secure transport protocols generally (referencing LAKE/EDHOC [RFC9528] alongside TLS 1.3 [RFC9846]) and updated architectural diagrams accordingly.\r\n* Reorganized standalone sections on Failure Handling, Session Binding, Freshness, and Privacy under a unified Section 6 (\"Operational Considerations\").\r\n* Added Section 6.1 (\"Protocol Attack Vectors\") directly referencing the attacker model defined in `draft-ietf-seat-use-cases`.\r\n\r\n### Terminology and Key Management\r\n\r\n* Consolidated `hbK` (Hardware-Bound Key) and `tbK` (Target/TEE-Bound Key) into a single normalized `TSK` (Transport Signing Key), requiring Evidence to bind to the TSK.\r\n* Capitalized key abbreviations to `TSK`, `AEK`, and `ARK` for consistency.\r\n* Replaced references to \"TCB\" with \"security state\" to better reflect RATS claim scoping (see https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases/issues/70)\r\n\r\n### References and Clarifications\r\n\r\n* Added citation to RFC 9525 (\"Service Identity in TLS\") to clarify traditional PKI identifier validation versus system integrity.\r\n* Updated references to the Use Cases draft from individual to WG status (`draft-ietf-seat-use-cases`).\r\n* General editorial and grammatical polish throughout.\r\n\r\n## Second major edit\r\n\r\n- Added definition for Authenticated Identity\r\n- Added operational considerations section for TOCTOU risks\r\n- Added broad RATS security related challenges that effect SEAT goals\r\n- Added an applied cryptographic argument for per-connect session and Evidence binding\r\n\r\n## Third major edit\r\n\r\n- Added Appendix B exploring RA efforts with adjacent PKIX work\r\n- Cross-ref between ACME RATS and LAMPS CSR Attestation\r\n- Added architectual analysis between SEAT and other WG effort\r\n- Further discuss TOCTOU risks of pre-handshake attestation and remedies",
+      "createdAt": "2026-10-25T21:11:25Z",
+      "updatedAt": "2026-10-26T21:38:53Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "fd8dea1800676155749c070cb0d7cacb1d9419d6",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "nr-refinement-patch",
+      "headRefOid": "c26a26c09d7b7e9167efa75aa010711b84315e76",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Would we be okay merging this PR and then seeing if I/we have time to tackle #39 before the cut-off? ",
+          "createdAt": "2026-10-26T21:38:53Z",
+          "updatedAt": "2026-10-26T21:38:53Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUI0Z9w",
+          "commit": {
+            "abbreviatedOid": "c6580a2"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "A bunch of minor comments/suggestions",
+          "createdAt": "2026-10-26T01:23:11Z",
+          "updatedAt": "2026-10-26T01:35:37Z",
+          "comments": [
+            {
+              "originalPosition": 28,
+              "body": "```suggestion\n|  | | Transport | |  |          |           |    | Transport |    |\n```",
+              "createdAt": "2026-10-26T01:23:11Z",
+              "updatedAt": "2026-10-26T01:35:37Z"
+            },
+            {
+              "originalPosition": 174,
+              "body": "```suggestion\n{:aside}\n> Note: Regardless of the timing model, the deployment of any timing\n```",
+              "createdAt": "2026-10-26T01:23:32Z",
+              "updatedAt": "2026-10-26T01:35:37Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "```suggestion\n{:quote}\n> \"Cryptography *without system integrity* is like investing in an\narmored car to carry money between a customer living in a cardboard\nbox and a person doing business on a park bench.\"\n>\n> \u2014 Gene Spafford\n```",
+              "createdAt": "2026-10-26T01:24:27Z",
+              "updatedAt": "2026-10-26T01:35:37Z"
+            },
+            {
+              "originalPosition": 72,
+              "body": "```suggestion\nbased not just on the Attester's cryptographic identity, but also on what\nits security capabilities are (e.g., whether it is a Confidential Computing-capable server) and\nwhether its security state is acceptable.\n```",
+              "createdAt": "2026-10-26T01:31:07Z",
+              "updatedAt": "2026-10-26T01:35:38Z"
+            },
+            {
+              "originalPosition": 324,
+              "body": "PC should be a separate subsection at the same level of OC and SC.",
+              "createdAt": "2026-10-26T01:33:35Z",
+              "updatedAt": "2026-10-26T01:35:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUI9H5w",
+          "commit": {
+            "abbreviatedOid": "c6580a2"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T01:45:34Z",
+          "updatedAt": "2026-10-26T01:45:34Z",
+          "comments": [
+            {
+              "originalPosition": 324,
+              "body": "Done with https://github.com/tls-attestation/seat-architecture/pull/35/commits/c9ac1aae283297a3de035bd14cb1c5db98f00fb8!",
+              "createdAt": "2026-10-26T01:45:34Z",
+              "updatedAt": "2026-10-26T01:45:50Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABULkFWw",
+          "commit": {
+            "abbreviatedOid": "da1b92d"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T08:34:38Z",
+          "updatedAt": "2026-10-26T08:34:38Z",
+          "comments": [
+            {
+              "originalPosition": 36,
+              "body": "duplicated",
+              "createdAt": "2026-10-26T08:34:38Z",
+              "updatedAt": "2026-10-26T08:34:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUPAx_Q",
+          "commit": {
+            "abbreviatedOid": "da1b92d"
+          },
+          "author": "yaronf",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T13:42:17Z",
+          "updatedAt": "2026-10-26T13:42:17Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "Section 5.3 justifies combining intra-handshake and post-handshake attestation so that one protocol can establish initial trust and then perform periodic re-attestation on a long-lived session. That combination is no longer needed. Re-attestation is defined in the intra-handshake protocol, draft-fossati-seat-early-attestation. An implementation can use that single protocol for the initial appraisal and for later re-attestation. A combined intra-and-post design adds a second timing model for a property the intra-handshake protocol already provides.",
+              "createdAt": "2026-10-26T13:42:17Z",
+              "updatedAt": "2026-10-26T13:42:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUPG2_w",
+          "commit": {
+            "abbreviatedOid": "da1b92d"
+          },
+          "author": "yaronf",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T13:49:14Z",
+          "updatedAt": "2026-10-26T13:49:14Z",
+          "comments": [
+            {
+              "originalPosition": 249,
+              "body": "On the two sentences in this subsection:\n\n> {{RFC9334}} expects a failed Attester appraisal to result in reduced access or privileges rather than outright rejection. In the event of failures occurring within the Post-Handshake Window, this behaviour is to be handled at the transport layer.\n\nA specific citation in RFC 9334 would be useful. The closest text is Section 1, which says a system that cannot be verified to be in a good state can be given reduced access or privileges, taken out of service, or flagged for repair. That list includes taking the system out of service. It does not prefer reduced access over rejection.\n\nThe two sentences also contradict each other. A transport connection either exists or it does not. Reduced privilege is a decision about what an endpoint may do while the connection exists, and the transport layer has no such degree of access.",
+              "createdAt": "2026-10-26T13:49:14Z",
+              "updatedAt": "2026-10-26T13:49:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUPXxaw",
+          "commit": {
+            "abbreviatedOid": "234ecf4"
+          },
+          "author": "yaronf",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T14:07:51Z",
+          "updatedAt": "2026-10-26T14:07:51Z",
+          "comments": [
+            {
+              "originalPosition": 308,
+              "body": "This paragraph's threat model stops at replay across sessions and key substitution. It does not cover a Verifier that receives the Attestation Binder, or the parameters that are inputs to the binder. A Verifier that holds those values can try to authenticate as the initiator or as the responder. The binder has to be constructed so that neither the binder nor those inputs lets the Verifier impersonate either peer. The three binding conditions do not give that property.",
+              "createdAt": "2026-10-26T14:07:51Z",
+              "updatedAt": "2026-10-26T14:07:51Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUQPUSQ",
+          "commit": {
+            "abbreviatedOid": "da1b92d"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T15:02:49Z",
+          "updatedAt": "2026-10-26T15:02:49Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "Thanks for the text correction. \r\n\r\nA quick note regarding combinations: while the text was drafted with both seat-early and seat-expat in mind, which are distinct protocol specifications, the aim was to also accommodate a then-future scenario where \"an implementation can use that single protocol for the initial appraisal and for later re-attestation\" such as is now the case with the latest -8 revision of [seat-early.](https://www.ietf.org/archive/id/draft-fossati-seat-early-attestation-08.html#name-reattestation) I'd welcome suggestions to help make the text clearer without excluding any one given concrete solution. ",
+              "createdAt": "2026-10-26T15:02:49Z",
+              "updatedAt": "2026-10-26T15:02:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUQ2RcA",
+          "commit": {
+            "abbreviatedOid": "234ecf4"
+          },
+          "author": "yaronf",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T15:45:10Z",
+          "updatedAt": "2026-10-26T15:45:11Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "Let me put it differently. This section claims that the \"natural\" thing is to combine an intra-HS solution with a post-HS solution, to get reattestation \"for free\".\n\nBut I can just as well claim that it's easier (more \"natural\") to implement TLS-level aTLS for both initial and later attestation, or to implement them both at the application level.\n\nIn other words, arguments from complexity are always brittle...",
+              "createdAt": "2026-10-26T15:45:11Z",
+              "updatedAt": "2026-10-26T15:45:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUQ76Fw",
+          "commit": {
+            "abbreviatedOid": "234ecf4"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T15:51:24Z",
+          "updatedAt": "2026-10-26T16:59:08Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "Isn't the overarching issue more to do with placement in the networking stack rather than timing wrt the handshake? Both \"timing models\" can achieve both initial establishment and reattestation, they just do it in their own layer, using their own mechanisms. Doing part at TLS level and part above seems odd.\n\nUnfortunately, reframing it like this would require substantial changes throughout the doc.",
+              "createdAt": "2026-10-26T15:51:24Z",
+              "updatedAt": "2026-10-26T16:59:08Z"
+            },
+            {
+              "originalPosition": 230,
+              "body": "```suggestion\nProtocol designers, implementers, operators, and users must consider the specific\n```",
+              "createdAt": "2026-10-26T15:52:46Z",
+              "updatedAt": "2026-10-26T16:59:08Z"
+            },
+            {
+              "originalPosition": 308,
+              "body": "Hmm, not sure I follow - the Verifier cannot impersonate the attester unless the attester has no other authentication mechanism, in which case I don't think you can stop the Verifier from impersonating.",
+              "createdAt": "2026-10-26T16:23:21Z",
+              "updatedAt": "2026-10-26T16:59:08Z"
+            },
+            {
+              "originalPosition": 374,
+              "body": "This seems to conflate the attestation timing wrt handshake with initial vs re-attestation - you can probably just drop the parantheses.\n```suggestion\nreal-time connection establishment or re-attestation.\n```",
+              "createdAt": "2026-10-26T16:25:37Z",
+              "updatedAt": "2026-10-26T16:59:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUSdwKQ",
+          "commit": {
+            "abbreviatedOid": "da1b92d"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T17:47:03Z",
+          "updatedAt": "2026-10-26T17:47:03Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "> Isn't the overarching issue more to do with placement in the networking stack rather than timing wrt the handshake? Both \"timing models\" can achieve both initial establishment and reattestation, they just do it in their own layer, using their own mechanisms. Doing part at TLS level and part above seems odd.\r\n\r\nI think that's the gap here. The -00 draft is heavily slanted toward equating intra-handshake with the library/transport level and post-handshake with the application level and this PR does not attempt to change that.\r\n\r\n> Unfortunately, reframing it like this would require substantial changes throughout the doc.\r\n\r\nYes. It's a TODO I'll raise as a dedicated issue https://github.com/tls-attestation/seat-architecture/issues/39 to track.",
+              "createdAt": "2026-10-26T17:47:03Z",
+              "updatedAt": "2026-10-26T17:52:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUTMe-A",
+          "commit": {
+            "abbreviatedOid": "da1b92d"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T18:44:52Z",
+          "updatedAt": "2026-10-26T18:44:52Z",
+          "comments": [
+            {
+              "originalPosition": 249,
+              "body": "5ed38189a7c9f59f0152307feb6aa586deb49a73 should address this. It adds a direct citation to Section 1 of RFC9334 and aims to increase clarity overall. ",
+              "createdAt": "2026-10-26T18:44:52Z",
+              "updatedAt": "2026-10-26T18:44:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUTOVVA",
+          "commit": {
+            "abbreviatedOid": "234ecf4"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T18:47:27Z",
+          "updatedAt": "2026-10-26T18:47:27Z",
+          "comments": [
+            {
+              "originalPosition": 308,
+              "body": "I have not seen this kind of attack replicated in any of the models I've experimented with either. Is the attack similar to that of a CA being capable of impersonating an applicant? Or is there an attacker model from the use cases draft worth importing here?",
+              "createdAt": "2026-10-26T18:47:27Z",
+              "updatedAt": "2026-10-26T18:47:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUTWm-Q",
+          "commit": {
+            "abbreviatedOid": "c26a26c"
+          },
+          "author": "ysong02",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T18:58:06Z",
+          "updatedAt": "2026-10-26T18:58:06Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "I agree that placement in the protocol stack seems to be a more consistent way to distinguish the two approaches, especially since both can support initial and reattestation. However, timing still captures an important difference in how initial attestation is performed, as an architecture draft, I think both aspects are worth capturing.\n\nPerhaps Section 5 could make these distinctions clearer, and in Section 5.3 we just simply clarify that the two approaches are not mutually exclusive and leave the reattestation details to Section8.3.",
+              "createdAt": "2026-10-26T18:58:06Z",
+              "updatedAt": "2026-10-26T18:58:06Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
