@@ -506,7 +506,7 @@ the transport identity is physically confined within the endorsed environment.
 
 The Relying Party relies on the Verifier to appraise the Attester's Evidence.
 This reliance requires the Relying Party to trust both the Verifier's cryptographic
-signature (the Attestation Result Key, or `ARK`) and the Verifier's Appraisal Policy.
+signature and the Verifier's Appraisal Policy.
 
 In a co-located Verifier deployment (Background-Check Model), this trust
 relationship is implicit, as the verification logic and appraisal policy are local
@@ -639,12 +639,11 @@ domains:
   digests, the verifier will faithfully certify an unapproved workload
   (see {{Section 4 of RFC9334}} and {{I-D.ietf-seat-use-cases}}).
 
-* Destination Identity Validation: Transport binding
-  proves that an enclave is present, not that it is the destination the client
-  intended to reach. If a relying party validates a genuine
-  hardware quote but omits matching the peer's certificate identity against
-  its intended application reference identity, the connection is vulnerable
-  to diversion attacks.
+* Destination Identity Validation: Transport binding proves that an enclave is
+  present, not that it is the destination the client intended to reach.
+  If a relying party validates a genuine hardware quote but omits matching
+  the peer's presented identity against the intended reference identity
+  (see {{Section 1.1 of RFC9525}}, the connection is vulnerable to diversion attacks.
 
 ## Protocol Attack Vectors
 
@@ -819,32 +818,51 @@ a matter of Relying Party policy; see {{failure-handling}}.
 ## Attestation Credential Lifecycle Boundaries {#lifecycle-boundaries}
 
 Remote attestation provides a point-in-time observation of the target
-platform's security state. The interval between Evidence Generation Time and
-subsequent application data exchange introduces a theoretical Time-of-Check
-to Time-of-Use (TOCTOU) gap (see {{definitions}}).
+platform's security state.  The interval between Evidence Generation
+Time and subsequent application data exchange introduces a
+theoretical Time-of-Check to Time-of-Use (TOCTOU) gap (see {{definitions}}).
 
-In typical attestation architectures, this gap is bounded by hardware- and
-platform-enforced immutability critical sections:
+In typical attestation architectures (see exceptions below), this gap
+is bounded by hardware-and platform-enforced immutability critical
+sections:
 
-* Hardware-Latched State: Sensitive platform state, including secure boot
-  measurements and platform configuration, is cryptographically latched into
-  write-once hardware registers that cannot be altered without resetting the
-  platform.
+*  Hardware-Latched State: Sensitive platform state, including secure
+   boot measurements and platform configuration, is cryptographically
+   latched into write-once or extend-only hardware registers hardware
+   registers that cannot be altered without resetting the platform.
 
-* Memory Isolation: Memory encryption and execution boundaries prevent an
-  untrusted host (as well as peer enclaves) from altering enclave memory during execution.
+*  Memory Isolation: Memory encryption and execution boundaries
+   prevent an untrusted host (as well as peer enclaves) from altering
+   enclave memory during execution.
 
-* Deferred Updates: Critical software updates require an instance restart
-  that resets the measurement latch.
+*  Durable logs or deferred updates: Critical software updates either
+   require an instance restart that resets the measurement latch, or
+   otherwise provide an append-only log bound to an extend-only
+   measurement latch (such as when live firmware updates are
+   supported by the platform).
 
-Point-in-time measurements therefore provide durable security assurances for
-properties governed by platform immutability latches.
+Point-in-time measurements therefore provide durable security
+assurances for properties governed by platform immutability latches.
 
-The primary operational concern over long-running sessions is not instability
-in underlying hardware or boot measurements, but runtime state drift, such as
-policy expiration or endorsement revocation. In such deployments, re-attestation
-during the connection lifetime serves as a periodic policy refresh, confirming
-that long-lived sessions remain aligned with current appraisal criteria (see {{reattestation}}).
+Over long-running sessions, operational risk arises from two distinct
+sources:
+
+*  Target State Evolution: Internal modifications to the platform's
+   active security state during execution, such as live firmware
+   updates advancing a security version number (SVN) or appending to
+   the firmware activity log.
+
+*  Appraisal Context Drift: External changes to the evaluation
+   environment independent of the target platform, including
+   endorsement credential revocation, updated reference value
+   manifests (e.g., CoRIM), or revised appraisal policies deprecating
+   previously acceptable states in response to newly disclosed
+   vulnerabilities.
+
+Periodic re-attestation during the connection lifetime addresses both
+factors by capturing fresh evidence of the target's current
+operational state and confirming that the established session remains
+aligned with current appraisal criteria (see {{reattestation}}).
 
 # Privacy Considerations {#privacy}
 
