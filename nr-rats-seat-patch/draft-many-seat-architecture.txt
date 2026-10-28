@@ -574,10 +574,10 @@ Table of Contents
 
    Because the TSK (rooted in the Transport Anchor) and the AEK (rooted
    in the Attestation Anchor) originate in orthogonal trust domains,
-   this commitment cryptographically binds them.  This assures the
-   Verifier and Relying Party that the transport identity is not merely
-   valid, but physically resident within the attested Target
-   Environment.
+   committing to the TSK within signed Evidence cryptographically binds
+   them.  This assures the Verifier and Relying Party that the transport
+   identity is not merely valid, but physically resident within the
+   attested Target Environment.
 
 4.5.2.  Verifier Trust and Appraisal Policy
 
@@ -610,10 +610,9 @@ Table of Contents
    to confirm platform integrity and TSK residency, and verifies the
    session binder to confirm they are co-located.
 
-   The Relying Party must additionally satisfy itself that the
-   Attestation Credential is bound to the current session — that it has
-   not been replayed from a different session or transferred from a
-   different endpoint.
+   This binder confirms that the Attestation Credential is bound to the
+   current session — ensuring it has not been replayed from a different
+   session or transferred from a different endpoint.
 
    This assurance is provided by the session binding mechanism described
    in Section 6.4.1; the check may be performed by the Relying Party
@@ -701,13 +700,13 @@ Table of Contents
    the transport design and the operational assumptions required of the
    surrounding deployment.
 
-   The SEAT protocol layer provides channel binding:
+   The SEAT protocol layer provides channel and key binding:
 
    *  Deriving a Session Binding Value that commits to two-sided session
       randomness (see Section 6.4.1).
 
    *  Binding the Transport Signing Key (TSK) to the attested execution
-      environment.
+      environment, evaluated at appraisal time (see Section 8).
 
    *  Injecting the Session Binding Value into the attestation challenge
       (see Section 4).
