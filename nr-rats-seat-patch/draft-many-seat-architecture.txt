@@ -5,14 +5,14 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                               Independent
 Intended status: Informational                                T. Fossati
-Expires: 30 April 2027                                            NVIDIA
+Expires: 1 May 2027                                               NVIDIA
                                                                 T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
                                                                  Y. Song
                                                                    Inria
-                                                         27 October 2026
+                                                         28 October 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 April 2027.
+   This Internet-Draft will expire on 1 May 2027.
 
 Copyright Notice
 
@@ -558,9 +558,9 @@ Table of Contents
 4.5.  RATS Trust Model
 
    This section describes the trust relationships required to establish
-   an Attested Channel.  The general trust model of described in
-   Section 7 of [RFC9334] applies; the subsections below specialise it
-   for the transport context.
+   an Attested Channel.  The general trust model described in Section 7
+   of [RFC9334] applies; the subsections below specialise it for the
+   transport context.
 
 4.5.1.  Attester Trust and Key Provenance
 
@@ -608,10 +608,10 @@ Table of Contents
    the TSK against its Transport Anchor to confirm the peer's identity
    (e.g., verifying the reference identifier per [RFC9525]), evaluates
    the Attestation Credential against its Attestation Anchor to confirm
-   platform integrity, and verifies the session binder to confirm they
-   are co-located.  Only when all elements satisfy their respective
-   trust anchors does the session achieve the status of an Attested
-   Channel.
+   platform integrity and TSK residency, and verifies the session binder
+   to confirm they are co-located.  Only when all elements satisfy their
+   respective trust anchors does the session achieve the status of an
+   Attested Channel.
 
 5.  Timing Models
 
@@ -715,7 +715,7 @@ Table of Contents
    breakdowns in prerequisite trust domains:
 
    *  Appraisal Engine Mechanics: If an appraisal library contains
-      implementation flaws—such as permitting an empty, null, or
+      implementation flaws - such as permitting an empty, null, or
       uninspected challenge parameter to bypass verification. (see
       Section 4.4).
 
@@ -923,8 +923,8 @@ Table of Contents
       without resetting the platform.
 
    *  Memory Isolation: Memory encryption and execution boundaries
-      prevent an untrusted host from altering enclave memory during
-      execution.
+      prevent an untrusted host (as well as peer enclaves) from altering
+      enclave memory during execution.
 
    *  Deferred Updates: Critical software updates require an instance
       restart that resets the measurement latch.
