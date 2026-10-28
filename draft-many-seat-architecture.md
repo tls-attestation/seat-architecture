@@ -486,15 +486,19 @@ session:
 ~~~aasvg
    Supply Chain (Endorser / Reference Value Provider)
               |
-              V
+              |
+              v
    Attesting Environment (e.g., HRoT)
               |
-              V
+              |
+              v
    Target Environment (e.g., cVM)
               |
-              V
+              |
+              v
    Transport Signing Key (TSK)
 ~~~
+{: #fig-te-key-provenance title="Target Environment Trust and Key Provenance"}
 
 Because the `TSK` (rooted in the Transport Anchor) and the `AEK` (rooted in
 the Attestation Anchor) originate in orthogonal trust domains, this
