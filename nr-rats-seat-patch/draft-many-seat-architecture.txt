@@ -583,8 +583,8 @@ Table of Contents
 
    The Relying Party relies on the Verifier to appraise the Attester's
    Evidence.  This reliance requires the Relying Party to trust both the
-   Verifier's cryptographic signature (the Attestation Result Key, or
-   ARK) and the Verifier's Appraisal Policy.
+   Verifier's cryptographic signature and the Verifier's Appraisal
+   Policy.
 
    In a co-located Verifier deployment (Background-Check Model), this
    trust relationship is implicit, as the verification logic and
@@ -728,9 +728,9 @@ Table of Contents
    *  Destination Identity Validation: Transport binding proves that an
       enclave is present, not that it is the destination the client
       intended to reach.  If a relying party validates a genuine
-      hardware quote but omits matching the peer's certificate identity
-      against its intended application reference identity, the
-      connection is vulnerable to diversion attacks.
+      hardware quote but omits matching the peer's presented identity
+      against the intended reference identity (see Section 1.1 of
+      [RFC9525], the connection is vulnerable to diversion attacks.
 
 6.2.  Protocol Attack Vectors
 
@@ -914,31 +914,47 @@ Table of Contents
    theoretical Time-of-Check to Time-of-Use (TOCTOU) gap (see
    Section 2).
 
-   In typical attestation architectures, this gap is bounded by
-   hardware- and platform-enforced immutability critical sections:
+   In typical attestation architectures (see exceptions below), this gap
+   is bounded by hardware-and platform-enforced immutability critical
+   sections:
 
    *  Hardware-Latched State: Sensitive platform state, including secure
       boot measurements and platform configuration, is cryptographically
-      latched into write-once hardware registers that cannot be altered
-      without resetting the platform.
+      latched into write-once or extend-only hardware registers hardware
+      registers that cannot be altered without resetting the platform.
 
    *  Memory Isolation: Memory encryption and execution boundaries
       prevent an untrusted host (as well as peer enclaves) from altering
       enclave memory during execution.
 
-   *  Deferred Updates: Critical software updates require an instance
-      restart that resets the measurement latch.
+   *  Durable logs or deferred updates: Critical software updates either
+      require an instance restart that resets the measurement latch, or
+      otherwise provide an append-only log bound to an extend-only
+      measurement latch (such as when live firmware updates are
+      supported by the platform).
 
    Point-in-time measurements therefore provide durable security
    assurances for properties governed by platform immutability latches.
 
-   The primary operational concern over long-running sessions is not
-   instability in underlying hardware or boot measurements, but runtime
-   state drift, such as policy expiration or endorsement revocation.  In
-   such deployments, re-attestation during the connection lifetime
-   serves as a periodic policy refresh, confirming that long-lived
-   sessions remain aligned with current appraisal criteria (see
-   Section 6.5.3).
+   Over long-running sessions, operational risk arises from two distinct
+   sources:
+
+   *  Target State Evolution: Internal modifications to the platform's
+      active security state during execution, such as live firmware
+      updates advancing a security version number (SVN) or appending to
+      the firmware activity log.
+
+   *  Appraisal Context Drift: External changes to the evaluation
+      environment independent of the target platform, including
+      endorsement credential revocation, updated reference value
+      manifests (e.g., CoRIM), or revised appraisal policies deprecating
+      previously acceptable states in response to newly disclosed
+      vulnerabilities.
+
+   Periodic re-attestation during the connection lifetime addresses both
+   factors by capturing fresh evidence of the target's current
+   operational state and confirming that the established session remains
+   aligned with current appraisal criteria (see Section 6.5.3).
 
 7.  Privacy Considerations
 
