@@ -441,12 +441,12 @@ controlling `TSK` on that active session.
 
 Under the Background-Check model, the Relying Party extracts the opaque
 credential and passes it alongside its local Session Binding Value to the
-Verifier (see Section 5.2 of {{RFC9334}} and {{fig-roles}}). The Verifier
+Verifier (see {{Section 5.2 of RFC9334}} and {{fig-roles}}). The Verifier
 validates endorsements, reference values, and session equality before
 returning an Attestation Result.
 
 Under the Passport model, the Attester presents a pre-appraised Attestation
-Result directly to the Relying Party (see Section 5.1 of {{RFC9334}} and
+Result directly to the Relying Party (see {{Section 5.1 of RFC9334}} and
 {{fig-roles}}). The Attester supplies proof of possession of the certified
 Transport Signing Key (`TSK`) bound inside the signed Attestation Result.
 
@@ -483,7 +483,7 @@ must enforce fail-closed semantics (see {{failure-handling}}):
 ## RATS Trust Model
 
 This section describes the trust relationships required to establish
-an Attested Channel.  The general trust model of described in
+an Attested Channel.  The general trust model described in
 {{Section 7 of RFC9334}} applies; the subsections below specialise it
 for the transport context.
 
@@ -527,7 +527,7 @@ for a given service.
 The Relying Party evaluates both trust domains jointly. It validates the `TSK`
 against its Transport Anchor to confirm the peer's identity (e.g., verifying
 the reference identifier per {{RFC9525}}), evaluates the Attestation Credential
-against its Attestation Anchor to confirm platform integrity, and verifies the
+against its Attestation Anchor to confirm platform integrity and `TSK` residency, and verifies the
 session binder to confirm they are co-located. Only when all elements satisfy
 their respective trust anchors does the session achieve the status of
 an Attested Channel.
@@ -631,13 +631,13 @@ these external layers result in operational breakdowns in prerequisite trust
 domains:
 
 * Appraisal Engine Mechanics: If an appraisal library contains implementation
-  flaws—such as permitting an empty, null, or uninspected challenge parameter
+  flaws - such as permitting an empty, null, or uninspected challenge parameter
   to bypass verification. (see {{fail-closed-semantics}}).
 
 * Policy Specification: If an operator configures an appraisal policy that
   accepts unmeasured container images, outdated firmware, or loose software
   digests, the verifier will faithfully certify an unapproved workload
-  (see Section 4 of {{RFC9334}} and {{I-D.ietf-seat-use-cases}}).
+  (see {{Section 4 of RFC9334}} and {{I-D.ietf-seat-use-cases}}).
 
 * Destination Identity Validation: Transport binding
   proves that an enclave is present, not that it is the destination the client
@@ -832,7 +832,7 @@ platform-enforced immutability critical sections:
   platform.
 
 * Memory Isolation: Memory encryption and execution boundaries prevent an
-  untrusted host from altering enclave memory during execution.
+  untrusted host (as well as peer enclaves) from altering enclave memory during execution.
 
 * Deferred Updates: Critical software updates require an instance restart
   that resets the measurement latch.
