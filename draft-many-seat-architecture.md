@@ -500,11 +500,11 @@ session:
 ~~~
 {: #fig-te-key-provenance title="Target Environment Trust and Key Provenance"}
 
-Because the `TSK` (rooted in the Transport Anchor) and the `AEK` (rooted in
-the Attestation Anchor) originate in orthogonal trust domains, this
-commitment cryptographically binds them. This assures the Verifier and
-Relying Party that the transport identity is not merely valid, but
-physically resident within the attested Target Environment.
+Because the `TSK` (rooted in the Transport Anchor) and the `AEK` (rooted in the
+Attestation Anchor) originate in orthogonal trust domains, committing to the
+`TSK` within signed Evidence cryptographically binds them. This assures the
+Verifier and Relying Party that the transport identity is not merely valid,
+but physically resident within the attested Target Environment.
 
 ### Verifier Trust and Appraisal Policy
 
@@ -536,9 +536,9 @@ the Attestation Credential against its Attestation Anchor to confirm
 platform integrity and `TSK` residency, and verifies the session binder to
 confirm they are co-located.
 
-The Relying Party must additionally satisfy itself that the Attestation Credential
-is bound to the current session — that it has not been replayed from a different
-session or transferred from a different endpoint.
+This binder confirms that the Attestation Credential is bound to the current
+session — ensuring it has not been replayed from a different session or
+transferred from a different endpoint.
 
 This assurance is provided by the session binding mechanism
 described in {{channel-binding-pattern}}; the check may be performed by
@@ -626,12 +626,12 @@ Designing and evaluating an attested transport protocol requires a precise
 distinction between the cryptographic guarantees provided by the transport
 design and the operational assumptions required of the surrounding deployment.
 
-The SEAT protocol layer provides channel binding:
+The SEAT protocol layer provides channel and key binding:
 
 * Deriving a Session Binding Value that commits to two-sided session
   randomness (see {{channel-binding-pattern}}).
 * Binding the Transport Signing Key (`TSK`) to the attested execution
-  environment.
+  environment, evaluated at appraisal time (see {{security-considerations}}).
 * Injecting the Session Binding Value into the attestation challenge
   (see {{seat-rats-interface}}).
 * Ensuring that Evidence presented on one transport session cannot be relayed
