@@ -346,25 +346,50 @@ trust anchors or supplied by a Relying Party in a
 deployment-specific manner. When Attestation Results are produced,
 they reflect the outcome of applying that policy.
 
-How Evidence reaches the Verifier follows one of the two RATS
-conveyance models ({{Section 5 of RFC9334}}):
+# The Interface Between RATS and SEAT {#seat-rats-interface}
 
-Background-Check Model:
-: The Relying Party conveys the Attester's Evidence to the Verifier
-  and receives Attestation Results in return.  The Verifier may be
-  co-located with the Relying Party, appraising Evidence inline, for
-  example during an intra-handshake exchange that requires a real-time
-  result before the connection is finalized or operated as a remote
-  service.
+Integrating Remote Attestation with secure transport requires a clean
+separation of concerns between transport state and platform appraisal. The
+transport protocol maintains channel confidentiality, message integrity, and
+session uniqueness, but remains agnostic to internal platform measurement
+formats (see {{protocol-scope-boundaries}}).
 
-Passport Model:
-: The Attester conveys its Evidence to a remote Verifier, obtains
-  Attestation Results, and presents those Results to the Relying
-  Party.
+Conversely, the RATS layer collects and appraises Evidence, relying on the
+transport layer to anchor that appraisal to a specific connection
+(see {{RFC9334}}).
 
-Verifier location is an independent deployment choice: a co-located
-Verifier operates under the Background-Check Model, whereas a remote
-Verifier may operate under either model.
+## Composite Trust Anchors
+
+An Attested Channel requires the Relying Party to evaluate orthogonal
+dimensions of trust, each rooting in a distinct cryptographic anchor:
+
+* *The Transport Anchor (Identity):* The trust anchor (typically a WebPKI
+  or enterprise CA) that vouches for the binding between the peer's
+  Authenticated Identity and its Transport Signing Key (`TSK`).
+
+* *The Attestation Anchor (Posture):* The trust anchor (typically a
+  hardware manufacturer root, device-specific CA, or configured
+  Verifier key) that vouches for the integrity of the Attesting
+  Environment and its Attesting Environment Key (`AEK`).
+
+Such anchors operate independently. For example, a CA issuing the
+transport certificate is generally unaware of the platform's hardware
+state, and the hardware manufacturer issuing the attestation
+endorsement is unaware of the application-level identity the platform
+is hosting.
+
+## Transport-to-Attestation Invocation
+
+When attestation is negotiated, the transport stack supplies two inputs across
+the boundary to the Attesting Environment: a session-unique Session Binding
+Value and the public component of the Transport Signing Key (`TSK`)
+(see {{definitions}} and {{channel-binding-pattern}}).
+
+The Attesting Environment commits both parameters into its Evidence payload.
+This asserts that the attested execution state is bound to the endpoint
+controlling `TSK` on that active session.
+
+## Conveyance Models
 
 {{fig-roles}} illustrates how Evidence and Attestation Results flow
 under the two conveyance models.
@@ -396,59 +421,21 @@ under the two conveyance models.
 ~~~
 {: #fig-roles title="RATS Conveyance Models in the Transport Context"}
 
-# The Interface Between RATS and SEAT {#seat-rats-interface}
+How Evidence reaches the Verifier follows one of the two RATS
+conveyance models ({{Section 5 of RFC9334}}):
 
-Integrating Remote Attestation with secure transport requires a clean
-separation of concerns between transport state and platform appraisal. The
-transport protocol maintains channel confidentiality, message integrity, and
-session uniqueness, but remains agnostic to internal platform measurement
-formats (see {{protocol-scope-boundaries}}).
+Background-Check Model:
+: The Relying Party conveys the Attester's Evidence to the Verifier
+  and receives Attestation Results in return.  The Verifier may be
+  co-located with the Relying Party, appraising Evidence inline, for
+  example during an intra-handshake exchange that requires a real-time
+  result before the connection is finalized or operated as a remote
+  service (see {{Section 5.2 of RFC9334}} and {{fig-roles}}).
 
-Conversely, the RATS layer collects and appraises Evidence, relying on the
-transport layer to anchor that appraisal to a specific connection
-(see {{RFC9334}}).
-
-## Composite Trust Anchors
-
-An Attested Channel requires the Relying Party to evaluate orthogonal
-dimensions of trust, each rooting in a distinct cryptographic anchor:
-
-- **The Transport Anchor (Identity):** The trust anchor (typically a WebPKI or
-  enterprise CA) that vouches for the binding between the peer's Authenticated
-  Identity and its Transport Signing Key (`TSK`).
-
-- **The Attestation Anchor (Posture):** The trust anchor (typically a hardware
-  manufacturer root, device-specific CA, or configured Verifier key) that vouches
-  for the integrity of the Attesting Environment and its Attesting Environment Key (`AEK`).
-
-Such anchors operate independently. For example, a CA issuing the transport
-certificate is generally unaware of the platform's hardware state, and the hardware
-manufacturer issuing the attestation endorsement is unaware of the application-level
-identity the platform is hosting.
-
-## Transport-to-Attestation Invocation
-
-When attestation is negotiated, the transport stack supplies two inputs across
-the boundary to the Attesting Environment: a session-unique Session Binding
-Value and the public component of the Transport Signing Key (`TSK`)
-(see {{definitions}} and {{channel-binding-pattern}}).
-
-The Attesting Environment commits both parameters into its Evidence payload.
-This asserts that the attested execution state is bound to the endpoint
-controlling `TSK` on that active session.
-
-## Conveyance Interfaces
-
-Under the Background-Check model, the Relying Party extracts the opaque
-credential and passes it alongside its local Session Binding Value to the
-Verifier (see {{Section 5.2 of RFC9334}} and {{fig-roles}}). The Verifier
-validates endorsements, reference values, and session equality before
-returning an Attestation Result.
-
-Under the Passport model, the Attester presents a pre-appraised Attestation
-Result directly to the Relying Party (see {{Section 5.1 of RFC9334}} and
-{{fig-roles}}). The Attester supplies proof of possession of the certified
-Transport Signing Key (`TSK`) bound inside the signed Attestation Result.
+Passport Model:
+: The Attester conveys its Evidence to a remote Verifier, obtains
+  Attestation Results, and presents those Results to the Relying
+  Party (see {{Section 5.1 of RFC9334}} and {{fig-roles}}).
 
 ## Fail-Closed Binding Semantics {#fail-closed-semantics}
 
@@ -487,33 +474,47 @@ an Attested Channel.  The general trust model described in
 {{Section 7 of RFC9334}} applies; the subsections below specialise it
 for the transport context.
 
-### Attester Trust and Key Provenance
+### Target Environment Trust and Key Provenance
 
-For an Attesting Environment to be trustworthy to a Verifier, the Verifier
-relies on an Endorsement chain linking the Attesting Environment Key (`AEK`)
-to the Attestation Anchor. This chain provides cryptographic proof of the
-environment's manufacturer, model, and security capabilities.
+In the transport context, establishing an Attested Channel requires
+demonstrating key provenance: proving that the private Transport Signing
+Key (`TSK`) used for channel authentication is physically confined within
+an authorized, attested execution environment. This relies on an unbroken
+chain of trust spanning the platform supply chain to the active transport
+session:
 
-In the transport context, the Attester also holds a Transport Signing Key (`TSK`).
-Because the `TSK` and the `AEK` root in different trust domains,
-the Attesting Environment is responsible for cryptographically linking them.
-By generating the `TSK` internally and including a commitment to it
-(e.g., a public key hash) within the signed Evidence, the Attester provides
-proof of key provenance. This assures the Verifier and Relying Party that
-the transport identity is physically confined within the endorsed environment.
+~~~aasvg
+   Supply Chain (Endorser / Reference Value Provider)
+              |
+              V
+   Attesting Environment (e.g., HRoT)
+              |
+              V
+   Target Environment (e.g., cVM)
+              |
+              V
+   Transport Signing Key (TSK)
+~~~
+
+Because the `TSK` (rooted in the Transport Anchor) and the `AEK` (rooted in
+the Attestation Anchor) originate in orthogonal trust domains, this
+commitment cryptographically binds them. This assures the Verifier and
+Relying Party that the transport identity is not merely valid, but
+physically resident within the attested Target Environment.
 
 ### Verifier Trust and Appraisal Policy
 
-The Relying Party relies on the Verifier to appraise the Attester's Evidence.
-This reliance requires the Relying Party to trust both the Verifier's cryptographic
-signature and the Verifier's Appraisal Policy.
+The Relying Party must have a trust relationship with the Verifier commensurate
+with the sensitivity of the authorization decision. This reliance requires the
+Relying Party to trust both the Verifier's cryptographic signature and
+the Verifier's Appraisal Policy.
 
-In a co-located Verifier deployment (Background-Check Model), this trust
-relationship is implicit, as the verification logic and appraisal policy are local
-to the Relying Party. In a remote Verifier deployment, the Relying Party authenticates
-the Verifier's ARK against its local trust anchors and relies on the assumption that
-the Verifier's configured Appraisal Policy enforces the Relying Party's minimum
-security requirements for the session.
+In the co-located Verifier deployment, this relationship is implicit:
+the Verifier's logic is part of the Relying Party's own
+implementation. In the remote Verifier deployment, the Relying Party
+must authenticate the Verifier and confirm that the Verifier's
+Appraisal Policy for Evidence is consistent with the Relying Party's
+own requirements before accepting any Attestation Credentials.
 
 ### Compound Trust and Cross-Domain Authorization
 
@@ -524,13 +525,24 @@ for a given service.
 
 ## Relying Party Trust
 
-The Relying Party evaluates both trust domains jointly. It validates the `TSK`
-against its Transport Anchor to confirm the peer's identity (e.g., verifying
-the reference identifier per {{RFC9525}}), evaluates the Attestation Credential
-against its Attestation Anchor to confirm platform integrity and `TSK` residency, and verifies the
-session binder to confirm they are co-located. Only when all elements satisfy
-their respective trust anchors does the session achieve the status of
-an Attested Channel.
+The Relying Party evaluates both trust domains jointly. It validates the
+`TSK` against its Transport Anchor to confirm the peer's identity (for
+example, by verifying the reference identifier per {{RFC9525}}), evaluates
+the Attestation Credential against its Attestation Anchor to confirm
+platform integrity and `TSK` residency, and verifies the session binder to
+confirm they are co-located.
+
+The Relying Party must additionally satisfy itself that the Attestation Credential
+is bound to the current session — that it has not been replayed from a different
+session or transferred from a different endpoint.
+
+This assurance is provided by the session binding mechanism
+described in {{channel-binding-pattern}}; the check may be performed by
+the Relying Party itself or delegated to the Verifier, but it cannot
+be pre-computed independently of the session.
+
+Only when all elements satisfy their respective trust anchors does the
+session achieve the status of an Attested Channel.
 
 # Timing Models {#timing-models}
 
