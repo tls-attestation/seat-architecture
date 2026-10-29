@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-27T03:58:10.430919+00:00",
+  "timestamp": "2026-10-29T04:40:57.239422+00:00",
   "repo": "tls-attestation/seat-architecture",
   "labels": [
     {
@@ -398,7 +398,7 @@
     {
       "number": 39,
       "id": "I_kwDOTCeSC88AAAABaFI8nA",
-      "title": "Remove editorial slant that bifercates intra-handshake with the library/transport level and isolates post-handshake with the application level",
+      "title": "Remove editorial slant that bifurcates intra-handshake with the library/transport level and isolates post-handshake with the application level",
       "url": "https://github.com/tls-attestation/seat-architecture/issues/39",
       "state": "OPEN",
       "author": "telephonicrobotics",
@@ -407,9 +407,17 @@
       "labels": [],
       "body": "Discussion originally started by @yaronf in https://github.com/tls-attestation/seat-architecture/pull/35#discussion_r4377866452 identified an editorial slant that needs a thorough review.\r\n            ",
       "createdAt": "2026-10-26T17:51:10Z",
-      "updatedAt": "2026-10-26T17:51:10Z",
+      "updatedAt": "2026-10-27T15:26:49Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Since initial attestation and reattestation can occur within the same session, I'm wondering how freshness is ensured between attestation exchanges. If the attestation binder is derived from the same Session Binding Value, wouldn't it be possible to reuse previously generated Evidence within that session?\n>\n> Would additional exchange-specific freshness mechanisms are needed to ensure this?\n\n_Originally posted by @ysong02 in https://github.com/tls-attestation/seat-architecture/pull/35#discussion_r4381411647_\n            ",
+          "createdAt": "2026-10-27T13:09:34Z",
+          "updatedAt": "2026-10-27T13:09:34Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -2430,7 +2438,7 @@
       "labels": [],
       "body": "Introduces a solution for per-session freshness for the Passport conveyance model and incorporates feedback from Markus based on the following use-case (use-cases PR at tls-attestation/use-cases-and-properties#56). Defines a novel Target/TEE-bound ephemeral KEM (`keK`) to provide the ability to decouple session liveness from credential issuance and making key requirements context-dependent.\r\n\r\n## Major updates\r\n\r\n* *Introduced KEM Encapsulation Key (`keK`):* Added definitions for an optional ephemeral, per-session liveness anchor generated exclusively within the Target Environment to mitigate key exfiltration windows.\r\n\r\n* *Interactive Passport Challenge:* Established an interactive challenge-response mechanism enabling a Relying Party to verify an Attester's active control by sealing session-specific secrets to the keK.\r\n\r\n* *Epoch-Bound Lifecycles:* Tied `keK` rotation boundaries to explicit temporal signals like [Epoch Markers](https://datatracker.ietf.org/doc/draft-ietf-rats-epoch-markers/) to establish network freshness without requiring real-time Verifier connectivity.\r\n\r\n* *Conditional Key Requirements:* Updated the Target/TEE-Bound Key (`tbK`) definition so that its usage is conditional, rendering it mandatory only when a deployment's policy specifically requires **Compound Authentication**.\r\n\r\n* *Compound Authentication:* Added security considerations for compound authentication and limitations/constraints/assumptions needed to maintain it.\r\n\r\n* *Post-Handshake Failure Handling:* Updated language to specify that behaviors may be handled fluidly at the transport layer, supporting reduced access privileges over outright connection termination.\r\n\r\n### Will resolve:\r\n\r\n* #27 (Markus' Review)\r\n\r\n* #28 (Incomplete Per-Session Freshness Support: Cryptographic Mechanics Missing for Passport Model)\r\n\r\nAlso moves previously introduced appendix B to [wiki entry](https://github.com/tls-attestation/seat-architecture/wiki/Proposal:-Interactive-Passport-Challenge-for-Per%E2%80%90Session-Freshness-Binding)\r\n",
       "createdAt": "2026-07-06T00:17:12Z",
-      "updatedAt": "2026-07-16T22:13:15Z",
+      "updatedAt": "2026-10-28T12:22:39Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "cf247e4fd5ad4b9510dca4e9c03b17ec149824b1",
@@ -2490,6 +2498,13 @@
           "body": "@tireddy2 \r\n> The proposed mechanism looks interesting, but the PR pulls too much mechanism up into the architecture layer.\r\n\r\nOn top of the fact that this PR has cycled through full rewrites of the text at least once or twice. After Vienna, we'll deconstruct this PR, find what could stay but go into a wiki page and what makes sense to go into a fresh PR without a half month of experimental renames and experiments blurring the edges. ",
           "createdAt": "2026-07-16T14:51:12Z",
           "updatedAt": "2026-07-16T14:51:12Z"
+        },
+        {
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Just a note that, while I like the solution, I'm not sure if an arch document is the right place for it. Not a hard \"no\", I just don't know how this is usually done.\r\n\r\nIt seems I have changed my mind, would be good to discuss this in -arch! :) ",
+          "createdAt": "2026-10-28T12:05:50Z",
+          "updatedAt": "2026-10-28T12:19:04Z"
         }
       ],
       "reviews": [
@@ -2707,6 +2722,26 @@
               "updatedAt": "2026-07-16T22:13:15Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUrP2RQ",
+          "commit": {
+            "abbreviatedOid": "d2e0b71"
+          },
+          "author": "ionut-arm",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T12:22:39Z",
+          "updatedAt": "2026-10-28T12:22:39Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "> The attacker would need to feed a handshake secret into the blind signing oracle (side note: I don't know what you mean by this. You can't make a TEE sign something without running inside the TEE, which is code that is verified).\r\n\r\nI guess it depends how much / what code you launch in the TEE, and what is measured. But if you're launching a shell CVM and then loading unmeasured workloads, as a RP you can't tell who's obtaining the evidence from inside the TEE. So you can just get a workload that sits and waits to get \"challenge\" values from outside, creates evidence that signs that challenge, and sends it back out. The question is whether the RP trusts that evidence.\r\n\r\n(Note that even if the workload is measured, it's still not possible to cryptographically prove who asked for the evidence, because evidence doesn't have any \"provenance\" metadata.)\r\n\r\nThe example above is extreme, but you can imagine other ways to expose the same kind of evidence signing oracle.\r\n\r\n> Just having the private key should not allow compromising the session.\r\n\r\n\ud83d\udc4d\ud83c\udffb I keep trying to understand whether there is any feasible attack that would contradict this.",
+              "createdAt": "2026-10-28T12:22:39Z",
+              "updatedAt": "2026-10-28T12:27:23Z"
+            }
+          ]
         }
       ]
     },
@@ -2912,24 +2947,26 @@
       "id": "PR_kwDOTCeSC88AAAABKouTOQ",
       "title": "Refreshed document content",
       "url": "https://github.com/tls-attestation/seat-architecture/pull/35",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "telephonicrobotics",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This update is largely structural and intended to align with the current direction of the [seat-use-cases official work item](https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases). It also addresses some of the feedback from various authors including those from Yuxuan Song who has been recently added as a co-author to the draft.\r\n\r\n## Initial edit\r\n\r\n### Scope and Architecture\r\n\r\n* Generalized the architecture from TLS-specific mechanics to secure transport protocols generally (referencing LAKE/EDHOC [RFC9528] alongside TLS 1.3 [RFC9846]) and updated architectural diagrams accordingly.\r\n* Reorganized standalone sections on Failure Handling, Session Binding, Freshness, and Privacy under a unified Section 6 (\"Operational Considerations\").\r\n* Added Section 6.1 (\"Protocol Attack Vectors\") directly referencing the attacker model defined in `draft-ietf-seat-use-cases`.\r\n\r\n### Terminology and Key Management\r\n\r\n* Consolidated `hbK` (Hardware-Bound Key) and `tbK` (Target/TEE-Bound Key) into a single normalized `TSK` (Transport Signing Key), requiring Evidence to bind to the TSK.\r\n* Capitalized key abbreviations to `TSK`, `AEK`, and `ARK` for consistency.\r\n* Replaced references to \"TCB\" with \"security state\" to better reflect RATS claim scoping (see https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases/issues/70)\r\n\r\n### References and Clarifications\r\n\r\n* Added citation to RFC 9525 (\"Service Identity in TLS\") to clarify traditional PKI identifier validation versus system integrity.\r\n* Updated references to the Use Cases draft from individual to WG status (`draft-ietf-seat-use-cases`).\r\n* General editorial and grammatical polish throughout.\r\n\r\n## Second major edit\r\n\r\n- Added definition for Authenticated Identity\r\n- Added operational considerations section for TOCTOU risks\r\n- Added broad RATS security related challenges that effect SEAT goals\r\n- Added an applied cryptographic argument for per-connect session and Evidence binding\r\n\r\n## Third major edit\r\n\r\n- Added Appendix B exploring RA efforts with adjacent PKIX work\r\n- Cross-ref between ACME RATS and LAMPS CSR Attestation\r\n- Added architectual analysis between SEAT and other WG effort\r\n- Further discuss TOCTOU risks of pre-handshake attestation and remedies",
       "createdAt": "2026-10-25T21:11:25Z",
-      "updatedAt": "2026-10-26T21:38:53Z",
+      "updatedAt": "2026-10-27T13:11:16Z",
       "baseRepository": "tls-attestation/seat-architecture",
       "baseRefName": "main",
       "baseRefOid": "fd8dea1800676155749c070cb0d7cacb1d9419d6",
       "headRepository": "tls-attestation/seat-architecture",
       "headRefName": "nr-refinement-patch",
       "headRefOid": "c26a26c09d7b7e9167efa75aa010711b84315e76",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2026-10-27T13:11:16Z",
+      "mergedAt": "2026-10-27T13:11:16Z",
+      "mergedBy": "telephonicrobotics",
+      "mergeCommit": {
+        "oid": "7a2003114b95b9ce92111666a799109394ce4961"
+      },
       "comments": [
         {
           "author": "telephonicrobotics",
@@ -3239,6 +3276,370 @@
               "body": "I agree that placement in the protocol stack seems to be a more consistent way to distinguish the two approaches, especially since both can support initial and reattestation. However, timing still captures an important difference in how initial attestation is performed, as an architecture draft, I think both aspects are worth capturing.\n\nPerhaps Section 5 could make these distinctions clearer, and in Section 5.3 we just simply clarify that the two approaches are not mutually exclusive and leave the reattestation details to Section8.3.",
               "createdAt": "2026-10-26T18:58:06Z",
               "updatedAt": "2026-10-26T18:58:06Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUY_Wtg",
+          "commit": {
+            "abbreviatedOid": "c26a26c"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "\ud83d\udea2 it!",
+          "createdAt": "2026-10-27T07:03:14Z",
+          "updatedAt": "2026-10-27T07:03:14Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUTiOxQ",
+          "commit": {
+            "abbreviatedOid": "23a292f"
+          },
+          "author": "ysong02",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-26T19:13:05Z",
+          "updatedAt": "2026-10-27T08:57:43Z",
+          "comments": [
+            {
+              "originalPosition": 1,
+              "body": "Since initial attestation and reattestation can occur within the same session, I'm wondering how freshness is ensured between attestation exchanges. If the attestation binder is derived from the same Session Binding Value, wouldn't it be possible to reuse previously generated Evidence within that session?\n\nWould additional exchange-specific freshness mechanisms are needed to ensure this?",
+              "createdAt": "2026-10-26T19:13:05Z",
+              "updatedAt": "2026-10-27T08:57:43Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 40,
+      "id": "PR_kwDOTCeSC88AAAABLJNkOw",
+      "title": "Expand on interface between SEAT and RATS",
+      "url": "https://github.com/tls-attestation/seat-architecture/pull/40",
+      "state": "OPEN",
+      "author": "telephonicrobotics",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "- Resolves #37,  resolves #38, (Partially addresses #36)\n\n- Established The Interface Between RATS and SEAT section and expanded RATS Trust Model within it\n\n- Added protocol scope and operational trust boundaries to Operation Considerations\n\n- Set boundaries on TOCTOU concerns and incorporated insight from Ned Smith https://mailarchive.ietf.org/arch/msg/rats/wtBBHi3swC3l2uBuWB0Y-QFZ3Ak/",
+      "createdAt": "2026-10-27T23:46:46Z",
+      "updatedAt": "2026-10-29T00:08:42Z",
+      "baseRepository": "tls-attestation/seat-architecture",
+      "baseRefName": "main",
+      "baseRefOid": "7a2003114b95b9ce92111666a799109394ce4961",
+      "headRepository": "tls-attestation/seat-architecture",
+      "headRefName": "nr-rats-seat-patch",
+      "headRefOid": "8f79960b3d408fa3f804ce0d22dea58dac355d06",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUmMBSA",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Excellent stuff, thanks!\n\nI have inlined a few comments.",
+          "createdAt": "2026-10-28T02:52:30Z",
+          "updatedAt": "2026-10-28T04:04:04Z",
+          "comments": [
+            {
+              "originalPosition": 50,
+              "body": "```suggestion\nVerifier (see {{Section 5.2 of RFC9334}} and {{fig-roles}}). The Verifier\n```",
+              "createdAt": "2026-10-28T02:52:30Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 51,
+              "body": "this description can be made more precise.\na couple of notes:\n* \"validates endorsements, ref-vals\" may be a bit exotic in RATS parlance\n* we should also describe what \"session equality\" means.",
+              "createdAt": "2026-10-28T02:58:43Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 55,
+              "body": "```suggestion\nResult directly to the Relying Party (see {{Section 5.1 of RFC9334}} and\n```",
+              "createdAt": "2026-10-28T02:59:18Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 95,
+              "body": "```suggestion\nan Attested Channel.  The general trust model described in\n```",
+              "createdAt": "2026-10-28T03:01:56Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 112,
+              "body": "ISTM that this paragraph uses Attester when it should use Target Environment.\nIs this (slightly more ambiguous -- TE $$\\subset$$ Attester) word choice intentional?\n\nMore generally, I think the discussion on the trust chain should start at the Target Environment, which is the entity holding the TSK:\n\nSupply Chain (Endorser/RVP) $$\\implies$$ AE (e.g., HRoT) $$\\implies$$ TE (e.g., CVM) $$\\implies$$ TSK ",
+              "createdAt": "2026-10-28T03:26:25Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 120,
+              "body": "\n> _\"co-located Verifier deployment (Background-Check Model)\"_\n\nI'd drop the parenthetical; RATS roles location and topological pattern are orthogonal.\n",
+              "createdAt": "2026-10-28T03:33:06Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 174,
+              "body": "ISTM that another key appraisal objective is TSK residency\n```suggestion\nagainst its Attestation Anchor to confirm platform integrity and `TSK` residency, and verifies the\n```",
+              "createdAt": "2026-10-28T03:46:40Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 205,
+              "body": "Just to check: this is not exclusively done a the transport layer, right?\nThe TSK-TEE binding is also responsibility of the RATS layer at appraisal time.",
+              "createdAt": "2026-10-28T03:52:51Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 221,
+              "body": "```suggestion\n  flaws - such as permitting an empty, null, or uninspected challenge parameter\n```",
+              "createdAt": "2026-10-28T03:54:09Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 227,
+              "body": "Is there a more precise pointer into use-cases?\n\n```suggestion\n  (see {{Section 4 of RFC9334}} and {{I-D.ietf-seat-use-cases}}).\n```",
+              "createdAt": "2026-10-28T03:55:10Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 233,
+              "body": "is \"application reference identity\" defined somewhere?",
+              "createdAt": "2026-10-28T03:56:42Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 257,
+              "body": "> _\"[...] without resetting the platform\"_\n\nthis may be a bit more nuanced in case of so-called live firmware/hitless update.  However, in such case the evidence is supposed to contain an immutable log of the update chain that can be appraised.",
+              "createdAt": "2026-10-28T04:01:21Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 260,
+              "body": "```suggestion\n  untrusted host (as well as peer enclaves) from altering enclave memory during execution.\n```",
+              "createdAt": "2026-10-28T04:02:18Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 266,
+              "body": "see my comment above on hitless updates",
+              "createdAt": "2026-10-28T04:02:48Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            },
+            {
+              "originalPosition": 282,
+              "body": "ditto",
+              "createdAt": "2026-10-28T04:03:31Z",
+              "updatedAt": "2026-10-28T04:04:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUn0PrA",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T06:56:13Z",
+          "updatedAt": "2026-10-28T06:56:13Z",
+          "comments": [
+            {
+              "originalPosition": 257,
+              "body": "Attempted to address in https://github.com/tls-attestation/seat-architecture/pull/40/changes/441568b3afe24853cde34badaa67cd2d2a0ebe5a",
+              "createdAt": "2026-10-28T06:56:13Z",
+              "updatedAt": "2026-10-28T06:59:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUn2Wew",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T06:59:54Z",
+          "updatedAt": "2026-10-28T06:59:54Z",
+          "comments": [
+            {
+              "originalPosition": 120,
+              "body": "Addressed in https://github.com/tls-attestation/seat-architecture/pull/40/changes/441568b3afe24853cde34badaa67cd2d2a0ebe5a",
+              "createdAt": "2026-10-28T06:59:54Z",
+              "updatedAt": "2026-10-28T06:59:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUn2jeg",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T07:00:19Z",
+          "updatedAt": "2026-10-28T07:00:19Z",
+          "comments": [
+            {
+              "originalPosition": 233,
+              "body": "Addressed in https://github.com/tls-attestation/seat-architecture/pull/40/changes/441568b3afe24853cde34badaa67cd2d2a0ebe5a",
+              "createdAt": "2026-10-28T07:00:19Z",
+              "updatedAt": "2026-10-28T07:00:19Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUvt6Xw",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T17:46:43Z",
+          "updatedAt": "2026-10-28T17:46:44Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "@thomas-fossati \r\n> * \"validates endorsements, ref-vals\" may be a bit exotic in RATS parlance\r\n\r\nDo you mean that the text is using too much RATS jargon? I don't know if I agree (given the section), but happy to accept different text. Or I could point to terminology within 9334, but my guess is that it wouldn't help much in assisting reader comprehension, if I understand your feedback correctly.\r\n\r\n> * \"we should also describe what \"session equality\" means.\r\n\r\nAck.\r\n\r\n",
+              "createdAt": "2026-10-28T17:46:43Z",
+              "updatedAt": "2026-10-28T17:46:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUvzI0A",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T17:52:59Z",
+          "updatedAt": "2026-10-28T17:53:00Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "> @thomas-fossati\r\n> \r\n> > * \"validates endorsements, ref-vals\" may be a bit exotic in RATS parlance\r\n> \r\n> Do you mean that the text is using too much RATS jargon? I don't know if I agree (given the section), but happy to accept different text. Or I could point to terminology within 9334, but my guess is that it wouldn't help much in assisting reader comprehension, if I understand your feedback correctly.\r\n\r\non the contrary :smiling My RATS colleagues will be confused by that sentence because in their mental model \"validation\" is not an action performed by the Verifier.  What do you mean by that in this context?",
+              "createdAt": "2026-10-28T17:53:00Z",
+              "updatedAt": "2026-10-28T17:53:00Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUv3AbQ",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T17:58:00Z",
+          "updatedAt": "2026-10-28T17:58:00Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "> > @thomas-fossati\r\n> > > * \"validates endorsements, ref-vals\" may be a bit exotic in RATS parlance\r\n> > \r\n> > \r\n> > Do you mean that the text is using too much RATS jargon? I don't know if I agree (given the section), but happy to accept different text. Or I could point to terminology within 9334, but my guess is that it wouldn't help much in assisting reader comprehension, if I understand your feedback correctly.\r\n> \r\n> on the contrary :smiling My RATS colleagues will be confused by that sentence because in their mental model \"validation\" is not an action performed by the Verifier. What do you mean by that in this context?\r\n\r\nAh! I mean to speak of the Verifier's appraisal policy alongside the process of running the Evidence through something a CoRIM Processor. (Edit: I'll try to rephrase the language alongside the other outstanding comments)",
+              "createdAt": "2026-10-28T17:58:00Z",
+              "updatedAt": "2026-10-28T18:03:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUwIsNA",
+          "commit": {
+            "abbreviatedOid": "89d60c9"
+          },
+          "author": "thomas-fossati",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T18:21:21Z",
+          "updatedAt": "2026-10-28T18:21:21Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "OK, then maybe something like:\n\n```suggestion\nVerifier (see {{Section 5.2 of RFC9334}} and {{fig-roles}}). The Verifier\nruns Evidence through its appraisal policy and checks session equality before\n```",
+              "createdAt": "2026-10-28T18:21:21Z",
+              "updatedAt": "2026-10-28T18:21:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUyXvIw",
+          "commit": {
+            "abbreviatedOid": "89d60c9"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T21:31:36Z",
+          "updatedAt": "2026-10-28T21:31:37Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "I decided we had [perfectly good text ](https://github.com/tls-attestation/seat-architecture/pull/40/changes#diff-af096f6494fe630a3fcbaf7bf7ca576b7e9363f63e1d8b27f1aad5b1a076032bL352)we already agreed upon regarding the conveyance models , so I moved it over into the refactored section [wholesale ](https://github.com/tls-attestation/seat-architecture/pull/40/changes#diff-af096f6494fe630a3fcbaf7bf7ca576b7e9363f63e1d8b27f1aad5b1a076032bR427).",
+              "createdAt": "2026-10-28T21:31:36Z",
+              "updatedAt": "2026-10-28T21:31:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUybzOA",
+          "commit": {
+            "abbreviatedOid": "def41f5"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T21:38:04Z",
+          "updatedAt": "2026-10-28T21:38:05Z",
+          "comments": [
+            {
+              "originalPosition": 112,
+              "body": "I turned this into \"figure 3\" in commit https://github.com/tls-attestation/seat-architecture/pull/40/changes/ccc1278d27abfd41ed7964e2ca985052afaebe2b",
+              "createdAt": "2026-10-28T21:38:04Z",
+              "updatedAt": "2026-10-28T21:38:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOTCeSC88AAAABUywD-g",
+          "commit": {
+            "abbreviatedOid": "10bab6c"
+          },
+          "author": "telephonicrobotics",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-10-28T22:10:15Z",
+          "updatedAt": "2026-10-28T22:10:15Z",
+          "comments": [
+            {
+              "originalPosition": 205,
+              "body": "I updated this!",
+              "createdAt": "2026-10-28T22:10:15Z",
+              "updatedAt": "2026-10-28T22:10:16Z"
             }
           ]
         }
