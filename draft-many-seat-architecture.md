@@ -445,8 +445,8 @@ appraisal engine (see {{definitions}}).
 
 Appraisal interfaces must not treat session challenges as optional filters.
 If a verification interface permits an empty, null, or zero-length session
-challenge to proceed without failure, or if an unconfigured verifier evaluates
-platform signatures while skipping the equality assertion against session
+challenge to proceed without failure, or if an unconfigured Verifier evaluates
+platform state and signatures while skipping the equality assertion against session
 context, the channel binding guarantee fails silently. Under such conditions,
 the system evaluates platform execution state in the abstract, but fails to
 prove that the platform is attached to the live communication session.
@@ -479,7 +479,7 @@ for the transport context.
 In the transport context, establishing an Attested Channel requires
 demonstrating key provenance: proving that the private Transport Signing
 Key (`TSK`) used for channel authentication is physically confined within
-an authorized, attested execution environment. This relies on an unbroken
+an authorized Target Environment. This relies on an unbroken
 chain of trust spanning the platform supply chain to the active transport
 session:
 
@@ -834,8 +834,10 @@ a matter of Relying Party policy; see {{failure-handling}}.
 ## Attestation Credential Lifecycle Boundaries {#lifecycle-boundaries}
 
 Remote attestation provides a point-in-time observation of the target
-platform's security state.  The interval between Evidence Generation
-Time and subsequent application data exchange introduces a
+platform's security state.  Additionally, the point-in-time when the claims
+representing the Attester's state are collected is also necessarily earlier than
+when the Evidence is signed.   The interval between Claim Collection Time,
+Evidence Generation Time and subsequent application data exchange introduces a
 theoretical Time-of-Check to Time-of-Use (TOCTOU) gap (see {{definitions}}).
 
 In typical attestation architectures (see exceptions below), this gap
@@ -844,10 +846,10 @@ sections:
 
 *  Hardware-Latched State: Sensitive platform state, including secure
    boot measurements and platform configuration, is cryptographically
-   latched into write-once or extend-only hardware registers hardware
+   latched into write-once hardware registers hardware
    registers that cannot be altered without resetting the platform.
 
-*  Memory Isolation: Memory encryption and execution boundaries
+*  Memory Isolation: Memory encryption and access-control boundaries
    prevent an untrusted host (as well as peer enclaves) from altering
    enclave memory during execution.
 
@@ -855,7 +857,9 @@ sections:
    require an instance restart that resets the measurement latch, or
    otherwise provide an append-only log bound to an extend-only
    measurement latch (such as when live firmware updates are
-   supported by the platform).
+   supported by the platform). It must be possible for the Relying
+   Party to assess whether a critical software update can happen
+   without the Attester being terminated.
 
 Point-in-time measurements therefore provide durable security
 assurances for properties governed by platform immutability latches.
