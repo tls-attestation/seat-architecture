@@ -1239,3 +1239,31 @@ The authors wish to thank all SEAT WG participants for their
 thoughtful input and contributions that have helped influence
 this document.
 
+# Document History {#document-history}
+{:numbered="false"}
+
+## draft-many-seat-architecture-01
+{:numbered="false"}
+
+- Terminology: Introduced `TSK`, capitalized key identifiers (`AEK`, `ARK`),
+  and defined `Authenticated Identity`.
+
+- Architecture: Defined the RATS/SEAT interface with fail-closed semantics,
+  formalized compound authorization and key provenance, and refreshed core diagrams.
+
+- Operations: Added a dedicated section detailing operational scope,
+  trust boundaries, and attestation credential lifecycles.
+
+- Security: Added threat models covering unauthorized credential hosting
+  and blind envelope substitution under encrypted Evidence.
+
+- Appendices: Added TLS 1.3 session binding transcript derivation and
+  comparative analysis with ACME RATS.
+
+- Editorial: Added Yuxuan Song as co-author, updated affiliations,
+  and revised references.
+
+## draft-many-seat-architecture-00
+{:numbered="false"}
+
+- Initial version
