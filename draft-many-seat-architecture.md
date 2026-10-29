@@ -57,6 +57,11 @@ informative:
   I-D.ietf-lake-ra:
   I-D.ietf-acme-rats:
   I-D.ietf-lamps-csr-attestation:
+  Use-Cases-PR-56:
+    title: Add Web PKI identity injection use case for ephemeral containers
+    target: https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases/pull/56
+    author:
+      - org: SEAT WG
   IAB-Attestation-Risks:
     title: "IAB Statement on the Risks of Attestation of Software and Hardware on the Open Internet"
     date: 2023-09-25
@@ -475,6 +480,9 @@ an Attested Channel.  The general trust model described in
 for the transport context.
 
 ### Target Environment Trust and Key Provenance
+
+> **TODO:** Explore security outcomes and options when using a non-confidential
+`TSK` as seen discussed in this open SEAT use case proposal: {{Use-Cases-PR-56}}
 
 In the transport context, establishing an Attested Channel requires
 demonstrating key provenance: proving that the private Transport Signing
