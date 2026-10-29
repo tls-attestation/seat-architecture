@@ -552,6 +552,10 @@ Table of Contents
 
 4.5.1.  Target Environment Trust and Key Provenance
 
+      *TODO:* Explore security outcomes and options when using a non-
+      confidential TSK as seen discussed in this open SEAT use case
+      proposal: [Use-Cases-PR-56]
+
    In the transport context, establishing an Attested Channel requires
    demonstrating key provenance: proving that the private Transport
    Signing Key (TSK) used for channel authentication is physically
@@ -1312,6 +1316,11 @@ Table of Contents
               "Remote ATtestation procedureS (RATS) Conceptual Message
               Wrapper (CMW)", RFC 9999, DOI 10.17487/RFC9999, July 2026,
               <https://www.rfc-editor.org/rfc/rfc9999>.
+
+   [Use-Cases-PR-56]
+              SEAT WG, "Add Web PKI identity injection use case for
+              ephemeral containers", n.d., <https://github.com/ietf-wg-
+              seat/draft-ietf-seat-use-cases/pull/56>.
 
 Appendix A.  Implementing Transport Integration (informational)
 
