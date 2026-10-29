@@ -5,14 +5,14 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                               Independent
 Intended status: Informational                                T. Fossati
-Expires: 1 May 2027                                               NVIDIA
+Expires: 2 May 2027                                               NVIDIA
                                                                 T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
                                                                  Y. Song
                                                                    Inria
-                                                         28 October 2026
+                                                         29 October 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 May 2027.
+   This Internet-Draft will expire on 2 May 2027.
 
 Copyright Notice
 
@@ -133,6 +133,9 @@ Table of Contents
      B.1.  ACME RATS
      B.2.  Architectual Comparisions
    Acknowledgments
+   Document History
+     draft-many-seat-architecture-01
+     draft-many-seat-architecture-00
    Authors' Addresses
 
 1.  Introduction
@@ -1437,6 +1440,33 @@ Acknowledgments
    The authors wish to thank all SEAT WG participants for their
    thoughtful input and contributions that have helped influence this
    document.
+
+Document History
+
+draft-many-seat-architecture-01
+
+   *  Terminology: Introduced TSK, capitalized key identifiers (AEK,
+      ARK), and defined Authenticated Identity.
+
+   *  Architecture: Defined the RATS/SEAT interface with fail-closed
+      semantics, formalized compound authorization and key provenance,
+      and refreshed core diagrams.
+
+   *  Operations: Added a dedicated section detailing operational scope,
+      trust boundaries, and attestation credential lifecycles.
+
+   *  Security: Added threat models covering unauthorized credential
+      hosting and blind envelope substitution under encrypted Evidence.
+
+   *  Appendices: Added TLS 1.3 session binding transcript derivation
+      and comparative analysis with ACME RATS.
+
+   *  Editorial: Added Yuxuan Song as co-author, updated affiliations,
+      and revised references.
+
+draft-many-seat-architecture-00
+
+   *  Initial version
 
 Authors' Addresses
 
