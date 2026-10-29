@@ -518,9 +518,9 @@ Table of Contents
    Appraisal interfaces must not treat session challenges as optional
    filters.  If a verification interface permits an empty, null, or
    zero-length session challenge to proceed without failure, or if an
-   unconfigured verifier evaluates platform signatures while skipping
-   the equality assertion against session context, the channel binding
-   guarantee fails silently.  Under such conditions, the system
+   unconfigured Verifier evaluates platform state and signatures while
+   skipping the equality assertion against session context, the channel
+   binding guarantee fails silently.  Under such conditions, the system
    evaluates platform execution state in the abstract, but fails to
    prove that the platform is attached to the live communication
    session.
@@ -555,9 +555,9 @@ Table of Contents
    In the transport context, establishing an Attested Channel requires
    demonstrating key provenance: proving that the private Transport
    Signing Key (TSK) used for channel authentication is physically
-   confined within an authorized, attested execution environment.  This
-   relies on an unbroken chain of trust spanning the platform supply
-   chain to the active transport session:
+   confined within an authorized Target Environment.  This relies on an
+   unbroken chain of trust spanning the platform supply chain to the
+   active transport session:
 
       Supply Chain (Endorser / Reference Value Provider)
                  |
@@ -921,10 +921,12 @@ Table of Contents
 6.6.  Attestation Credential Lifecycle Boundaries
 
    Remote attestation provides a point-in-time observation of the target
-   platform's security state.  The interval between Evidence Generation
-   Time and subsequent application data exchange introduces a
-   theoretical Time-of-Check to Time-of-Use (TOCTOU) gap (see
-   Section 2).
+   platform's security state.  Additionally, the point-in-time when the
+   claims representing the Attester's state are collected is also
+   necessarily earlier than when the Evidence is signed.  The interval
+   between Claim Collection Time, Evidence Generation Time and
+   subsequent application data exchange introduces a theoretical Time-
+   of-Check to Time-of-Use (TOCTOU) gap (see Section 2).
 
    In typical attestation architectures (see exceptions below), this gap
    is bounded by hardware-and platform-enforced immutability critical
@@ -932,10 +934,10 @@ Table of Contents
 
    *  Hardware-Latched State: Sensitive platform state, including secure
       boot measurements and platform configuration, is cryptographically
-      latched into write-once or extend-only hardware registers hardware
-      registers that cannot be altered without resetting the platform.
+      latched into write-once hardware registers hardware registers that
+      cannot be altered without resetting the platform.
 
-   *  Memory Isolation: Memory encryption and execution boundaries
+   *  Memory Isolation: Memory encryption and access-control boundaries
       prevent an untrusted host (as well as peer enclaves) from altering
       enclave memory during execution.
 
@@ -943,7 +945,9 @@ Table of Contents
       require an instance restart that resets the measurement latch, or
       otherwise provide an append-only log bound to an extend-only
       measurement latch (such as when live firmware updates are
-      supported by the platform).
+      supported by the platform).  It must be possible for the Relying
+      Party to assess whether a critical software update can happen
+      without the Attester being terminated.
 
    Point-in-time measurements therefore provide durable security
    assurances for properties governed by platform immutability latches.

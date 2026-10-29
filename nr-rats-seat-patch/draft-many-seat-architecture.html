@@ -2048,8 +2048,8 @@ cryptographic binder is evaluated as a strict, non-optional invariant by the
 appraisal engine (see <a href="#definitions" class="auto internal xref">Section 2</a>).<a href="#section-4.4-1" class="pilcrow">¶</a></p>
 <p id="section-4.4-2">Appraisal interfaces must not treat session challenges as optional filters.
 If a verification interface permits an empty, null, or zero-length session
-challenge to proceed without failure, or if an unconfigured verifier evaluates
-platform signatures while skipping the equality assertion against session
+challenge to proceed without failure, or if an unconfigured Verifier evaluates
+platform state and signatures while skipping the equality assertion against session
 context, the channel binding guarantee fails silently. Under such conditions,
 the system evaluates platform execution state in the abstract, but fails to
 prove that the platform is attached to the live communication session.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
@@ -2092,7 +2092,7 @@ for the transport context.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-1">In the transport context, establishing an Attested Channel requires
 demonstrating key provenance: proving that the private Transport Signing
 Key (<code>TSK</code>) used for channel authentication is physically confined within
-an authorized, attested execution environment. This relies on an unbroken
+an authorized Target Environment. This relies on an unbroken
 chain of trust spanning the platform supply chain to the active transport
 session:<a href="#section-4.5.1-1" class="pilcrow">¶</a></p>
 <span id="name-target-environment-trust-and"></span><div id="fig-te-key-provenance">
@@ -2541,8 +2541,10 @@ a matter of Relying Party policy; see <a href="#failure-handling" class="auto in
 <a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-attestation-credential-life" class="section-name selfRef">Attestation Credential Lifecycle Boundaries</a>
         </h3>
 <p id="section-6.6-1">Remote attestation provides a point-in-time observation of the target
-platform's security state.  The interval between Evidence Generation
-Time and subsequent application data exchange introduces a
+platform's security state.  Additionally, the point-in-time when the claims
+representing the Attester's state are collected is also necessarily earlier than
+when the Evidence is signed.   The interval between Claim Collection Time,
+Evidence Generation Time and subsequent application data exchange introduces a
 theoretical Time-of-Check to Time-of-Use (TOCTOU) gap (see <a href="#definitions" class="auto internal xref">Section 2</a>).<a href="#section-6.6-1" class="pilcrow">¶</a></p>
 <p id="section-6.6-2">In typical attestation architectures (see exceptions below), this gap
 is bounded by hardware-and platform-enforced immutability critical
@@ -2551,11 +2553,11 @@ sections:<a href="#section-6.6-2" class="pilcrow">¶</a></p>
 <li class="normal" id="section-6.6-3.1">
             <p id="section-6.6-3.1.1">Hardware-Latched State: Sensitive platform state, including secure
 boot measurements and platform configuration, is cryptographically
-latched into write-once or extend-only hardware registers hardware
+latched into write-once hardware registers hardware
 registers that cannot be altered without resetting the platform.<a href="#section-6.6-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.6-3.2">
-            <p id="section-6.6-3.2.1">Memory Isolation: Memory encryption and execution boundaries
+            <p id="section-6.6-3.2.1">Memory Isolation: Memory encryption and access-control boundaries
 prevent an untrusted host (as well as peer enclaves) from altering
 enclave memory during execution.<a href="#section-6.6-3.2.1" class="pilcrow">¶</a></p>
 </li>
@@ -2564,7 +2566,9 @@ enclave memory during execution.<a href="#section-6.6-3.2.1" class="pilcrow">¶<
 require an instance restart that resets the measurement latch, or
 otherwise provide an append-only log bound to an extend-only
 measurement latch (such as when live firmware updates are
-supported by the platform).<a href="#section-6.6-3.3.1" class="pilcrow">¶</a></p>
+supported by the platform). It must be possible for the Relying
+Party to assess whether a critical software update can happen
+without the Attester being terminated.<a href="#section-6.6-3.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-6.6-4">Point-in-time measurements therefore provide durable security
