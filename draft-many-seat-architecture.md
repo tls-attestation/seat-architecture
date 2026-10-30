@@ -75,7 +75,7 @@ informative:
     target: "https://datatracker.ietf.org/wg/plants/about/"
     author:
       - org: "IETF"
-  AIBWORKSHOP26:
+  IAB-WORKSHOP26:
     title: "Post-Quantum Authentication in Enterprise and Mobile Networks"
     date: 2026-10-11
     target: "https://datatracker.ietf.org/doc/slides-pqws-12-1540-nokia/"
@@ -777,7 +777,7 @@ Furthermore, uncompressed platform Evidence may exceed network Path MTU limits,
 causing datagram fragmentation and connection aborts. On datagram-based transports
 packet drops cannot generally be recovered selectively at the transport layer,
 meaning lost fragments can precipitate full-message retransmissions
-and session aborts rather than mere latency delays {{AIBWORKSHOP26}}.
+and session aborts rather than mere latency delays {{IAB-WORKSHOP26}}.
 
 To mitigate these transport reliability challenges, implementations can evaluate
 compact proofs (see {{PLANTS-WG}} or distribute heavy reference manifests
