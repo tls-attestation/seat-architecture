@@ -5,14 +5,14 @@
 Network Working Group                                            N. Ritz
 Internet-Draft                                               Independent
 Intended status: Informational                                T. Fossati
-Expires: 2 May 2027                                               NVIDIA
+Expires: 3 May 2027                                               NVIDIA
                                                                 T. Reddy
                                                                    Nokia
                                                              I. Mihalcea
                                                                      Arm
                                                                  Y. Song
                                                                    Inria
-                                                         29 October 2026
+                                                         30 October 2026
 
 
      Secure Evidence and Attestation Transport (SEAT) Architecture
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 May 2027.
+   This Internet-Draft will expire on 3 May 2027.
 
 Copyright Notice
 
@@ -860,7 +860,7 @@ Table of Contents
    datagram-based transports packet drops cannot generally be recovered
    selectively at the transport layer, meaning lost fragments can
    precipitate full-message retransmissions and session aborts rather
-   than mere latency delays [AIBWORKSHOP26].
+   than mere latency delays [IAB-WORKSHOP26].
 
    To mitigate these transport reliability challenges, implementations
    can evaluate compact proofs (see [PLANTS-WG] or distribute heavy
@@ -1361,14 +1361,6 @@ Table of Contents
 
 10.2.  Informative References
 
-   [AIBWORKSHOP26]
-              Reddy.K, T. and H. Tschofenig, "Post-Quantum
-              Authentication in Enterprise and Mobile Networks", IAB
-              Workshop Accelerating the Deployment of Post-Quantum
-              Authentication (PQWS), 11 October 2026,
-              <https://datatracker.ietf.org/doc/slides-pqws-
-              12-1540-nokia/>.
-
    [I-D.ietf-acme-rats]
               Liu, P. C., Ounsworth, M., Richardson, M., Mallaya, G.,
               and S. Rajala, "Automated Certificate Management
@@ -1423,6 +1415,14 @@ Table of Contents
               <https://datatracker.ietf.org/doc/statement-iab-statement-
               on-the-risks-of-attestation-of-software-and-hardware-on-
               the-open-internet/>.
+
+   [IAB-WORKSHOP26]
+              Reddy.K, T. and H. Tschofenig, "Post-Quantum
+              Authentication in Enterprise and Mobile Networks", IAB
+              Workshop Accelerating the Deployment of Post-Quantum
+              Authentication (PQWS), 11 October 2026,
+              <https://datatracker.ietf.org/doc/slides-pqws-
+              12-1540-nokia/>.
 
    [NIEME2021]
               Niemi, A., Pop, V., and J. Ekberg, "Trusted Sockets Layer:
