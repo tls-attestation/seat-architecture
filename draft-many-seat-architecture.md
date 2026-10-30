@@ -57,7 +57,8 @@ informative:
   I-D.ietf-lake-ra:
   I-D.ietf-acme-rats:
   I-D.ietf-lamps-csr-attestation:
-  Use-Cases-PR-56:
+  I-D.ietf-tls-extended-key-update:
+  UC-PR-56:
     title: Add Web PKI identity injection use case for ephemeral containers
     target: https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases/pull/56
     author:
@@ -69,6 +70,22 @@ informative:
     author:
       - org: Internet Architecture Board (IAB)
   NIEME2021: DOI.10.1007/978-3-030-91625-1_10
+  PLANTS-WG:
+    title: "Post-Quantum Signatures in Public-Key Infrastructures (plants)"
+    target: "https://datatracker.ietf.org/wg/plants/about/"
+    author:
+      - org: "IETF"
+  IAB-WORKSHOP26:
+    title: "Post-Quantum Authentication in Enterprise and Mobile Networks"
+    date: 2026-10-11
+    target: "https://datatracker.ietf.org/doc/slides-pqws-12-1540-nokia/"
+    author:
+      - fullname: "Tirumaleswar Reddy.K"
+        organization: "Nokia"
+      - fullname: "Hannes Tschofenig"
+        organization: "University of the Bundeswehr Munich"
+    seriesinfo:
+      "IAB Workshop": "Accelerating the Deployment of Post-Quantum Authentication (PQWS)"
 
 ...
 
@@ -285,12 +302,21 @@ Verification Anchor:
   Exported Authenticators).
 
 Split Deployment:
-: A deployment in which the Attesting Environment
-  and the transport stack reside in different execution contexts.
-  The transport stack is in the Target Environment; the Attesting
-  Environment (e.g., a TEE) must receive the attestation binder
+: A deployment topology in which the Attesting Environment
+  and the transport stack reside in different execution contexts
+  (vertical seperation). The transport stack is in the Target Environment;
+  the Attesting Environment (e.g., a TEE) must receive the attestation binder
   input — typically a handshake transcript hash or exported key —
   from the transport stack via a trusted interface.
+
+Multi-Endpoint Deployment:
+: A deployment topology in which multiple distinct transport endpoints reside
+  within the same Target Environment (horizontal separation). An attestation
+  endpoint manages attestation exchanges, while one or more separate serving
+  endpoints terminate application data channels.
+
+> <cref>TODO: Explore security outcomes and operational considerations for
+proposed Multi-Endpoint Deployment topologies.</cref>
 
 # Roles and Entities
 
@@ -481,8 +507,8 @@ for the transport context.
 
 ### Target Environment Trust and Key Provenance
 
-> **TODO:** Explore security outcomes and options when using a non-confidential
-`TSK` as seen discussed in this open SEAT use case proposal: {{Use-Cases-PR-56}}
+<cref>TODO: Explore security outcomes and options when using a non-confidential
+TSK as seen discussed in this open SEAT use case proposal</cref> (see {{UC-PR-56}}).
 
 In the transport context, establishing an Attested Channel requires
 demonstrating key provenance: proving that the private Transport Signing
@@ -563,8 +589,9 @@ transport handshake define the two Attestation Timing Models used in
 this architecture.
 
 Depending on the approach, an Attestation Credential may be conveyed
-during the Intra-Handshake Window or conveyed at the application layer in
-the Post-Handshake Window.
+during the Intra-Handshake Window or during the Post-Handshake Window,
+utilizing either native transport protocol extensions or application-level
+framing.
 
 If the credential is Evidence, the Relying Party acts as or forwards
 it to a Verifier to appraise the Evidence. If the credential is an
@@ -595,33 +622,37 @@ to flow.
 ## Post-Handshake Attestation
 
 An Attestation Credential is conveyed by the Attester **after** transport
-connection establishment to the Relying Party following the transition to
-application data exchange.
+connection establishment to the Relying Party. Conveyance may occur within
+the transport layer using post-handshake protocol mechanisms utilizing either
+native transport protocol extensions or above the transport layer within
+application protocols.
 
-The Attestation Binder is derived after handshake completion,
-tying the Attestation Credential to the completed session.
+The Attestation Binder is derived after initial handshake completion,
+tying the Attestation Credential to the established session context.
 
-This deployment can be localized with the sidecar pattern, which
-withholds application data until the attestation procedure completes,
-decoupling the attestation protocol from application logic.
+Regardless of whether post-handshake conveyance is implemented directly within
+the transport stack or localized in an application-level wrapper (such as a
+sidecar proxy), authorization policies must dictate which data exchanges
+are required to stall until the attestation procedure completes successfully.
 
 ## Combining Timing Models
 
-The two timing models may also be used together and their combination
-is the natural architecture for deployments requiring both immediate
-trust establishment and durable session integrity over long-lived
-connections.
-
-In this composition, intra-handshake attestation establishes baseline
-trust before the session becomes usable: the Relying Party's Verifier
-must accept the Attester's Attestation Credential before application
-data can flow. The combined model suits constrained device and IoT
-deployments where a single attestation protocol handles both initial
-session trust and ongoing periodic re-attestation, avoiding separate
-code paths for onboarding and normal operation.
-
 Protocol specifications building on this architecture MAY support one
 or both timing models.
+
+When designing solutions, it is important to distinguish the timing
+model used for conveyance (Intra-Handshake vs. Post-Handshake) from the
+lifecycle event being satisfied (initial trust establishment vs.
+re-attestation). Initial attestation can be performed using *either*
+timing model: Intra-Handshake mechanisms can establish baseline trust
+during connection setup, or Post-Handshake mechanisms can be used to
+withhold application data exchange immediately after connection establishment.
+
+Re-attestation, by definition, occurs during the Lifetime of Connection.
+A comprehensive solution might combine both models — using Intra-Handshake
+for initial trust and Post-Handshake for re-attestation — or it might
+rely entirely on Post-Handshake mechanisms to handle both initial
+session trust and ongoing periodic re-attestation.
 
 # Operational Considerations
 
@@ -680,6 +711,79 @@ to review these considerations and their remedies.
 For an architectural overview of additional security-related concerns for attested
 transport channels, see {{security-considerations}}.
 
+## Operational Challenges Under the Background-Check Model {#conveyance-tradeoffs}
+
+Deploying SEAT protocols requires resolving a core topological trade-off between
+the Background-Check and Passport conveyance models (see {{fig-roles}}). While
+protocol mechanisms determine how messages are framed on the wire, the operational
+profile of the transport channel is governed by where and when Evidence is appraised.
+
+For short-lived or latency-sensitive connections, the Passport model can minimize setup latency by allowing local evaluation of pre-appraised credentials during channel establishment.
+For persistent, long-lived connections, periodic re-attestation over the established Attested Channel accommodates dynamic platform evolution; the conveyance model determines whether the appraisal is synchronous (Background Check) or asynchronous (Passport).
+
+The conveyance models differ in where Evidence is disclosed and when appraisal occurs (see {{Section 5 of RFC9334}}); both require withholding application data until the initial appraisal completes (see {{fail-closed-semantics}}).
+
+This section outlines a number of operational challenges that operators and implementers
+of SEAT protocols may encounter when deploying the Background-Check conveyance model.
+
+### Hardware Information Disclosure
+
+Conveying raw Evidence directly to the Relying Party may expose granular hardware
+topology, silicon identity keys, and platform patch state to the peer. Protecting
+this sensitive platform state requires due care to avoid unnecessary information
+disclosure (see {{privacy}}).
+
+By contrast, the Passport model discloses raw measurements exclusively to an
+authorized Verifier out-of-band. This may make it operationally simpler to present
+a minimized Attestation Result that asserts policy conformance without disclosing
+underlying hardware metrics. Where the Background-Check model is used, implementations
+may mitigate exposure by decoupling static platform endorsements from ephemeral session
+binders, or by evaluating manufacturer PKIs out-of-band.
+
+### Bounded Credential Lifecycles
+
+Attestation Evidence reflects a point-in-time observation of platform state,
+which can introduce an operational Time-of-Check to Time-of-Use (TOCTOU) gap over
+long-running connections (see {{lifecycle-boundaries}}). While platform-enforced
+hardware latches protect boot-time state, assurances regarding unlatched software
+components may drift as execution continues.
+
+In the Passport model, freshness is governed by explicit validity windows;
+however, tight lifetimes risk mid-session expiration while longer lifetimes increase
+exposure to unobserved state changes. Deployments can address this tension by isolating
+long-lived baseline manifests from lightweight session-binding proofs.
+
+### Runtime State Drift
+
+Adapting to runtime state evolution or appraisal context drift can be addressed
+via periodic re-attestation (see {{reattestation}}). In the Background-Check model,
+executing continuous appraisal directly over the active Attested Channel incurs
+synchronous round trips to an available Verifier, introducing potential for
+pipeline stalls or transport timeouts.
+
+Under the Passport model, re-attestation occurs asynchronously out-of-band: the
+Attester fetches an updated Attestation Result and ingests it via standard transport
+mechanisms without blocking channel execution. Where continuous background checks
+are necessary, separating target state monitoring from asynchronous context drift
+tracking can help reduce active channel friction.
+
+### Handshake Latency and Network Reliability
+
+In the Background-Check model, the Relying Party must withhold application data
+while performing a synchronous appraisal query to an available Verifier. This
+verification fan-out latency compounds channel setup delays, which increases
+communication timeouts in lossy or distributed networks.
+
+Furthermore, uncompressed platform Evidence may exceed network Path MTU limits,
+causing datagram fragmentation and connection aborts. On datagram-based transports
+packet drops cannot generally be recovered selectively at the transport layer,
+meaning lost fragments can precipitate full-message retransmissions
+and session aborts rather than mere latency delays {{IAB-WORKSHOP26}}.
+
+To mitigate these transport reliability challenges, implementations can evaluate
+compact proofs (see {{PLANTS-WG}}) or distribute heavy reference manifests
+out-of-band to keep on-wire payloads within standard Path MTU limits.
+
 ## Failure handling {#failure-handling}
 
 ### Failure handling within Intra-Handshake Window
@@ -699,18 +803,26 @@ policies, and assists in auditing and general debugging.
 
 ### Failure handling within Post-Handshake Window
 
-When attestation occurs within the Post-Handshake Window, or when
-Re-attestation fails during the Lifetime of Connection, the transport
-session already exists and application data may already be flowing.
+Failure handling in the Post-Handshake Window depends on whether the
+appraisal relates to the initial attestation event or to a subsequent
+re-attestation.
 
-{{Section 1-2 of RFC9334}} allows a failed Attester appraisal to result
-in reduced access or privileges rather than outright rejection.
-As the Relying Party's enforcement point sits outside the transport
-connection establishment window, the Appraisal Policy determines whether the
-connection is torn down, or restricted to a subset of application-layer
-functionality.
+For an initial attestation event using the Post-Handshake model,
+authorization policies withhold application data exchange until the
+attestation procedure completes successfully; thus, application data
+has not yet begun to flow. A failure at this stage prevents the initial
+authorization to exchange application data.
 
-Failure handling of Post-Handshake Attestation does not retroactively
+When Re-attestation fails during the Lifetime of Connection, the
+transport session is already established and application data has
+already been flowing. {{Section 1-2 of RFC9334}} allows a failed
+Attester appraisal to result in reduced access or privileges rather
+than outright rejection. Depending on whether enforcement is handled
+by the transport stack or the application, the Appraisal Policy
+determines whether the underlying transport session is torn down or
+restricted to an authorized subset of data streams.
+
+Failure handling of Re-attestation does not retroactively
 protect application data already exchanged prior to the failed
 appraisal; it bounds further exposure going forward.
 
@@ -827,10 +939,17 @@ these as distinct concerns.
 
 Per-session freshness ensures Evidence cannot be replayed across
 sessions but does not address changes in the Attester's state
-during the Lifetime of Connection. A Relying Party MAY require
-Re-attestation before continuing to transmit sensitive data to a
-peer whose trust assessment has expired or whose deployment
-environment may have changed in ways material to its policy.
+during the Lifetime of Connection, nor does it prevent replay of
+previously presented Evidence within the same session.  Protocol
+specifications supporting re-attestation must require fresh Evidence
+generation bound to an updated session challenge (e.g., using
+Extended Key Update {{I-D.ietf-tls-extended-key-update}} or an
+epoch-specific transport exporter).
+
+A Relying Party MAY require Re-attestation before continuing to
+transmit sensitive data to a peer whose trust assessment has
+expired or whose deployment environment may have changed in ways
+material to its policy.
 
 Re-attestation does not retroactively protect data transmitted
 before a state change occurred.  It bounds further exposure by
@@ -1132,7 +1251,8 @@ RATS semantics.
 Depending on the conveyance model, the Relying Party either forwards
 Evidence to a Verifier to receive an authorization decision
 (Background-Check Model) or validates an Attestation Result directly
-(Passport Model).
+(Passport Model). This section describes two in-band structural
+implementations (Extension-Based and Structured Payload Conveyance).
 
 ## Extension-Based Conveyance
 
@@ -1263,17 +1383,25 @@ this document.
 - Architecture: Defined the RATS/SEAT interface with fail-closed semantics,
   formalized compound authorization and key provenance, and refreshed core diagrams.
 
-- Operations: Added a dedicated section detailing operational scope,
-  trust boundaries, and attestation credential lifecycles.
+- Timing Models: Clarified post-handshake conveyance mechanisms within the transport
+  layer (e.g., Exported Authenticators) alongside application framing, and decoupled
+  conveyance timing from connection lifecycle events (initial trust establishment vs.
+  periodic re-attestation).
+
+- Operations: Added a dedicated section detailing operational scope, trust
+  boundaries, and attestation credential lifecycles; documented operational
+  trade-offs and challenges under the Background-Check model and refined post-handshake failure handling to
+  distinguish initial attestation gating from mid-connection re-attestation.
 
 - Security: Added threat models covering unauthorized credential hosting
   and blind envelope substitution under encrypted Evidence.
 
-- Appendices: Added TLS 1.3 session binding transcript derivation and
-  comparative analysis with ACME RATS.
+- Appendices: Added TLS 1.3 session binding transcript derivation,
+  comparative analysis with ACME RATS, and an out-of-band appraisal integration
+  pattern using pre-cached Attestation Results.
 
 - Editorial: Added Yuxuan Song as co-author, updated affiliations,
-  and revised references.
+  and revised references (including PLANTS-WG and IAB PQWS citations).
 
 ## draft-many-seat-architecture-00
 {:numbered="false"}
