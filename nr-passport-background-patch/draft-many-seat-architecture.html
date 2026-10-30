@@ -2384,17 +2384,9 @@ transport channels, see <a href="#security-considerations" class="auto internal 
 the Background-Check and Passport conveyance models (see <a href="#fig-roles" class="auto internal xref">Figure 2</a>). While
 protocol mechanisms determine how messages are framed on the wire, the operational
 profile of the transport channel is governed by where and when Evidence is appraised.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
-<p id="section-6.3-2">For short-lived or latency-sensitive connections, the Passport model can minimize
-setup latency by allowing local evaluation of pre-appraised credentials during
-channel establishment. For persistent, long-lived connections, post-handshake exchanges
-and the use of the Background-Check Model may be better suited to accommodate dynamic
-platform evolution and periodic health monitoring over an already-established
-Attested Channel.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
-<p id="section-6.3-3">The choice between conveyance models and timing mechanisms often reflects an
-optimization for connection lifespan rather than a divergent security posture
-(see <span><a href="https://rfc-editor.org/rfc/rfc9334#section-5.1-1" class="relref">Section 5.1-1</a> of [<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>). Both approaches require withholding application
-data until the appropriate appraisal completes (see <span><a href="https://rfc-editor.org/rfc/rfc9334#section-8.5" class="relref">Section 8.5</a> of [<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>) and
-both rely on identical security state postures.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+<p id="section-6.3-2">For short-lived or latency-sensitive connections, the Passport model can minimize setup latency by allowing local evaluation of pre-appraised credentials during channel establishment.
+For persistent, long-lived connections, periodic re-attestation over the established Attested Channel accommodates dynamic platform evolution; the conveyance model determines whether the appraisal is synchronous (Background Check) or asynchronous (Passport).<a href="#section-6.3-2" class="pilcrow">¶</a></p>
+<p id="section-6.3-3">The conveyance models differ in where Evidence is disclosed and when appraisal occurs (see <span><a href="https://rfc-editor.org/rfc/rfc9334#section-5" class="relref">Section 5</a> of [<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>); both require withholding application data until the initial appraisal completes (see <a href="#fail-closed-semantics" class="auto internal xref">Section 4.4</a>).<a href="#section-6.3-3" class="pilcrow">¶</a></p>
 <p id="section-6.3-4">This section outlines a number of operational challenges that operators and implementers
 of SEAT protocols may encounter when deploying the Background-Check conveyance model.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
 <div id="hardware-information-disclosure">
@@ -2462,7 +2454,7 @@ packet drops cannot generally be recovered selectively at the transport layer,
 meaning lost fragments can precipitate full-message retransmissions
 and session aborts rather than mere latency delays <span>[<a href="#IAB-WORKSHOP26" class="cite xref">IAB-WORKSHOP26</a>]</span>.<a href="#section-6.3.4-2" class="pilcrow">¶</a></p>
 <p id="section-6.3.4-3">To mitigate these transport reliability challenges, implementations can evaluate
-compact proofs (see <span>[<a href="#PLANTS-WG" class="cite xref">PLANTS-WG</a>]</span> or distribute heavy reference manifests
+compact proofs (see <span>[<a href="#PLANTS-WG" class="cite xref">PLANTS-WG</a>]</span>) or distribute heavy reference manifests
 out-of-band to keep on-wire payloads within standard Path MTU limits.<a href="#section-6.3.4-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2651,7 +2643,7 @@ these as distinct concerns.<a href="#section-6.6.3-1" class="pilcrow">¶</a></p>
 sessions but does not address changes in the Attester's state
 during the Lifetime of Connection, nor does it prevent replay of
 previously presented Evidence within the same session.  Protocol
-specifications supporting re-attestation <span class="bcp14">MUST</span> require fresh Evidence
+specifications supporting re-attestation must require fresh Evidence
 generation bound to an updated session challenge (e.g., using
 Extended Key Update <span>[<a href="#I-D.ietf-tls-extended-key-update" class="cite xref">I-D.ietf-tls-extended-key-update</a>]</span> or an
 epoch-specific transport exporter).<a href="#section-6.6.3-2" class="pilcrow">¶</a></p>
