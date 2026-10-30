@@ -709,18 +709,10 @@ the Background-Check and Passport conveyance models (see {{fig-roles}}). While
 protocol mechanisms determine how messages are framed on the wire, the operational
 profile of the transport channel is governed by where and when Evidence is appraised.
 
-For short-lived or latency-sensitive connections, the Passport model can minimize
-setup latency by allowing local evaluation of pre-appraised credentials during
-channel establishment. For persistent, long-lived connections, post-handshake exchanges
-and the use of the Background-Check Model may be better suited to accommodate dynamic
-platform evolution and periodic health monitoring over an already-established
-Attested Channel.
+For short-lived or latency-sensitive connections, the Passport model can minimize setup latency by allowing local evaluation of pre-appraised credentials during channel establishment.
+For persistent, long-lived connections, periodic re-attestation over the established Attested Channel accommodates dynamic platform evolution; the conveyance model determines whether the appraisal is synchronous (Background Check) or asynchronous (Passport).
 
-The choice between conveyance models and timing mechanisms often reflects an
-optimization for connection lifespan rather than a divergent security posture
-(see {{Section 5.1-1 of RFC9334}}). Both approaches require withholding application
-data until the appropriate appraisal completes (see {{Section 8.5 of RFC9334}}) and
-both rely on identical security state postures.
+The conveyance models differ in where Evidence is disclosed and when appraisal occurs (see {{Section 5 of RFC9334}}); both require withholding application data until the initial appraisal completes (see {{fail-closed-semantics}}).
 
 This section outlines a number of operational challenges that operators and implementers
 of SEAT protocols may encounter when deploying the Background-Check conveyance model.
@@ -780,7 +772,7 @@ meaning lost fragments can precipitate full-message retransmissions
 and session aborts rather than mere latency delays {{IAB-WORKSHOP26}}.
 
 To mitigate these transport reliability challenges, implementations can evaluate
-compact proofs (see {{PLANTS-WG}} or distribute heavy reference manifests
+compact proofs (see {{PLANTS-WG}}) or distribute heavy reference manifests
 out-of-band to keep on-wire payloads within standard Path MTU limits.
 
 ## Failure handling {#failure-handling}
@@ -940,7 +932,7 @@ Per-session freshness ensures Evidence cannot be replayed across
 sessions but does not address changes in the Attester's state
 during the Lifetime of Connection, nor does it prevent replay of
 previously presented Evidence within the same session.  Protocol
-specifications supporting re-attestation MUST require fresh Evidence
+specifications supporting re-attestation must require fresh Evidence
 generation bound to an updated session challenge (e.g., using
 Extended Key Update {{I-D.ietf-tls-extended-key-update}} or an
 epoch-specific transport exporter).
