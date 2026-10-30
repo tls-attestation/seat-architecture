@@ -58,7 +58,7 @@ informative:
   I-D.ietf-acme-rats:
   I-D.ietf-lamps-csr-attestation:
   I-D.ietf-tls-extended-key-update:
-  Use-Cases-PR-56:
+  UC-PR-56:
     title: Add Web PKI identity injection use case for ephemeral containers
     target: https://github.com/ietf-wg-seat/draft-ietf-seat-use-cases/pull/56
     author:
@@ -302,12 +302,21 @@ Verification Anchor:
   Exported Authenticators).
 
 Split Deployment:
-: A deployment in which the Attesting Environment
-  and the transport stack reside in different execution contexts.
-  The transport stack is in the Target Environment; the Attesting
-  Environment (e.g., a TEE) must receive the attestation binder
+: A deployment topology in which the Attesting Environment
+  and the transport stack reside in different execution contexts
+  (vertical seperation). The transport stack is in the Target Environment;
+  the Attesting Environment (e.g., a TEE) must receive the attestation binder
   input — typically a handshake transcript hash or exported key —
   from the transport stack via a trusted interface.
+
+Multi-Endpoint Deployment:
+: A deployment topology in which multiple distinct transport endpoints reside
+  within the same Target Environment (horizontal separation). An attestation
+  endpoint manages attestation exchanges, while one or more separate serving
+  endpoints terminate application data channels.
+
+> <cref>TODO: Explore security outcomes and operational considerations for
+proposed Multi-Endpoint Deployment topologies.</cref>
 
 # Roles and Entities
 
@@ -498,8 +507,8 @@ for the transport context.
 
 ### Target Environment Trust and Key Provenance
 
-> **TODO:** Explore security outcomes and options when using a non-confidential
-`TSK` as seen discussed in this open SEAT use case proposal: {{Use-Cases-PR-56}}
+<cref>TODO: Explore security outcomes and options when using a non-confidential
+TSK as seen discussed in this open SEAT use case proposal</cref> (see {{UC-PR-56}}).
 
 In the transport context, establishing an Attested Channel requires
 demonstrating key provenance: proving that the private Transport Signing
@@ -623,8 +632,8 @@ tying the Attestation Credential to the established session context.
 
 Regardless of whether post-handshake conveyance is implemented directly within
 the transport stack or localized in an application-level wrapper (such as a
-sidecar proxy), authorization policies must withhold application data exchange until
-the attestation procedure completes successfully.
+sidecar proxy), authorization policies must dictate which data exchanges
+are required to stall until the attestation procedure completes successfully.
 
 ## Combining Timing Models
 
